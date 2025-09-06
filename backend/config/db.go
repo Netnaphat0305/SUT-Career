@@ -52,6 +52,13 @@ func SetupDatabase() {
 		&entity.Report{},
 		&entity.Admin{},
 		&entity.Worklog{},
+		// ================ เพิ่มโดยพรศิริ ============================================
+        &entity.StudentPost{},
+        &entity.StudentPostAttachment{},
+		&entity.RequestTicket{},
+		&entity.TicketReply{},
+        // =========================สิ้นสุดการเพิ่มของพรศิริ==============================
+
 
 		
 		//=========================
