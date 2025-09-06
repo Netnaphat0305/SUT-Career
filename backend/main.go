@@ -5,10 +5,13 @@ import (
 
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/controller"
+	
 	"github.com/KBook22/System-Analysis-and-Design/middleware"
 	"github.com/KBook22/System-Analysis-and-Design/seed"
 	"github.com/gin-gonic/gin"
 )
+
+
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -23,6 +26,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 const PORT = "8080"
 
 func main() {
@@ -52,25 +56,22 @@ func main() {
 		api.GET("/reviews/scores", controller.ListRatingScores)
 		api.GET("/payments/statuses", controller.ListPaymentStatuses)
 		api.GET("/payments/methods", controller.ListPaymentMethods)
-		
+
 		// api.GET("/banks", controller.ListBanks)
 		// api.GET("/genders", controller.ListGenders)
-		
-		
-
 
 		//=====================================
 		//get report status
-		api.GET("/reportstatus",controller.GetReportstatus)
+		api.GET("/reportstatus", controller.GetReportstatus)
 
 		api.GET("/reports", controller.GetAllReports)
 		api.GET("/reports/:id", controller.GetReportByID)
 		api.GET("/reports/user/:user_id", controller.GetReportByUserID)
 		api.POST("/reports", controller.CreateReport)
-		
+
 		api.DELETE("/reports/:id", controller.DeleteReport)
 		api.PUT("/reports/:id", controller.UpdateReport)
-		
+
 		// worklog
 		api.POST("/worklogs", controller.CreateWorklog)
 		api.GET("/worklogs/student/:id", controller.GetWorklogStudent)
@@ -79,22 +80,20 @@ func main() {
 		// // Extra
 		// api.GET("/jobposts/:id/students", controller.GetStudentInJobpost)
 		// api.GET("/users/:id", controller.GetUserByEmployerID)
-	
 
 		//=====================================
-
 
 		protected := api.Group("")
 		// protected.Use(middleware.Authorizes())
 		// {
-			// JobPost (actions)
+		// JobPost (actions)
 
-			jobpostRoutes := protected.Group("/myjobposts")
-			{
-				jobpostRoutes.POST("", controller.CreateJobPost)
-				jobpostRoutes.PUT("/:id", controller.UpdateJobPost)
-				jobpostRoutes.DELETE("/:id", controller.DeleteJobPost)
-			}
+		jobpostRoutes := protected.Group("/myjobposts")
+		{
+			jobpostRoutes.POST("", controller.CreateJobPost)
+			jobpostRoutes.PUT("/:id", controller.UpdateJobPost)
+			jobpostRoutes.DELETE("/:id", controller.DeleteJobPost)
+		}
 
 		// --- Salary Type ---
 		api.GET("/salarytype", controller.ListSalaryType)
@@ -112,7 +111,10 @@ func main() {
 
 		// --- FAQs & Student Profile (Public) ---
 		api.GET("/faqs", controller.GetFAQs)
-		api.GET("/student-profile-posts", controller.GetStudentProfilePosts)
+		////////////////////////////////////เเก้ไขโดยพรศิริ ////////////////////////////
+		api.GET("/student-posts", controller.GetStudentPosts)
+		api.GET("/student-posts/:id", controller.GetStudentPostByID)
+		////////////สิ้นสุดการเพิ่มของพรศิริ//////////////////////////////
 	}
 
 	// -------------------- 🔐 Protected Routes (ต้องล็อกอิน) --------------------
@@ -127,17 +129,17 @@ func main() {
 
 		// --- Employer: My Posts ---
 		auth.GET("/employer/myposts", controller.GetEmployerPosts)
-
-		// --- Student Profile ---
-		auth.POST("/student-profile-posts", controller.CreateStudentProfilePost)
-		auth.GET("/profile", controller.GetMyProfile)
+		//////////////////////////เเก้ไขโดยพรศิริ///////////////////////////////////
+		// --- Student Post ---
+		auth.POST("/student-posts", controller.CreateStudentPost)
+		auth.PUT("/student-posts/:id", controller.UpdateStudentPost)
+		auth.DELETE("/student-posts/:id", controller.DeleteStudentPost)
+		////////////////สิ้นสุดการเเก้ไขของพรศิริ///////////////////////
 
 		// --- Job Applications ---
 		auth.GET("/jobapplications/init/:id", controller.InitJobApplication)
 		auth.POST("/jobapplications", controller.CreateJobApplication)
 		auth.GET("/jobapplications/me", controller.GetMyApplications)
-
-
 
 		// --- Tickets ---
 		auth.POST("/tickets", controller.CreateRequestTicket)

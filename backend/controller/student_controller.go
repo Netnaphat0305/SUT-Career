@@ -7,7 +7,6 @@ import (
 
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/entity"
-	"github.com/KBook22/System-Analysis-and-Design/services"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -63,9 +62,9 @@ func RegisterStudent(c *gin.Context) {
 		Phone:     payload.Phone,
 		Faculty:   payload.Faculty,
 		Year:      payload.Year,
-		Birthday:  time.Now(),
-		Age:       0,
-		GPA:       0.0,
+		Birthday:  time.Now(), // Default value
+		Age:       0,          // Default value
+		GPA:       0.0,        // Default value
 	}
 
 	if err := tx.Create(&student).Error; err != nil {
@@ -82,9 +81,8 @@ func RegisterStudent(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Student registration successful"})
 }
 
-// ✨ 1. แก้ไข Struct สำหรับ Response ที่นี่
 type ProfileResponse struct {
-	Student entity.Student            `json:"student"` // เปลี่ยนจาก StudentInfo -> Student และ json:"student_info" -> json:"student"
+	Student entity.Student            `json:"student"`
 	Posts   []entity.StudentProfilePost `json:"posts"`
 }
 
@@ -96,8 +94,8 @@ func GetMyProfile(c *gin.Context) {
 		return
 	}
 
-	studentProfile, err := services.GetStudentProfileByUserID(userID.(uint))
-	if err != nil {
+	var studentProfile entity.Student
+	if err := config.DB().Preload("User").Where("user_id = ?", userID).First(&studentProfile).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Student profile not found"})
 			return
@@ -106,15 +104,14 @@ func GetMyProfile(c *gin.Context) {
 		return
 	}
 
-	studentPosts, err := services.GetStudentProfilePostsByStudentID(studentProfile.ID)
-	if err != nil {
+	var studentPosts []entity.StudentProfilePost
+	if err := config.DB().Where("student_id = ?", studentProfile.ID).Order("created_at desc").Find(&studentPosts).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not retrieve student posts"})
 		return
 	}
-    
-	// ✨ 2. แก้ไขการสร้าง Response ให้ตรงกับ Struct ใหม่
+
 	response := ProfileResponse{
-		Student: *studentProfile,
+		Student: studentProfile,
 		Posts:   studentPosts,
 	}
 
