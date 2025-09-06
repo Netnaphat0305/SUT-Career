@@ -57,6 +57,7 @@ func SetupDatabase() {
         &entity.StudentPostAttachment{},
 		&entity.RequestTicket{},
 		&entity.TicketReply{},
+		&entity.TicketAttachment{},
         // =========================สิ้นสุดการเพิ่มของพรศิริ==============================
 
 

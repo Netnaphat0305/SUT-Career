@@ -10,4 +10,7 @@ type TicketReply struct {
 	TicketID     uint   `gorm:"not null" json:"ticket_id"`
 	AuthorID     uint   `gorm:"not null" json:"author_id"`
 	Author       User   `gorm:"foreignKey:AuthorID" json:"author"`
+
+	// ✅ เพิ่มบรรทัดนี้เข้ามา
+	Attachments  []TicketAttachment `gorm:"foreignKey:TicketReplyID" json:"attachments"`
 }
