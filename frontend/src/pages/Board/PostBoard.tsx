@@ -53,7 +53,7 @@ const PostBoard: React.FC = () => {
 
   return (
     <div className="bg-gray">
-      <div className="container">
+      {/* <div className="container"> */}
         <PageHeader title="บอร์ดโพสต์งาน" />
         <div className="job-list">
           {loading ? (
@@ -123,7 +123,7 @@ const PostBoard: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    // </div>
   );
 };
 

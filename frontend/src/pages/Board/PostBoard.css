@@ -7,12 +7,13 @@
   min-height: calc(100vh - 64px); /* เผื่อ header สูง 64px */
   display: flex;
   flex-direction: column;
+  max-width: 100vw; /* ✅ ป้องกันล้นจอ */
 }
 
 .container {
   flex: 1;
-  width: 100%;
-  max-width: 1200px;
+  max-width: 1200px;   /* ✅ ใช้ max-width แทน min() */
+  width: 100%;         /* ✅ ให้เต็มจอแต่ไม่เกิน 1200px */
   margin: 0 auto;
   padding: 0 16px;
   box-sizing: border-box;

@@ -1,88 +1,54 @@
 .board-container {
-<<<<<<< HEAD
-  width: 100vw; /* กว้างเต็มความกว้าง viewport */
-  position: relative; /* เพื่อให้ลูกที่ใช้ position:absolute อยู่สัมพันธ์กับ container นี้ */
-  left: 50%; /* เลื่อนซ้ายจากจุดเริ่มต้น 50% ของหน้าจอ */
-  right: 50%; /* เลื่อนขวาจากจุดสิ้นสุด 50% (ใช้ร่วมกับ margin ซ้าย/ขวาลบเพื่อขยายเต็ม) */
-  margin-left: -50vw; /* เลื่อน margin ซ้ายกลับมาครึ่ง viewport width เพื่อขยายเต็มจอ */
-  margin-right: -50vw; /* เลื่อน margin ขวากลับมาครึ่ง viewport width เช่นกัน */
-  min-height: 250px; /* ความสูงขั้นต่ำ 250px */
-  height: auto; /* ความสูงอัตโนมัติ ตามเนื้อหา */
-  background: linear-gradient(90deg, #1976d3 0%, #64b5f6 100%); /* ไล่สีพื้นหลังจากซ้ายไปขวา */
-  padding: 40px 0; /* ช่องว่างบน-ล่าง 40px ไม่มีซ้าย-ขวา */
-  box-sizing: border-box; /* รวม padding และ border ในขนาด */
-  display: flex; /* ตั้ง container เป็น flex */
-  justify-content: center; /* จัดลูกภายในชิดกลางแนวนอน */
-=======
-  width: 100%;
+  width: 100%;                /* ✅ จาก 100vw → 100% */
+  max-width: 100%;            /* ✅ ป้องกันเนื้อหาเกินขอบ */
   position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-  min-height: 250px;
-  height: auto;
   background: linear-gradient(90deg, #1976d3 0%, #64b5f6 100%);
   padding: 40px 0;
   box-sizing: border-box;
   display: flex;
   justify-content: center;
->>>>>>> main
+  overflow: hidden;           /* ✅ ป้องกันเนื้อหาล้น */
 }
+
 
 .board-content {
-  position: relative; /* เพื่อให้ลูก absolute ภายในสัมพันธ์กับ container นี้ */
-  width: 100%; /* กว้างเต็ม container แม่ */
-  max-width: 1024px; /* กว้างไม่เกิน 1024px */
-  display: flex; /* flex container */
-  justify-content: flex-start; /* จัดลูกชิดซ้าย */
-  align-items: flex-start; /* จัดลูกชิดบนแนวตั้ง */
-  padding: 0 20px 0 20px; /* padding ซ้าย-ขวา 20px */
-  padding-right: 620px; /* เว้นที่ขวา 620px สำหรับวาง banner */
-  box-sizing: border-box; /* รวม padding, border */
-  flex-wrap: wrap; /* ให้ลูก flex ขึ้นบรรทัดใหม่ถ้าพื้นที่ไม่พอ */
-  gap: 40px; /* ช่องว่างระหว่างลูก 40px */
+  position: relative;
+  width: 100%;
+  max-width: 1024px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 0 20px;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  gap: 40px;
 }
 
-.banner-container {
-  position: absolute; /* วางแบบ absolute ใน container แม่ */
-  top: 0; /* ชิดบน container */
-  right: 0; /* ชิดขวา container */
-  max-width: 600px; /* กว้างไม่เกิน 600px */
-  width: 100%; /* กว้างเต็มพื้นที่ที่ max-width กำหนด */
-  height: 180px; /* ความสูงตายตัว 180px */
-  background-color: #f9edc8; /* สีพื้นหลังครีม */
-  border-radius: 30px; /* มุมโค้งมน 30px */
-  border: 1px solid #6B7280; /* ขอบเส้นบางสีเทาเข้ม */
-  padding: 0 20px; /* ช่องว่างซ้าย-ขวา 20px */
-  display: flex; /* flex container */
-  align-items: center; /* กึ่งกลางแนวตั้ง */
-  justify-content: space-between; /* ดันลูกซ้าย-ขวาสุด */
-  box-sizing: border-box; /* รวม padding, border */
-  flex-shrink: 0; /* ห้ามย่อ */
-  margin-left: auto; /* ดัน margin ซ้ายอัตโนมัติ */
-  margin-top: 0; /* ไม่มี margin บน */
+@media (max-width: 1024px) {
+  .board-content {
+    padding-right: 20px; /* ✅ ป้องกันการล้นหน้าจอ */
+  }
 }
 
 .subheadline {
-  max-width: 400px; /* กว้างไม่เกิน 400px */
-  display: flex; /* flex container */
-  flex-direction: column; /* เรียงลูกในแนวตั้ง */
-  align-items: flex-start; /* ชิดซ้ายแนวนอน */
-  gap: 12px; /* ช่องว่างระหว่างลูก 12px */
-  flex-shrink: 0; /* ห้ามย่อ */
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .subheadline h1 {
-  color: white; /* ตัวอักษรสีขาว */
-  font-family: "Kanit", "Sarabun", sans-serif; /* ฟอนต์ */
-  font-size: 30px; /* ขนาดตัวอักษร 30px */
-  margin: 0; /* ไม่มี margin รอบๆ */
+  color: white;
+  font-family: "Kanit", "Sarabun", sans-serif;
+  font-size: 30px;
+  margin: 0;
 }
 
 .button-row {
-  display: flex; /* flex container */
-  gap: 12px; /* ช่องว่างระหว่างปุ่ม 12px */
+  display: flex;
+  gap: 12px;
 }
 
 .btn-startpost,
@@ -103,8 +69,6 @@
 .btn-startpost:hover,
 .btn-mypost:hover {
   background-color: #e6f0ff; /* พื้นหลังสีฟ้าจางเมื่อ hover */
-<<<<<<< HEAD
-=======
 }
 
 .banner-container {
@@ -164,91 +128,55 @@
 
 .no-border-button:hover {
   background-color: #e5dbb0;
->>>>>>> main
 }
 
 .banner-image {
-  width: 250px; /* ความกว้าง 250px */
-  height: auto; /* ความสูงอัตโนมัติตามอัตราส่วน */
-  flex-shrink: 0; /* ห้ามย่อ */
-  transform: scale(1.2); /* ขยายขนาด 1.2 เท่า */
-  transform-origin: right center; /* จุดหมุนอยู่ตรงขวากลาง */
-  margin-right: -40px; /* เลื่อนขวาออกไป 40px (ลบ margin) */
-  margin-top: -5px; /* เลื่อนขึ้นเล็กน้อย */
-  max-width: 100%; /* กว้างไม่เกิน 100% ของ container */
+  width: 250px;
+  height: auto;
+  flex-shrink: 0;
+  transform: scale(1.2);
+  transform-origin: right center;
+  margin-right: -20px;
+  margin-top: -5px;
+  max-width: 100%;
 }
 
-.banner-content h1 {
-  font-family: "Kanit", "Sarabun", sans-serif; /* ฟอนต์ */
-  font-weight: 500; /* ตัวหนาปานกลาง */
-  color: #1f2937; /* สีเข้ม */
-  margin-top: 10px; /* เว้นบน 10px */
-  margin-bottom: 0; /* ไม่มีเว้นล่าง */
-  padding: 0 10px; /* ช่องว่างซ้าย-ขวา 10px */
-  font-size: 24px; /* ขนาดตัวอักษร 24px */
-}
-
-.banner-content p {
-  font-family: "Kanit", "Sarabun", sans-serif; /* ฟอนต์ */
-  color: #1f2937; /* สีเข้ม */
-  font-weight: 400; /* น้ำหนักปกติ */
-  margin-top: 0; /* ไม่มีเว้นบน */
-  margin-bottom: 0; /* ไม่มีเว้นล่าง */
-  padding: 0 10px; /* ช่องว่างซ้าย-ขวา 10px */
-}
-
-.no-border-button {
-  font-family: "Kanit", "Sarabun", sans-serif; /* ฟอนต์ */
-  border: none !important; /* ลบเส้นขอบทุกกรณี */
-  box-shadow: none !important; /* ลบเงา */
-  background-color: #f9edc8; /* สีพื้นครีม */
-  color: black; /* ตัวอักษรสีดำ */
-  margin-top: 0px; /* ไม่มี margin บน */
-  padding-left: 10px; /* ช่องว่างซ้าย 10px */
-  font-weight: 500; /* ตัวหนาปานกลาง */
-  transition: background-color 0.3s ease; /* เอฟเฟกต์เปลี่ยนสีพื้นหลัง */
-}
-
-.no-border-button:hover {
-  background-color: #e5dbb0; /* สีพื้นหลังเปลี่ยนเมื่อ hover */
-}
-
-/* Responsive สำหรับหน้าจอเล็ก */
+/* ✅ Responsive */
 @media (max-width: 768px) {
   .board-content {
-    flex-direction: column; /* เรียงลูกในแนวตั้ง */
-    align-items: flex-start; /* ชิดซ้าย */
-    padding-right: 20px; /* padding ขวาเล็กลง */
+    flex-direction: column;
+    align-items: flex-start;
+    padding-right: 20px;
   }
 
   .banner-container {
-    position: static; /* ยกเลิก position absolute */
-    width: 100%; /* กว้างเต็ม */
-    height: auto; /* ความสูงอัตโนมัติ */
-    margin-top: 20px; /* เว้นระยะห่างด้านบน */
-    border-radius: 15px; /* มุมโค้งมนเล็กลง */
-    flex-direction: column; /* เรียงลูกในแนวตั้ง */
-    align-items: flex-start; /* ชิดซ้าย */
-    justify-content: flex-start; /* ชิดบน */
-    padding: 20px; /* ช่องว่างรอบๆ */
+    position: static;
+    width: 100%;
+    height: auto;
+    margin-top: 20px;
+    border-radius: 15px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 20px;
   }
 
   .banner-image {
-    width: 100%; /* กว้างเต็ม container */
-    max-width: 250px; /* ไม่เกิน 250px */
-    margin: 10px 0 0 0; /* เว้นด้านบน 10px */
-    transform: none; /* ยกเลิกการขยาย */
-    margin-right: 0; /* ไม่มี margin ขวา */
-    margin-top: 0; /* ไม่มี margin บน */
+    width: 100%;
+    max-width: 250px;
+    margin: 10px 0 0 0;
+    transform: none;
+    margin-right: 0;
+    margin-top: 0;
   }
 
   .button-row {
-    flex-direction: column; /* เรียงปุ่มในแนวตั้ง */
-    gap: 10px; /* ช่องว่างระหว่างปุ่ม 10px */
+    flex-direction: column;
+    gap: 10px;
   }
 
   .btn-startpost,
   .btn-mypost {
-    width: 100%; /* ปรับปุ่มให้เต็มความกว้าง container */
+    width: 100%;
   }
 }

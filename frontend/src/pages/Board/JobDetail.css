@@ -11,7 +11,7 @@
   gap: 20px;                   /* ช่องว่างระหว่างลูก flex 20px */
   background-color: #f8f8f8;   /* สีพื้นหลังเทาอ่อน */
   padding-top: 10px;
-  margin-top: 64px;            /* เว้นช่องว่างด้านบน 64px */
+  margin-top: 0px;            /* เว้นช่องว่างด้านบน 64px */
 }
 
 html, body {
