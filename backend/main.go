@@ -134,6 +134,8 @@ func main() {
 		auth.POST("/student-posts", controller.CreateStudentPost)
 		auth.PUT("/student-posts/:id", controller.UpdateStudentPost)
 		auth.DELETE("/student-posts/:id", controller.DeleteStudentPost)
+
+		auth.POST("/upload", controller.UploadToSupabase) // uploadfile
 		////////////////สิ้นสุดการเเก้ไขของพรศิริ///////////////////////
 
 		// --- Job Applications ---
