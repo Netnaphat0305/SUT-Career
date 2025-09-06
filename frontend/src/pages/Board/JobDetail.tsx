@@ -127,7 +127,6 @@
 //   );
 // };
 
-// export default PostLayout;
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button, Spin, message } from "antd";
 import lahui from "../../assets/lahui.svg";
@@ -206,7 +205,7 @@ const PostLayout: React.FC = () => {
     fetchPost();
   }, [id, location.state]);
 
-  // ✅ restore scroll position ก่อน render
+  //  restore scroll position ก่อน render
   useLayoutEffect(() => {
     const savedScroll = sessionStorage.getItem(SCROLL_KEY);
     if (sidebarRef.current && savedScroll) {
@@ -238,7 +237,7 @@ const PostLayout: React.FC = () => {
                 selectedPost?.ID === post.ID ? "selected" : ""
               }`}
               // onClick={() => {
-              //   // ✅ บันทึกตำแหน่ง scroll ก่อน navigate
+              //   // บนทึกตำแหน่ง scroll ก่อน navigate
               //   if (sidebarRef.current) {
               //     sessionStorage.setItem(
               //       SCROLL_KEY,
@@ -246,17 +245,17 @@ const PostLayout: React.FC = () => {
               //     );
               //   }
 
-              //   // ✅ navigate ไปโพสต์ที่เลือก โดยไม่ reset scroll
+              //   // navigate ไปโพสต์ที่เลือก โดยไม่ reset scroll
               //   navigate(`/Job/post-detail/${post.ID}`, {
               //     state: { post },
               //     replace: true,
               //   });
               // }}
               onClick={() => {
-              // ✅ ไม่ใช้ navigate → เปลี่ยนเฉพาะ selectedPost
+              // ไม่ใช้ navigate  เปลี่ยนเฉพาะ selectedPost
               setSelectedPost(post);
 
-              // ✅ เปลี่ยน URL ให้เหมือน navigate แต่ไม่ reload หน้า
+              // เปลี่ยน URL ให้เหมือน navigate แต่ไม่ reload หน้า
               window.history.replaceState(null, "", `/Job/post-detail/${post.ID}`);
               }}  
             >

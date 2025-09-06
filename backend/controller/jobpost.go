@@ -9,6 +9,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// // GET /jobposts
+// // ดึงข้อมูลประกาศงานทั้งหมด
+// func ListJobPosts(c *gin.Context) {
+// 	var jobposts []entity.Jobpost
+// 	if err := config.DB().Find(&jobposts).Error; err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, gin.H{"data": jobposts})
+// }
+
+// GET /jobposts
+// ดึงข้อมูลประกาศงานทั้งหมด เรียงจากโพสต์ล่าสุดก่อน
 // GET /jobposts
 // ดึงข้อมูลประกาศงานทั้งหมด
 func ListJobPosts(c *gin.Context) {
@@ -17,6 +30,7 @@ func ListJobPosts(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"data": jobposts})
 }
 
@@ -35,33 +49,34 @@ func GetJobPostByID(c *gin.Context) {
 // GET /jobposts/employer/:id
 func ListJobPostsByEmployerID(c *gin.Context) {
 	var jobposts []entity.Jobpost
-	id := c.Param("id") 
+	id := c.Param("id")
 	if err := config.DB().Where("employer_id = ?", id).Find(&jobposts).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": jobposts})
 }
+
 // POST /jobposts
 func CreateJobPost(c *gin.Context) {
-    //  ดึง employerID จาก context ที่ middleware set ไว้
-    employerID, ok := c.Get("employerID")
-    if !ok {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-        return
-    }
-    var jobpost entity.Jobpost
-    if err := c.ShouldBindJSON(&jobpost); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
-    // บังคับใช้ employerID จาก JWT
-    jobpost.EmployerID = employerID.(uint)
-    if err := config.DB().Create(&jobpost).Error; err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
-    c.JSON(http.StatusCreated, gin.H{"data": jobpost})
+	//  ดึง employerID จาก context ที่ middleware set ไว้
+	employerID, ok := c.Get("employerID")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	var jobpost entity.Jobpost
+	if err := c.ShouldBindJSON(&jobpost); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	// บังคับใช้ employerID จาก JWT
+	jobpost.EmployerID = employerID.(uint)
+	if err := config.DB().Create(&jobpost).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"data": jobpost})
 }
 
 // PUT /jobposts/:id
@@ -87,86 +102,83 @@ func UpdateJobPost(c *gin.Context) {
 // DELETE /jobposts/:id
 // ลบประกาศงาน
 func DeleteJobPost(c *gin.Context) {
-    id := c.Param("id")
+	id := c.Param("id")
 
-    // ตรวจสอบว่าโพสต์มีอยู่จริงไหม
-    var jobpost entity.Jobpost
-    if err := config.DB().First(&jobpost, id).Error; err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบโพสต์นี้"})
-        return
-    }
-    // ลบโพสต์
-    if err := config.DB().Delete(&jobpost).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "ลบโพสต์ไม่สำเร็จ"})
-        return
-    }
+	// ตรวจสอบว่าโพสต์มีอยู่จริงไหม
+	var jobpost entity.Jobpost
+	if err := config.DB().First(&jobpost, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบโพสต์นี้"})
+		return
+	}
+	// ลบโพสต์
+	if err := config.DB().Delete(&jobpost).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ลบโพสต์ไม่สำเร็จ"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{"message": "ลบโพสต์เรียบร้อยแล้ว"})
+	c.JSON(http.StatusOK, gin.H{"message": "ลบโพสต์เรียบร้อยแล้ว"})
 }
-
 
 // GET /api/employer/myposts
 func GetEmployerPosts(c *gin.Context) {
-    //  ดึงค่า employerID จาก context โดยตรง
-    employerID, ok := c.Get("employerID")
-    if !ok {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-        return
-    }
-    //  ดึง jobposts ตาม employerID ที่ login อยู่
-    var jobposts []entity.Jobpost
-    if err := config.DB().
-        Preload("Employer.User").
-        Where("employer_id = ?", employerID).
-        Find(&jobposts).Error; err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+	//  ดึงค่า employerID จาก context โดยตรง
+	employerID, ok := c.Get("employerID")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	//  ดึง jobposts ตาม employerID ที่ login อยู่
+	var jobposts []entity.Jobpost
+	if err := config.DB().
+		Preload("Employer.User").
+		Where("employer_id = ?", employerID).
+		Find(&jobposts).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-    fmt.Println("employerID:", employerID)
-    fmt.Println("count jobposts:", len(jobposts))
+	fmt.Println("employerID:", employerID)
+	fmt.Println("count jobposts:", len(jobposts))
 
-    c.JSON(http.StatusOK, gin.H{"data": jobposts})
+	c.JSON(http.StatusOK, gin.H{"data": jobposts})
 
 }
 
 // POST /jobposts/upload-portfolio/:id
 // อัพโหลดไฟล์ Portfolio และอัปเดตใน Jobpost
 func UploadPortfolio(c *gin.Context) {
-    id := c.Param("id") // รับ id ของ jobpost ที่จะอัพเดต
+	id := c.Param("id") // รับ id ของ jobpost ที่จะอัพเดต
 
-    file, err := c.FormFile("portfolio")
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่พบไฟล์"})
-        return
-    }
+	file, err := c.FormFile("portfolio")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่พบไฟล์"})
+		return
+	}
 
-    filename := file.Filename
-    savePath := "./uploads/" + filename
+	filename := file.Filename
+	savePath := "./uploads/" + filename
 
-    if err := c.SaveUploadedFile(file, savePath); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกไฟล์ได้"})
-        return
-    }
+	if err := c.SaveUploadedFile(file, savePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกไฟล์ได้"})
+		return
+	}
 
-    // อัปเดตใน DB
-    var jobpost entity.Jobpost
-    if err := config.DB().First(&jobpost, id).Error; err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "Job post not found"})
-        return
-    }
+	// อัปเดตใน DB
+	var jobpost entity.Jobpost
+	if err := config.DB().First(&jobpost, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Job post not found"})
+		return
+	}
 
-    jobpost.PortfolioRequired = &savePath
-    if err := config.DB().Save(&jobpost).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถอัปเดต jobpost ได้"})
-        return
-    }
+	jobpost.PortfolioRequired = &savePath
+	if err := config.DB().Save(&jobpost).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถอัปเดต jobpost ได้"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{
-        "message":  "อัพโหลดสำเร็จ",
-        "filePath": savePath,
-        "data":     jobpost,
-    })
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "อัพโหลดสำเร็จ",
+		"filePath": savePath,
+		"data":     jobpost,
+	})
 }
-
-

@@ -7,8 +7,8 @@ import type { SalaryType } from "./salary_type";
 
 export interface Jobpost {
     ID: number;
-    CreatedAt: string;  // เพิ่มตรงนี้
-    UpdatedAt: string;  // เผื่อใช้
+    CreatedAt: string;   
+    UpdatedAt: string;
     DeletedAt?: string | null;
     title: string;
     description: string;
@@ -44,9 +44,9 @@ export interface CreateJobpost {
   description: string;
   salary: number;
   locationjob: string;
-  deadline: string;               // ✅ ส่งเป็น string (ISO format)
-  status: string;                 // ✅ ผู้ว่าจ้างเลือกเอง เช่น "Open"
-  portfolio_required: string;     // ✅ ผู้ว่าจ้างเลือกเอง "true"/"false"
+  deadline: string;              
+  status: string;                 
+  portfolio_required: string;     
   job_category_id: number;
   employment_type_id: number;
   salary_type_id: number;

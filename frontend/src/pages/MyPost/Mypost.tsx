@@ -85,7 +85,7 @@ import { Card, Button, Empty, Spin, message } from "antd";
 import { jobPostAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
 import "./Mypost.css";
-import lahui from "../../assets/lahui.svg"; // รูป default
+import lahui from "../../assets/lahui.svg";
 import { useNavigate } from "react-router-dom";
 
 const MyPost: React.FC = () => {
@@ -97,7 +97,15 @@ const MyPost: React.FC = () => {
     try {
       setLoading(true);
       const res = await jobPostAPI.getMyPosts();
-      setPosts(res.data);
+      const data = res.data;
+
+      // เรียงโพสต์ล่าสุด → เก่าสุด
+      const sortedData = data.sort(
+        (a: Jobpost, b: Jobpost) =>
+          new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
+      );
+
+      setPosts(sortedData);
     } catch (err) {
       console.error("Error fetching employer posts:", err);
       message.error("โหลดโพสต์งานไม่สำเร็จ");
@@ -105,8 +113,6 @@ const MyPost: React.FC = () => {
       setLoading(false);
     }
   };
-
-  console.log(" posts:", posts);
 
   useEffect(() => {
     fetchMyPosts();
@@ -163,10 +169,10 @@ const MyPost: React.FC = () => {
 
               <div className="mypost-logo">
                 <img
-                  src={post.image_url || lahui} // ถ้ามีรูปจริง ใช้, ถ้าไม่มี ใช้ lahui.svg
+                  src={post.image_url || lahui}
                   alt={post.title || "default-logo"}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = lahui; // fallback ถ้ารูปโหลดไม่ได้
+                    (e.target as HTMLImageElement).src = lahui;
                   }}
                 />
               </div>
