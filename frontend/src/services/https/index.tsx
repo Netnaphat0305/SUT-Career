@@ -38,11 +38,11 @@ const getAuthToken = (): string | null => {
   }
   return (
     (typeof localStorage !== "undefined" && localStorage.getItem("token")) ||
-    (typeof localStorage !== "undefined" && localStorage.getItem("auth_token")) ||
+    (typeof localStorage !== "undefined" &&
+      localStorage.getItem("auth_token")) ||
     null
   );
 };
-
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("token");
@@ -110,9 +110,7 @@ const handleApiError = (error: AxiosError, opts?: ReqOpts): never => {
   // log แบบเบา ๆ เว้นแต่ขอ silent
   if (!opts?.silent) {
     const msg =
-      (error.response?.data as any)?.error ||
-      error.message ||
-      "API error";
+      (error.response?.data as any)?.error || error.message || "API error";
     // ใช้ debug เพื่อลดเสียงใน console
     // eslint-disable-next-line no-console
     console.debug("API call failed:", msg, "(status:", status + ")");
@@ -134,7 +132,10 @@ export async function Get<T = any>(
   opts?: ReqOpts,
   config?: AxiosRequestConfig
 ): Promise<T> {
-  const cfg = { ...(requireAuth ? getAuthConfig() : getNoAuthConfig()), ...(config || {}) };
+  const cfg = {
+    ...(requireAuth ? getAuthConfig() : getNoAuthConfig()),
+    ...(config || {}),
+  };
   try {
     const res = await http.get(buildUrl(url), cfg);
     return res.data as T;
@@ -150,7 +151,10 @@ export async function Post<T = any>(
   opts?: ReqOpts,
   config?: AxiosRequestConfig
 ): Promise<T> {
-  const cfg = { ...(requireAuth ? getAuthConfig() : getNoAuthConfig()), ...(config || {}) };
+  const cfg = {
+    ...(requireAuth ? getAuthConfig() : getNoAuthConfig()),
+    ...(config || {}),
+  };
   try {
     const res = await http.post(buildUrl(url), data, cfg);
     return res.data as T;
@@ -159,7 +163,7 @@ export async function Post<T = any>(
   }
 }
 
-export const DeleteReq = async(
+export const DeleteReq = async (
   url: string,
   requireAuth: boolean = true
 ): Promise<AxiosResponse | any> => {
@@ -223,7 +227,8 @@ export const studentAPI = {
   signup: (data: Student) => Post("/students", data, false),
   getAll: () => Get("/students"),
   getById: (id: number) => Get(`/students/${id}`),
-  update: (id: number, data: Partial<Student>) => Update(`/students/${id}`, data),
+  update: (id: number, data: Partial<Student>) =>
+    Update(`/students/${id}`, data),
   delete: (id: number) => DeleteReq(`/students/${id}`),
 };
 
@@ -231,7 +236,8 @@ export const employerAPI = {
   signup: (data: Employer) => Post("/employers", data, false),
   getAll: () => Get("/employers"),
   getById: (id: number) => Get(`/employers/${id}`),
-  update: (id: number, data: Partial<Employer>) => Update(`/employers/${id}`, data),
+  update: (id: number, data: Partial<Employer>) =>
+    Update(`/employers/${id}`, data),
   delete: (id: number) => DeleteReq(`/employers/${id}`),
 };
 
@@ -242,7 +248,8 @@ export const jobpostAPI = {
     Get<{ data: Jobpost }>(`/api/myjobposts/${id}`),
   getByEmployerId: (id: number): Promise<{ data: Jobpost[] }> =>
     Get<{ data: Jobpost[] }>(`/api/myjobposts/employer/${id}`),
-  update: (id: number, data: Partial<Jobpost>) => Update(`/api/myjobposts/${id}`, data),
+  update: (id: number, data: Partial<Jobpost>) =>
+    Update(`/api/myjobposts/${id}`, data),
   delete: (id: number) => DeleteReq(`/api/myjobposts/${id}`),
 };
 
@@ -255,12 +262,15 @@ export const paymentAPI = {
   getByJobId: (jobId: number) => Get(`/api/payments/job/${jobId}`),
   getByEmployerId: (employerId: number): Promise<{ data: Payment[] }> =>
     Get(`/api/payments/employer/${employerId}`),
-  update: (id: number, data: Partial<Payment>) => Update(`/api/payments/${id}`, data),
+  update: (id: number, data: Partial<Payment>) =>
+    Update(`/api/payments/${id}`, data),
   uploadEvidence: (paymentId: number, form: FormData) =>
     axios.post(buildUrl(`/api/payments/${paymentId}/evidence`), form, {
       withCredentials: true,
       headers: {
-        ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
+        ...(getAuthToken()
+          ? { Authorization: `Bearer ${getAuthToken()}` }
+          : {}),
         "Content-Type": "multipart/form-data",
       },
       maxBodyLength: Infinity,
@@ -275,7 +285,9 @@ export const paymentReportAPI = {
     axios.post(buildUrl("/api/payment-reports/upload"), form, {
       headers: {
         "Content-Type": "multipart/form-data",
-        ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
+        ...(getAuthToken()
+          ? { Authorization: `Bearer ${getAuthToken()}` }
+          : {}),
       },
     }),
 };
@@ -296,28 +308,26 @@ export const jobPostAPI = {
   getAll: () => Get("/api/jobposts"),
   getById: (id: number) => Get(`/api/jobposts/${id}`),
   update: (id: number, data: Partial<Jobpost>) =>
-  Update(`/api/jobposts/${id}`, data),
+    Update(`/api/jobposts/${id}`, data),
   delete: (id: number) => Delete(`/api/jobposts/${id}`),
   getMyPosts: () => Get("/api/employer/myposts"), // ใช้ token จาก localStorage
-
 
   uploadPortfolio: (id: number, file: File) => {
     const formData = new FormData();
     formData.append("portfolio", file);
     const token = localStorage.getItem("token");
     return axios.post(
-    `${API_URL}/api/jobposts/upload-portfolio/${id}`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+      `${API_URL}/api/jobposts/upload-portfolio/${id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
   },
 };
-
 
 // Job Application APIs
 export const jobApplicationAPI = {
@@ -325,10 +335,8 @@ export const jobApplicationAPI = {
   create: (data: any) => Post(`/api/jobapplications`, data),
   getMyApplications: () => Get(`/api/jobapplications/me`),
   getByJobPost: (jobpost_id: number) => Get(`/api/jobapplications/job/${jobpost_id}`),
-  updateStatus: (id: number, status: string) => Update(`/api/jobapplications/${id}/status`, { status }),
-
-}
-
+  updateStatus: (id: number, status: string) => Update(`/api/jobapplications/${id}/status`, { application_status: status }),
+};
 
 // Job Category APIs
 export const jobCategoryAPI = {
@@ -338,7 +346,7 @@ export const jobCategoryAPI = {
 
 // Job employmentType APIs
 export const employmentTypeAPI = {
-  getAll: () => Get("/api/employmenttypes", false), 
+  getAll: () => Get("/api/employmenttypes", false),
   getById: (id: number) => Get(`/api/employmenttypes/${id}`, false),
 };
 
@@ -353,6 +361,7 @@ export const reportAPI = {
   create: (data: any) => Post("/api/reports", data),
   getAll: () => Get("/api/reports"),
   getById: (id: number) => Get(`/api reports/${id}`),
-  update: (id: number, data: Partial<any>) => Update(`/api/reports/${id}`, data),
+  update: (id: number, data: Partial<any>) =>
+    Update(`/api/reports/${id}`, data),
   delete: (id: number) => Delete(`/api/reports/${id}`),
 };

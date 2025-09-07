@@ -119,3 +119,35 @@ func GetApplicantsByJobPost(c *gin.Context) {
     })
 }
 
+// PUT /api/jobapplications/:id/status
+func UpdateApplicationStatus(c *gin.Context) {
+    id := c.Param("id")
+
+    var input struct {
+        ApplicationStatus entity.ApplicationStatusEnum `json:"application_status" binding:"required"`
+    }
+
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    var app entity.JobApplication
+    if err := config.DB().First(&app, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบใบสมัคร"})
+        return
+    }
+
+    app.ApplicationStatus = input.ApplicationStatus
+    app.LastUpdate = time.Now()
+
+    if err := config.DB().Save(&app).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตสถานะไม่สำเร็จ"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "อัปเดตสถานะเรียบร้อย",
+        "data":    app,
+    })
+}

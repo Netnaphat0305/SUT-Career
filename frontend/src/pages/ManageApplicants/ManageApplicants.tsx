@@ -11,7 +11,8 @@ const ManageApplicants: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [applicants, setApplicants] = useState<JobApplication[]>([]);
   const [jobpost, setJobpost] = useState<JobPost | null>(null);
-  const [selectedApplicant, setSelectedApplicant] = useState<JobApplication | null>(null);
+  const [selectedApplicant, setSelectedApplicant] =
+    useState<JobApplication | null>(null);
 
   // โหลดข้อมูลโพสต์ + ผู้สมัคร
   useEffect(() => {
@@ -34,13 +35,16 @@ const ManageApplicants: React.FC = () => {
   // ฟังก์ชันเลือกผู้สมัคร
   const handleSelectApplicant = async (applicationId: number) => {
     try {
-      await jobApplicationAPI.updateStatus(applicationId, "Accepted");
-      message.success("เลือกผู้สมัครเรียบร้อยแล้ว");
+      // แก้เป็นอัปเดตสถานะเป็น InterviewPending
+      await jobApplicationAPI.updateStatus(applicationId, "InterviewPending");
+      message.success("เลือกผู้สมัครเรียบร้อยแล้ว (รอสัมภาษณ์)");
 
       const appRes = await jobApplicationAPI.getByJobPost(Number(jobpost_id));
       setApplicants(appRes?.data || []);
 
-      const updated = appRes?.data.find((a: JobApplication) => a.ID === applicationId);
+      const updated = appRes?.data.find(
+        (a: JobApplication) => a.ID === applicationId
+      );
       if (updated) setSelectedApplicant(updated);
     } catch (error) {
       message.error("ไม่สามารถเลือกผู้สมัครได้");
@@ -48,7 +52,9 @@ const ManageApplicants: React.FC = () => {
   };
 
   if (loading) {
-    return <Spin size="large" style={{ display: "block", margin: "50px auto" }} />;
+    return (
+      <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
+    );
   }
 
   return (
@@ -79,11 +85,17 @@ const ManageApplicants: React.FC = () => {
             {applicants.map((app) => (
               <Card
                 key={app.ID}
-                className={`applicant-card ${selectedApplicant?.ID === app.ID ? "selected" : ""}`}
+                className={`applicant-card ${
+                  selectedApplicant?.ID === app.ID ? "selected" : ""
+                }`}
                 onClick={() => setSelectedApplicant(app)}
               >
                 <div className="applicant-info">
-                  <Avatar size={64} src={defaultProfile} style={{ marginRight: 16 }} />
+                  <Avatar
+                    size={64}
+                    src={defaultProfile}
+                    style={{ marginRight: 16 }}
+                  />
                   <div>
                     <h4 className="applicant-name">
                       {app.Student?.first_name} {app.Student?.last_name}
@@ -100,29 +112,42 @@ const ManageApplicants: React.FC = () => {
           <div className="applicant-detail-panel">
             {selectedApplicant ? (
               <>
-                <Avatar size={80} src={defaultProfile} style={{ marginBottom: 16 }} />
+                <Avatar
+                  size={80}
+                  src={defaultProfile}
+                  style={{ marginBottom: 16 }}
+                />
                 <h3>
-                  {selectedApplicant.Student?.first_name} {selectedApplicant.Student?.last_name}
+                  {selectedApplicant.Student?.first_name}{" "}
+                  {selectedApplicant.Student?.last_name}
                 </h3>
                 <p>รหัสนักศึกษา: {selectedApplicant.Student?.user?.username}</p>
                 <p>เบอร์โทร: {selectedApplicant.Student?.phone}</p>
                 <p>
-                  ธนาคาร: {selectedApplicant.Student?.bank?.bank_name || "ไม่ได้ระบุ"}
+                  ธนาคาร:{" "}
+                  {selectedApplicant.Student?.bank?.bank_name || "ไม่ได้ระบุ"}
                 </p>
                 <p>
-                  เหตุผลการสมัคร: {selectedApplicant.application_reason || "ไม่ได้ระบุเหตุผล"}
+                  เหตุผลการสมัคร:{" "}
+                  {selectedApplicant.application_reason || "ไม่ได้ระบุเหตุผล"}
                 </p>
                 <Button
                   type="primary"
                   size="large"
-                  disabled={selectedApplicant.application_status === "Accepted"}
+                  disabled={
+                    selectedApplicant.application_status === "InterviewPending"
+                  }
                   onClick={() => handleSelectApplicant(selectedApplicant.ID)}
                 >
-                  {selectedApplicant.application_status === "Accepted" ? "เลือกแล้ว" : "เลือก"}
+                  {selectedApplicant.application_status === "InterviewPending"
+                    ? "เลือกแล้ว (รอสัมภาษณ์)"
+                    : "เลือก"}
                 </Button>
               </>
             ) : (
-              <p style={{ color: "#999" }}>กรุณาเลือกผู้สมัครจากรายการด้านซ้าย</p>
+              <p style={{ color: "#999" }}>
+                กรุณาเลือกผู้สมัครจากรายการด้านซ้าย
+              </p>
             )}
           </div>
         </div>

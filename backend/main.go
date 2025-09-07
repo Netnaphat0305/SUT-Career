@@ -146,6 +146,8 @@ func main() {
 		auth.POST("/jobapplications", controller.CreateJobApplication)
 		auth.GET("/jobapplications/me", controller.GetMyApplications)
 		auth.GET("/jobapplications/job/:jobpost_id", controller.GetApplicantsByJobPost)
+		auth.PUT("/jobapplications/:id/status", controller.UpdateApplicationStatus)
+
 
 
 
