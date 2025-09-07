@@ -42,6 +42,8 @@ func main() {
 	// Seed ข้อมูลนักศึกษา 30 คน
 	db := config.DB()
 	seed.SeedStudents(db)
+	//////////เพิ่มโดยพรศิริ///////////////
+	seed.SeedSkills(db)
 
 	// --------------------  Public Routes --------------------
 	api := r.Group("/api")
@@ -114,6 +116,7 @@ func main() {
 		////////////////////////////////////เเก้ไขโดยพรศิริ ////////////////////////////
 		api.GET("/student-posts", controller.GetStudentPosts)
 		api.GET("/student-posts/:id", controller.GetStudentPostByID)
+		
 		////////////สิ้นสุดการเพิ่มของพรศิริ//////////////////////////////
 	}
 
@@ -134,6 +137,7 @@ func main() {
 		auth.POST("/student-posts", controller.CreateStudentPost)
 		auth.PUT("/student-posts/:id", controller.UpdateStudentPost)
 		auth.DELETE("/student-posts/:id", controller.DeleteStudentPost)
+		auth.GET("/skills", controller.ListSkills)
 
 		auth.POST("/upload", controller.UploadToSupabase) // uploadfile
 		////////////////สิ้นสุดการเเก้ไขของพรศิริ///////////////////////

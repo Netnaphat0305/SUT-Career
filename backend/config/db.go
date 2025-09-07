@@ -54,6 +54,7 @@ func SetupDatabase() {
 		&entity.Worklog{},
 		// ================ เพิ่มโดยพรศิริ ============================================
         &entity.StudentPost{},
+		&entity.Skill{},
         &entity.StudentPostAttachment{},
 		&entity.RequestTicket{},
 		&entity.TicketReply{},

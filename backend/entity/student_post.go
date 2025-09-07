@@ -17,6 +17,7 @@ type StudentPost struct {
 	Introduction         string `json:"introduction" gorm:"type:text"`
 	PortfolioURL         string `json:"portfolio_url" gorm:"type:varchar(500)"`
 	Status               string `json:"status" gorm:"type:varchar(50);default:'active'"`
+	Skills []*Skill `gorm:"many2many:student_post_skills;" json:"skills"`
 
 	// --- Foreign Key & Relations ---
 
@@ -27,9 +28,8 @@ type StudentPost struct {
 	// 2. ความสัมพันธ์กับไฟล์แนบ
 	Attachments []StudentPostAttachment `json:"attachments" gorm:"foreignKey:StudentPostID"`
 
-	// ✅ 3. [เพิ่มใหม่] ความสัมพันธ์กับหมวดหมู่งาน
-	JobCategoryID *uint       `json:"job_category_id"`
-	JobCategory   JobCategory `json:"job_category" gorm:"foreignKey:JobCategoryID;references:ID"`
+
+	
 }
 
 // กำหนดชื่อตารางให้ชัดเจน

@@ -1,7 +1,8 @@
 // src/interfaces/studentpost.ts
 
 import type { Student } from "./student";
-import type { JobCategory } from "./job_category";
+import type { Skill } from "./skill";
+
 
 // Interface สำหรับไฟล์แนบ (ใช้แทน Attachment เดิม)
 export interface StudentPostAttachment {
@@ -19,7 +20,14 @@ export interface CreateStudentPostModalProps {
   onSuccess: () => void;
 }
 
-
+export interface StudentPostAttachment {
+    ID?: number;
+    url: string;
+    name: string;
+    type: string;
+    student_post_id?: number;
+  }
+  
 // Interface หลักสำหรับโพสต์ของนักศึกษา (คงเดิม)
 export interface StudentPost {
   ID: number;
@@ -35,14 +43,12 @@ export interface StudentPost {
   introduction?: string;
   portfolio_url?: string;
   status: string;
-  skills: any;
+  skills: Skill[];
+  profile_image_url?: string;
 
   // --- ข้อมูลความสัมพันธ์ (Relations) ---
   student_id?: number;
   student?: Student;
-
-  job_category_id?: number;
-  job_category?: JobCategory; 
 
   attachments?: StudentPostAttachment[];
 }
