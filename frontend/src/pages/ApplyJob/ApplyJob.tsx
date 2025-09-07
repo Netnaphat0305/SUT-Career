@@ -115,14 +115,17 @@ const ApplyJob: React.FC = () => {
       // เรียก API สมัครงาน
       const res = await jobApplicationAPI.create(payload);
 
-      if (res.status === 201 || res.status === 200) {
-        // ถ้าแนบ Portfolio → อัปโหลดเพิ่ม
+      if (res?.status === 201 || res?.status === 200 || res?.data) {
+        // // ถ้าแนบ Portfolio → อัปโหลดเพิ่ม
         // if (portfolioFile) {
         //   await jobApplicationAPI.uploadPortfolio(res.data.ID, portfolioFile);
         // }
 
-        // แสดง Modal เมื่อสมัครสำเร็จ
+        // แสดง Toast แจ้งผลสำเร็จ
+        message.success("สมัครงานสำเร็จ!");
+        // เปิด Modal
         setIsModalVisible(true);
+        // ล้างฟอร์ม
         form.resetFields();
       } else {
         message.error("สมัครงานไม่สำเร็จ");
@@ -152,7 +155,7 @@ const ApplyJob: React.FC = () => {
             </h2>
             <p>
               <strong>บริษัท:</strong>{" "}
-              {post.Employer?.company_name || "ไม่ระบุบริษัท"}
+              {post?.Employer?.company_name || "ไม่ระบุบริษัท"}
             </p>
             <p>
               <strong>ระยะเวลา:</strong> {post?.deadline || "ไม่ระบุ"}
@@ -245,7 +248,7 @@ const ApplyJob: React.FC = () => {
             />
           </Form.Item>
 
-          {jobpost.portfolio_required === "true" && (
+          {jobpost.portfolio_required === true && (
             <Form.Item
               label="ไฟล์ผลงาน (Resume)"
               name="portfolio"
@@ -281,9 +284,9 @@ const ApplyJob: React.FC = () => {
             </Button>
           </div>
 
-          {/*สมัครสำเร็จ */}
+
           <Modal
-            open={isModalVisible}
+            open={isModalVisible} 
             onCancel={handleClose}
             footer={null}
             centered
