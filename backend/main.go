@@ -26,6 +26,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 const PORT = "8080"
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(CORSMiddleware())
-	
+
 	if err := os.MkdirAll("./static/payment_evidence", 0o755); err != nil {
 		log.Fatal(err)
 	}
@@ -61,25 +62,22 @@ func main() {
 		api.GET("/reviews/scores", controller.ListRatingScores)
 		api.GET("/payments/statuses", controller.ListPaymentStatuses)
 		api.GET("/payments/methods", controller.ListPaymentMethods)
-		
+
 		// api.GET("/banks", controller.ListBanks)
 		// api.GET("/genders", controller.ListGenders)
-		
-		
-
 
 		//=====================================
 		//get report status
-		api.GET("/reportstatus",controller.GetReportstatus)
+		api.GET("/reportstatus", controller.GetReportstatus)
 
 		api.GET("/reports", controller.GetAllReports)
 		api.GET("/reports/:id", controller.GetReportByID)
 		api.GET("/reports/user/:user_id", controller.GetReportByUserID)
 		api.POST("/reports", controller.CreateReport)
-		
+
 		api.DELETE("/reports/:id", controller.DeleteReport)
 		api.PUT("/reports/:id", controller.UpdateReport)
-		
+
 		// worklog
 		api.POST("/worklogs", controller.CreateWorklog)
 		api.GET("/worklogs/student/:id", controller.GetWorklogStudent)
@@ -88,22 +86,20 @@ func main() {
 		// // Extra
 		// api.GET("/jobposts/:id/students", controller.GetStudentInJobpost)
 		// api.GET("/users/:id", controller.GetUserByEmployerID)
-	
 
 		//=====================================
-
 
 		protected := api.Group("")
 		// protected.Use(middleware.Authorizes())
 		// {
-			// JobPost (actions)
+		// JobPost (actions)
 
-			jobpost := protected.Group("/myjobposts")
-			{
-				jobpost.GET("", controller.ListJobPosts)
-				jobpost.GET("/:id", controller.GetJobPostByID)
-				jobpost.GET("/employer/:id", controller.ListJobPostsByEmployerID)
-			}
+		jobpost := protected.Group("/myjobposts")
+		{
+			jobpost.GET("", controller.ListJobPosts)
+			jobpost.GET("/:id", controller.GetJobPostByID)
+			jobpost.GET("/employer/:id", controller.ListJobPostsByEmployerID)
+		}
 
 		// --- Salary Type ---
 		api.GET("/salarytype", controller.ListSalaryType)
@@ -122,6 +118,7 @@ func main() {
 		// --- FAQs & Student Profile (Public) ---
 		api.GET("/faqs", controller.GetFAQs)
 		api.GET("/student-profile-posts", controller.GetStudentProfilePosts)
+
 	}
 
 	// -------------------- 🔐 Protected Routes (ต้องล็อกอิน) --------------------
@@ -147,8 +144,6 @@ func main() {
 		auth.GET("/jobapplications/me", controller.GetMyApplications)
 		auth.GET("/jobapplications/job/:jobpost_id", controller.GetApplicantsByJobPost)
 
-
-
 		// --- Tickets ---
 		auth.POST("/tickets", controller.CreateRequestTicket)
 		auth.GET("/tickets", controller.GetMyRequestTickets)
@@ -167,6 +162,16 @@ func main() {
 		auth.GET("/orders", controller.ListOrders)
 		auth.GET("/discounts", controller.ListDiscounts)
 		auth.GET("/billable_items", controller.ListBillableItems)
+
+		// ===== Chat API =====
+		chat := auth.Group("/chat")
+		{
+			chat.GET("/rooms", controller.ListMyChatRooms)
+			chat.POST("/rooms", controller.CreateOrGetRoom)
+			chat.GET("/rooms/:roomId/messages", controller.ListRoomMessages)
+			chat.POST("/rooms/:roomId/messages", controller.SendMessage)
+		}
+		// ===== Chat API =====
 	}
 
 	// -------------------- 🛡️ Admin Routes --------------------

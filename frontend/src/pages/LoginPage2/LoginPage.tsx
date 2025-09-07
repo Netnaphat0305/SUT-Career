@@ -58,6 +58,11 @@ const LoginPage: React.FC = () => {
 
       const data = await response.json();
 
+      // ================== เพิ่มบรรทัดนี้เข้าไป ==================
+      console.log('Response data from server:', data);
+      console.log('Token string from server:', data.token);
+      // =======================================================
+      
       if (response.ok) {
         message.success('เข้าสู่ระบบสำเร็จ!');
         authContext.login(data.user, data.token);

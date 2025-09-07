@@ -13,8 +13,7 @@ type ChatHistory struct {
 	TimeStampSend time.Time `json:"Time_Stamp_Send"`
 	
 	//sender
-	UserID uint `gorm:"not null" json:"user_id"`
-	User   User `gorm:"foreignKey:UserID" json:"user"`
+	SenderRole string `json:"Sender_Role"`
 
 	ChatRoomID uint `gorm:"not null"`
 	ChatRoom *ChatRoom `gorm:"foreignKey:ChatRoomID" json:"Chat_Room_ID"`

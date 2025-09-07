@@ -7,7 +7,6 @@ type Interview struct {
 	InterviewSchedulingID uint
 	InterviewScheduling *InterviewScheduling `gorm:"foreignKey:InterviewSchedulingID;not null" json:"Interview_Scheduling_ID"`
 
-
 	//FK
 
 	StudentID uint

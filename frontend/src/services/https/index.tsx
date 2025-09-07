@@ -2,6 +2,10 @@
 import axios from "axios";
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
+//==================== edit by book ===========================
+import type { ChatRoom, ChatHistory, UserRole } from "../../interfaces/Chat";
+//==================== edit by book ===========================
+
 import type { Employer } from "../../interfaces/employer";
 import type { Student } from "../../interfaces/student";
 import type {
@@ -46,6 +50,9 @@ const getAuthToken = (): string | null => {
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("token");
+  //edit by book
+  console.log("getAuthConfig token =", token); // 👈 debug ตรงนี้
+  //end edit by book
   return {
     headers: {
       Authorization: token ? `Bearer ${token}` : "",
@@ -356,3 +363,19 @@ export const reportAPI = {
   update: (id: number, data: Partial<any>) => Update(`/api/reports/${id}`, data),
   delete: (id: number) => Delete(`/api/reports/${id}`),
 };
+
+//==================== edit by book ===========================
+export const chatAPI = {
+  listMyRooms: (): Promise<ChatRoom[]> =>
+    Get("/api/chat/rooms"),
+
+  createOrGetRoom: (targetId: number, targetRole: UserRole): Promise<ChatRoom> =>
+    Post("/api/chat/rooms", { target_id: targetId, target_role: targetRole }),
+
+  listMessages: (roomId: number): Promise<ChatHistory[]> =>
+    Get(`/api/chat/rooms/${roomId}/messages`),
+
+  sendMessage: (roomId: number, message: string): Promise<ChatHistory> =>
+    Post(`/api/chat/rooms/${roomId}/messages`, { message }),
+};
+//==================== edit by book ===========================
