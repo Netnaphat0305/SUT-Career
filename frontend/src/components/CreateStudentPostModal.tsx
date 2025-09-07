@@ -354,18 +354,17 @@ import {
   Modal, Form, Input, Select, Button, message, Row, Col, Typography, Upload,
 } from 'antd';
 import {
-  BulbOutlined, ClockCircleOutlined, EnvironmentOutlined, DollarOutlined, TagOutlined, LinkOutlined, UserOutlined, UploadOutlined,
+  BulbOutlined, ClockCircleOutlined, EnvironmentOutlined, DollarOutlined, TagOutlined, LinkOutlined, UploadOutlined,
 } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
-import { createStudentPost } from '../services/studentPostService';
 import { useAuth } from '../context/AuthContext';
-import { getAllSkills } from '../services/skillService';
+// ✅ 1. Import service และ URL จากไฟล์กลางที่เดียว
+import { studentPostAPI, skillAPI, UPLOAD_URL } from '../services/https/index';
 import type { Skill } from '../interfaces/skill';
 import type { CreateStudentPostModalProps, StudentPostAttachment } from "../interfaces/studentpost";
 
-// ✅ 1. [แก้ไข] แก้ไขการ Destructure ให้ถูกต้อง
 const { Title } = Typography;
-const { TextArea } = Input; // TextArea มาจาก Input
+const { TextArea } = Input;
 const { Option } = Select;
 
 const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
@@ -389,8 +388,9 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
     if (visible) {
       const fetchSkills = async () => {
         try {
-          const fetchedSkills = await getAllSkills();
-          setSkills(fetchedSkills);
+          // ✅ 2. เรียกใช้ฟังก์ชันผ่าน object ที่ import มา
+          const response = await skillAPI.getAllSkills();
+          setSkills(response.data); // Axios จะคืนข้อมูลใน property .data
         } catch (error) {
           message.error('ไม่สามารถโหลดข้อมูลสกิลได้');
         }
@@ -401,7 +401,7 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
 
   const handleUpload: UploadProps = {
     name: 'file',
-    action: 'http://localhost:8080/api/upload',
+    action: UPLOAD_URL, // ✅ 3. ใช้ URL ที่ import มา
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     method: 'POST',
     onChange: (info) => {
@@ -462,14 +462,16 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
         attachments: attachments,
       };
 
-      await createStudentPost(postData);
+      // ✅ 4. เรียกใช้ฟังก์ชันผ่าน object ที่ import มา
+      await studentPostAPI.createStudentPost(postData);
       message.success('สร้างโพสต์ของคุณสำเร็จแล้ว!');
       form.resetFields();
       setFileList([]);
       setAttachments([]);
       onSuccess();
     } catch (error: any) {
-      message.error(error.message || 'เกิดข้อผิดพลาดในการสร้างโพสต์');
+      const errorMessage = error?.response?.data?.error || error.message || 'เกิดข้อผิดพลาดในการสร้างโพสต์';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -490,7 +492,7 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
       footer={null}
       width={800}
       centered
-      destroyOnHidden={true} // ✅ 2. [แก้ไข] เปลี่ยน destroyOnClose เป็น destroyOnHidden
+      destroyOnHidden={true}
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Row gutter={16}>
