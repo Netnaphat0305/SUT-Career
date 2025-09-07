@@ -4,6 +4,7 @@ package middleware
 import (
 	"net/http"
 	"strings"
+	"log"
 
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/entity"
@@ -56,10 +57,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		//  ถ้าเป็น employer → preload employerID ลง context
 		if role == entity.Emp {
 			var employer entity.Employer
-			if err := config.DB().
-				Where("user_id = ?", userID).
-				First(&employer).Error; err == nil {
+			err := config.DB().Where("user_id = ?", userID).First(&employer).Error
+			if err != nil {
+				// log error เพื่อเช็ค ถ้าไม่เจอ employer record
+				log.Printf("Employer not found for user_id %d: %v", userID, err)
+			} else {
+				// set employerID ใน context
 				c.Set("employerID", employer.ID)
+				log.Printf("Set employerID %d for user_id %d", employer.ID, userID)
 			}
 		}
 		//  ถ้าเป็น student → preload studentID ลง context

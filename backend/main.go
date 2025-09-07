@@ -53,7 +53,6 @@ func main() {
 	{
 		// --- JobPosts (ดูได้ทุกคน) ---
 		api.GET("/jobposts", controller.ListJobPosts)
-		api.GET("/jobposts/:id", controller.GetJobPostByID)
 
 		// --- Job Categories ---
 		api.GET("/jobcategories", controller.ListJobCategories)
@@ -92,19 +91,6 @@ func main() {
 
 		//=====================================
 
-
-		protected := api.Group("")
-		// protected.Use(middleware.Authorizes())
-		// {
-			// JobPost (actions)
-
-			jobpost := protected.Group("/myjobposts")
-			{
-				jobpost.GET("", controller.ListJobPosts)
-				jobpost.GET("/:id", controller.GetJobPostByID)
-				jobpost.GET("/employer/:id", controller.ListJobPostsByEmployerID)
-			}
-
 		// --- Salary Type ---
 		api.GET("/salarytype", controller.ListSalaryType)
 		api.GET("/salarytype/:id", controller.GetSalaryTypeByID)
@@ -135,7 +121,7 @@ func main() {
 		auth.POST("/jobposts/upload-portfolio/:id", controller.UploadPortfolio)
 
 		// --- Employer: My Posts ---
-		auth.GET("/employer/myposts", controller.GetEmployerPosts)
+		// auth.GET("/employer/myposts", controller.GetEmployerPosts)
 
 		// --- Student Profile ---
 		auth.POST("/student-profile-posts", controller.CreateStudentProfilePost)
@@ -155,8 +141,11 @@ func main() {
 		auth.GET("/tickets/:id", controller.GetRequestTicketByID)
 		auth.POST("/tickets/:id/replies", controller.CreateTicketReply)
 
+		// --- myjob ---
+        auth.GET("/my-jobs/accepted", controller.GetEmployerPostsWithAcceptedApplications)
+
 		// --- Reviews ---
-		auth.POST("/reviews/new-rating", controller.CreateReview)
+		auth.POST("/reviews/:id", controller.CreateReview)
 		auth.GET("/reviews", controller.FindRatingsByJobPostID)
 
 		// --- Payments ---
@@ -167,6 +156,7 @@ func main() {
 		auth.GET("/orders", controller.ListOrders)
 		auth.GET("/discounts", controller.ListDiscounts)
 		auth.GET("/billable_items", controller.ListBillableItems)
+		auth.GET("/billable_items/:id", controller.GetBillableItemByID)
 	}
 
 	// -------------------- 🛡️ Admin Routes --------------------

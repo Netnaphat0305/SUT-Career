@@ -2,6 +2,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/KBook22/System-Analysis-and-Design/entity"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
@@ -48,12 +49,11 @@ func SetupDatabase() {
 		&entity.Orders{},
 		&entity.AddonServices{},
 		//=========================
-		&entity.ReportStatus{},//by supanut
+		&entity.ReportStatus{}, //by supanut
 		&entity.Report{},
 		&entity.Admin{},
 		&entity.Worklog{},
 
-		
 		//=========================
 	)
 }
@@ -106,9 +106,8 @@ func SeedDatabase() {
 	}
 
 	for _, jc := range jobCategories {
-    db.FirstOrCreate(&jc, entity.JobCategory{Model: gorm.Model{ID: jc.ID}})
-}
-
+		db.FirstOrCreate(&jc, entity.JobCategory{Model: gorm.Model{ID: jc.ID}})
+	}
 
 	// Genders
 	genders := []entity.Genders{
@@ -154,9 +153,9 @@ func SeedDatabase() {
 
 	// Statuses
 	paymentStatuses := []entity.Statuses{
-		{Model: gorm.Model{ID: 1}, StatusName: "ค้างชำระ"},
+		{Model: gorm.Model{ID: 1}, StatusName: "รอการชำระ"},
 		{Model: gorm.Model{ID: 2}, StatusName: "รอตรวจสอบ"},
-		{Model: gorm.Model{ID: 3}, StatusName: "สำเร็จ"},
+		{Model: gorm.Model{ID: 3}, StatusName: "ชำระแล้ว"},
 		{Model: gorm.Model{ID: 4}, StatusName: "ล้มเหลว"},
 	}
 	for _, ps := range paymentStatuses {
@@ -167,16 +166,16 @@ func SeedDatabase() {
 	discounts := []entity.Discounts{
 		{
 			Model:         gorm.Model{ID: 1},
-			DiscountName:  "ส่วนลด 10%",
-			DiscountValue: 10,
+			DiscountName:  "ส่วนลด 5%",
+			DiscountValue: 5,
 			Discounttype:  "percentage",
 			ValidFrom:     time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC),
 			ValidUntil:    time.Date(2024, 8, 31, 0, 0, 0, 0, time.UTC),
 		},
 		{
 			Model:         gorm.Model{ID: 2},
-			DiscountName:  "ส่วนลด 15%",
-			DiscountValue: 10,
+			DiscountName:  "ส่วนลด 3%",
+			DiscountValue: 3,
 			Discounttype:  "percentage",
 			ValidFrom:     time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC),
 			ValidUntil:    time.Date(2024, 9, 30, 0, 0, 0, 0, time.UTC),
@@ -195,12 +194,12 @@ func SeedDatabase() {
 		db.FirstOrCreate(&bi, bi.ID)
 	}
 
-	passwordEmp, _ := bcrypt.GenerateFromPassword([]byte("123456"), 14)
-	passwordStd, _ := bcrypt.GenerateFromPassword([]byte("777777"), 14)
+	password1, _ := bcrypt.GenerateFromPassword([]byte("123456"), 14)
+	password2, _ := bcrypt.GenerateFromPassword([]byte("167980"), 14)
 
 	users := []entity.User{
-		{Model: gorm.Model{ID: 1}, Username: "hormok_hr", Password: string(passwordEmp), Role: "Employer"},
-		{Model: gorm.Model{ID: 2}, Username: "panida_t", Password: string(passwordStd), Role: "Student"},
+		{Model: gorm.Model{ID: 1}, Username: "B6643904", Password: string(password1), Role: "employer"},
+		{Model: gorm.Model{ID: 2}, Username: "B6643041", Password: string(password2), Role: "student"},
 	}
 	for _, u := range users {
 		db.FirstOrCreate(&u, u.ID)
@@ -212,7 +211,7 @@ func SeedDatabase() {
 		Firstname:     "พรศิริ",
 		Lasttname:     "ถาบุญศรี",
 		Email:         "hr@hormok.co.th",
-		CompanyName:   "ห่อหมก สตูดิโอ",
+		CompanyName:   "Home Studio",
 		ContactPerson: "คุณพรศิริ ถาบุญศรี",
 		Birthday:      birthdayEmp,
 		Phone:         "081-234-5678",
@@ -225,7 +224,7 @@ func SeedDatabase() {
 	birthdayStd, _ := time.Parse("2006-01-02", "2004-12-31")
 	student := entity.Student{
 		Model:       gorm.Model{ID: 1},
-		Email:       "panida.t@gmail.com",
+		Email:       "phanida.t@gmail.com",
 		FirstName:   "พนิดา",
 		LastName:    "โต๊ะเหลือ",
 		Birthday:    birthdayStd,
@@ -241,110 +240,128 @@ func SeedDatabase() {
 		BankID:      banks[3].ID,
 	}
 	db.FirstOrCreate(&student, student.ID)
-
 	jobposts := []entity.Jobpost{
 		{
-			Model:       gorm.Model{ID: 1},
-			Title:       "พาร์ทไทม์ร้านบ้านชาบู",
-			Description: "ทำงานช่วงเย็น 17.00 - 20.00 น.",
-			Status:      "เปิดรับสมัคร",
-			Salary:      250,
-			EmployerID:  employer.ID,
+			Model:             gorm.Model{ID: 1},
+			Title:             "พาร์ทไทม์ร้านบ้านชาบู",
+			Description:       "ทำงานช่วงเย็น 17.00 - 20.00 น.",
+			Deadline:          time.Date(2024, 8, 31, 0, 0, 0, 0, time.UTC),
+			Status:            entity.Close,
+			ImageURL:          nil,
+			PortfolioRequired: nil,
+			Salary:            250,
+			LocationJob:       "ร้านบ้านชาบู สาขา มทส.",
+			EmployerID:        employer.ID,
+			JobCategoryID:     jobCategories[3].ID,
+			EmploymentTypeID:  employmentTypes[1].ID,
+			SalaryTypeID:      salaryTypes[2].ID,
+			StudentID:         student.ID,
 		},
 		{
-			Model:       gorm.Model{ID: 2},
-			Title:       "ผู้ช่วยช่างภาพ",
-			Description: "ถ่ายภาพสินค้าสำหรับลงเพจ",
-			Status:      "อนุมัติ",
-			Salary:      600,
-			EmployerID:  employer.ID,
+			Model:             gorm.Model{ID: 2},
+			Title:             "ผู้ช่วยช่างภาพ",
+			Description:       "ถ่ายภาพสินค้าสำหรับลงเพจ",
+			Deadline:          time.Date(2024, 9, 15, 0, 0, 0, 0, time.UTC),
+			Status:            entity.Open,
+			ImageURL:          nil,
+			PortfolioRequired: nil,
+			Salary:            600,
+			LocationJob:       "home studio สาขา มทส.",
+			EmployerID:        employer.ID,
+			JobCategoryID:     jobCategories[9].ID,
+			EmploymentTypeID:  employmentTypes[1].ID,
+			SalaryTypeID:      salaryTypes[2].ID,
+			StudentID:         student.ID,
 		},
 	}
 	for _, jp := range jobposts {
-		db.FirstOrCreate(&jp, jp.ID)
+		key := entity.Jobpost{}
+		key.ID = jp.ID
+		if err := db.FirstOrCreate(&jp, key).Error; err != nil {
+			fmt.Printf("[SEED ERR] %+v\n", err)
+		}
 	}
 
-	// Payment
-	payment1 := entity.Payments{
-		Model:            gorm.Model{ID: 1},
-		Proof_of_Payment: "proof_01.jpg",
-		Amount:           billableItems[0].Amount,
-		Datetime:         time.Now().Add(-24 * time.Hour),
-		BillableItemID:   billableItems[0].ID,
-		PaymentMethodID:  paymentMethod.ID,
-		StatusID:         paymentStatuses[1].ID,
-	}
-	db.FirstOrCreate(&payment1, payment1.ID)
 	//Pornsiri
 
-
-
 	//Chompoo
+	jobApplications := []entity.JobApplication{
+		{
+			ApplicationStatus: entity.StatusAccepted,
+			LastUpdate:        time.Now(),
+			ApplicationReason: "ได้รับการคัดเลือก",
+			StudentID:         student.ID,
+			JobPostID:         jobposts[0].ID,
+		},
+		{
+			ApplicationStatus: entity.StatusRejected,
+			LastUpdate:        time.Now().AddDate(0, 0, -10),
+			ApplicationReason: "ไม่ผ่านเกณฑ์",
+			StudentID:         student.ID,
+			JobPostID:         jobposts[1].ID,
+		},
+	}
 
-
+	for _, jobApp := range jobApplications {
+		if err := db.FirstOrCreate(&jobApp, entity.JobApplication{
+			StudentID: jobApp.StudentID,
+			JobPostID: jobApp.JobPostID,
+		}).Error; err != nil {
+			fmt.Println("Seed error:", err)
+		}
+	}
 
 	//Supanut
 	//=======================================
-
 
 	//reprot status
 	reprot_status := []entity.ReportStatus{
 		{Model: gorm.Model{ID: 1}, Statusname: "submitted"},
 		{Model: gorm.Model{ID: 2}, Statusname: "in_progress"},
 		{Model: gorm.Model{ID: 3}, Statusname: "resolved"},
-		
-		
 	}
 	for _, b := range reprot_status {
 		db.FirstOrCreate(&b, b.ID)
 	}
-	
+
 	// admin
 	admin := entity.Admin{
-        Model:     gorm.Model{ID: 1},
-        Firstname: "Supanut",
-        Lasttname: "Srisawat",
-        Email:     "admin@example.com",
-        Phone:     "0812345678",
-        Password:  "adminpassword", // ควรเข้ารหัสก่อนใช้งานจริง
-    }
-    db.FirstOrCreate(&admin, admin.ID)
+		Model:     gorm.Model{ID: 1},
+		Firstname: "Supanut",
+		Lasttname: "Srisawat",
+		Email:     "admin@example.com",
+		Phone:     "0812345678",
+		Password:  "adminpassword", // ควรเข้ารหัสก่อนใช้งานจริง
+	}
+	db.FirstOrCreate(&admin, admin.ID)
 
 	// เพิ่มตัวอย่างข้อมูล Report
-    report1 := entity.Report{
-    Model:          	gorm.Model{ID: 1},
-    Title:          	"รายงานวันแรก",
-    Datetime:           time.Date(2024, 8, 15, 10, 0, 0, 0, time.UTC),
-    Place:          	"บริษัท A",
-    Discription:    	"รายงานการทำงานวันแรก",
-    UserID:         	1,
-    ReportStatusID: 	1,
-    AdminID:        	1,
+	report1 := entity.Report{
+		Model:          gorm.Model{ID: 1},
+		Title:          "รายงานวันแรก",
+		Datetime:       time.Date(2024, 8, 15, 10, 0, 0, 0, time.UTC),
+		Place:          "บริษัท A",
+		Discription:    "รายงานการทำงานวันแรก",
+		UserID:         1,
+		ReportStatusID: 1,
+		AdminID:        1,
 	}
 	report2 := entity.Report{
-		Model:         	 	gorm.Model{ID: 2},
-		Title:          	"รายงานวันที่สอง",
-		Datetime:       	time.Date(2024, 8, 16, 10, 0, 0, 0, time.UTC),
-		Place:          	"บริษัท B",
-		Discription:    	"รายงานการทำงานวันที่สอง",
-		UserID:         	2,
-		ReportStatusID: 	2,
-		AdminID:        	1,
+		Model:          gorm.Model{ID: 2},
+		Title:          "รายงานวันที่สอง",
+		Datetime:       time.Date(2024, 8, 16, 10, 0, 0, 0, time.UTC),
+		Place:          "บริษัท B",
+		Discription:    "รายงานการทำงานวันที่สอง",
+		UserID:         2,
+		ReportStatusID: 2,
+		AdminID:        1,
 	}
 	db.FirstOrCreate(&report1, report1.ID)
 	db.FirstOrCreate(&report2, report2.ID)
 
-	
-	
-    
-
-
 	//=======================================
 
-
 	//Kittisak
-
-
 
 	//Netnaphat
 }

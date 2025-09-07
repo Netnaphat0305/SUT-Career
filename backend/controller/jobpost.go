@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/KBook22/System-Analysis-and-Design/config"
@@ -20,28 +19,6 @@ func ListJobPosts(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": jobposts})
 }
 
-// GET /jobposts/:id
-// ดึงข้อมูลประกาศงานตาม ID
-func GetJobPostByID(c *gin.Context) {
-	var jobpost entity.Jobpost
-	id := c.Param("id")
-	if err := config.DB().First(&jobpost, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Job post not found"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"data": jobpost})
-}
-
-// GET /jobposts/employer/:id
-func ListJobPostsByEmployerID(c *gin.Context) {
-	var jobposts []entity.Jobpost
-	id := c.Param("id") 
-	if err := config.DB().Where("employer_id = ?", id).Find(&jobposts).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"data": jobposts})
-}
 // POST /jobposts
 func CreateJobPost(c *gin.Context) {
     //  ดึง employerID จาก context ที่ middleware set ไว้
@@ -102,32 +79,6 @@ func DeleteJobPost(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, gin.H{"message": "ลบโพสต์เรียบร้อยแล้ว"})
-}
-
-
-// GET /api/employer/myposts
-func GetEmployerPosts(c *gin.Context) {
-    //  ดึงค่า employerID จาก context โดยตรง
-    employerID, ok := c.Get("employerID")
-    if !ok {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-        return
-    }
-    //  ดึง jobposts ตาม employerID ที่ login อยู่
-    var jobposts []entity.Jobpost
-    if err := config.DB().
-        Preload("Employer.User").
-        Where("employer_id = ?", employerID).
-        Find(&jobposts).Error; err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
-
-    fmt.Println("employerID:", employerID)
-    fmt.Println("count jobposts:", len(jobposts))
-
-    c.JSON(http.StatusOK, gin.H{"data": jobposts})
-
 }
 
 // POST /jobposts/upload-portfolio/:id

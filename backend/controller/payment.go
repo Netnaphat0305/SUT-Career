@@ -17,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
     "gorm.io/gorm"
 )
-
 // GET /payments/job/:jobId
 func GetPaymentByJobId(c *gin.Context) {
     jobId := c.Param("jobId")
@@ -30,7 +29,7 @@ func GetPaymentByJobId(c *gin.Context) {
         Where("jp.id = ?", jobId).
         Order("payments.created_at DESC, payments.id DESC").
         Preload("Status").
-        Preload("PaymentMethods").
+        Preload("PaymentMethod").
         Preload("Discount").
         First(&payment).Error
 
@@ -53,7 +52,7 @@ func ListPaymentsByEmployerID(c *gin.Context) {
         Where("jp.employer_id = ?", employerId).
         Order("payments.created_at DESC, payments.id DESC").
         Preload("Status").
-        Preload("PaymentMethods").
+        Preload("PaymentMethod").
         Preload("Discount").
         Find(&payments).Error; err != nil {
 
@@ -89,7 +88,7 @@ func ListPayments(c *gin.Context) {
     var payments []entity.Payments
     err := config.DB().
         Preload("Status").
-        Preload("PaymentMethods").
+        Preload("PaymentMethod").
         Preload("Discount").
         Find(&payments).Error
 
@@ -108,7 +107,7 @@ func GetPaymentByID(c *gin.Context) {
     var payment entity.Payments
     err := config.DB().
         Preload("Status").
-        Preload("PaymentMethods").
+        Preload("PaymentMethod").
         Preload("Discount").
         First(&payment, id).Error
 

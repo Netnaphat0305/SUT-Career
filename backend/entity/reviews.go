@@ -12,7 +12,7 @@ type Reviews struct {
 	Datetime       	time.Time     		`json:"datetime"`
 
 	//FK
-	JobpostID         	uint         	`json:"jobpost_id"`
+	JobpostID         	uint         	`json:"job_post_id"`
 	Jobpost           	*Jobpost	  	`gorm:"foreignKey: JobpostID;references:ID" json:"jobpost"`
 
 	Ratingscore_ID 	uint          		`json:"ratingscore_id"`
