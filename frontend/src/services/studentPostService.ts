@@ -1,56 +1,171 @@
-// src/services/studentPostService.ts
+// services/studentPostService.ts
 
-interface StudentPostPayload {
-    introduction: string;
+// ✅ ปรับปรุง interface สำหรับ Skills ใหม่
+interface Skill {
+    ID: number;
+    skill_name: string;
+    SkillName?: string;
+    CreatedAt: string;
+    UpdatedAt: string;
+  }
+  
+  interface Student {
+    ID: number;
+    first_name: string;
+    last_name: string;
+    email?: string;
+    phone?: string;
+    profile_image_url?: string;
+    faculty: string;
+    year?: number;
+    UserID?: number;
+    user_id?: number;
+  }
+  
+  interface Faculty {
+    ID: number;
+    Name: string;
+  }
+  
+  interface Department {
+    ID: number;
+    Name: string;
+  }
+  
+  interface Attachment {
+    ID: number;
+    url: string;
+    name: string;
+    type: string;
+    student_post_id: number;
+  }
+  
+  interface StudentPost {
+    ID: number;
+    title: string;
     job_type: string;
-    portfolio_url: string;
-    skills: string;
-}
-
-const API_BASE_URL = 'http://localhost:8080/api';
-
-/**
- * สร้างโพสต์โปรไฟล์หางานใหม่โดยนักศึกษา (ต้องมีการยืนยันตัวตน)
- * @param postData - ข้อมูลของโพสต์
- */
-export const createStudentProfilePost = async (postData: StudentPostPayload) => {
-    // ✨ 1. ดึง Token มาจาก localStorage
+    skills: Skill[];  // ✅ เปลี่ยนจาก string เป็น array ของ Skill objects
+    availability: string;
+    preferred_location: string;
+    expected_compensation?: string;
+    introduction: string;
+    portfolio_url?: string;
+    status: string;
+    student?: Student;
+    faculty?: Faculty;
+    department?: Department;
+    attachments?: Attachment[];
+    CreatedAt: string;
+    UpdatedAt: string;
+  }
+  
+  const API_BASE_URL = 'http://localhost:8080/api';
+  
+  // Helper function to get auth headers
+  const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
-    
-    // ✨ 2. สร้าง Headers object
-    const headers: HeadersInit = {
-        'Content-Type': 'application/json',
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
     };
-
-    // ✨ 3. ถ้ามี Token ให้เพิ่ม Authorization header เข้าไป
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(`${API_BASE_URL}/student-profile-posts`, {
-        method: 'POST',
-        headers: headers, // ✨ 4. ใช้ headers ที่เราสร้างขึ้น
-        body: JSON.stringify(postData),
+  };
+  
+  // Get all student posts (public)
+  export const getStudentPosts = async () => {
+    const response = await fetch(`${API_BASE_URL}/student-posts`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
-
+  
     if (!response.ok) {
-        // ถ้าไม่ได้รับอนุญาต (Unauthorized) อาจจะ redirect ไปหน้า login
-        if (response.status === 401) {
-            window.location.href = '/login';
-        }
-        const errorText = await response.text();
-        throw new Error(`เกิดข้อผิดพลาดในการสร้างโพสต์: ${errorText}`);
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch posts');
     }
+  
     return response.json();
-};
-
-/**
- * ดึงข้อมูลโพสต์โปรไฟล์ของนักศึกษาทั้งหมด (Public)
- */
-export const getStudentProfilePosts = async () => {
-    const response = await fetch(`${API_BASE_URL}/student-profile-posts`);
+  };
+  
+  // Get student post by ID (public)
+  export const getStudentPostById = async (id: number) => {
+    const response = await fetch(`${API_BASE_URL}/student-posts/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  
     if (!response.ok) {
-        throw new Error('ไม่สามารถดึงข้อมูลโพสต์ของนักศึกษาได้');
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch post');
     }
+  
     return response.json();
-}
+  };
+  
+  // Create student post (protected)
+  export const createStudentPost = async (postData: any) => {
+    const response = await fetch(`${API_BASE_URL}/student-posts`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(postData)
+    });
+  
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create post');
+    }
+  
+    return response.json();
+  };
+  
+  // Update student post (protected)
+  export const updateStudentPost = async (postId: number, postData: any) => {
+    const response = await fetch(`${API_BASE_URL}/student-posts/${postId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(postData)
+    });
+  
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update post');
+    }
+  
+    return response.json();
+  };
+  
+  // Delete student post (protected)
+  export const deleteStudentPost = async (postId: number) => {
+    const response = await fetch(`${API_BASE_URL}/student-posts/${postId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+  
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete post');
+    }
+  
+    return response.json();
+  };
+  
+  // Get my student posts (protected)
+  export const getMyStudentPosts = async () => {
+    const response = await fetch(`${API_BASE_URL}/my-posts`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+  
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch my posts');
+    }
+  
+    return response.json();
+  };
+  
+  // Backward compatibility - alias for old function name
+  export const getStudentProfilePosts = getStudentPosts;
+  export const createStudentProfilePost = createStudentPost;

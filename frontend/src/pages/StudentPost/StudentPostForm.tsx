@@ -249,116 +249,156 @@
 
 
 // src/pages/StudentPost/StudentPostForm.tsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Input, Select, Button, Card, Typography, Space, Row, Col, Divider, message, Result } from 'antd';
-import { LinkOutlined, SolutionOutlined, RocketOutlined, HomeOutlined } from '@ant-design/icons';
-import { createStudentProfilePost } from '../../services/studentPostService'; // ✨ 1. Import service
+// src/pages/StudentPost/StudentPostForm.tsx
+import React from 'react';
+import {
+  Form,
+  Input,
+  Select,
+  Button,
+  message,
+  Typography,
+  Row,
+  Col,
+  Divider,
+  Upload,
+} from 'antd';
+import { 
+  RocketOutlined, 
+  SolutionOutlined, 
+  UploadOutlined,
+  LinkOutlined,
+} from '@ant-design/icons';
+import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
+import { createStudentProfilePost } from '../../services/studentPostService';
+import { useAuth } from '../../context/AuthContext';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
 interface StudentPostFormProps {
-    onSuccess?: () => void;
+  onSuccess: () => void;
+  onClose: () => void;
 }
 
-const StudentPostForm: React.FC<StudentPostFormProps> = ({ onSuccess }) => {
-  const [loading, setLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const navigate = useNavigate();
+const StudentPostForm: React.FC<StudentPostFormProps> = ({ onSuccess, onClose }) => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = React.useState(false);
+  const [fileList, setFileList] = React.useState<UploadFile[]>([]);
+  const { user, token } = useAuth();
 
   const onFinish = async (values: any) => {
+    if (!user) {
+      message.error('กรุณาเข้าสู่ระบบก่อนสร้างโพสต์');
+      return;
+    }
+
     setLoading(true);
-    const postData = {
-        introduction: values.introduction,
-        job_type: values.jobType,
-        portfolio_url: values.portfolio || "",
-        skills: values.skills,
-    };
-    
     try {
-        await createStudentProfilePost(postData); // ✨ 2. เรียกใช้ฟังก์ชันจาก service
-        
-        message.success('โพสต์โปรไฟล์ของคุณสำเร็จแล้ว!');
-        if (onSuccess) {
-            onSuccess(); // ใช้สำหรับกรณีที่ถูกเรียกใช้ใน Modal
-        } else {
-            setIsSubmitted(true); // ใช้สำหรับกรณีที่เป็นหน้าเดี่ยว
-        }
-    } catch (error) {
-        console.error('Failed to submit the form:', error);
-        message.error(String(error));
+      await createStudentProfilePost({
+        ...values,
+        portfolio_url: values.portfolio_url || "",
+        file_url: values.file_url || "", 
+      });
+      message.success('สร้างโพสต์ของคุณสำเร็จแล้ว!');
+      onSuccess();
+    } catch (error: any) {
+      console.error('Failed to create post:', error);
+      message.error(error.message || 'เกิดข้อผิดพลาดในการสร้างโพสต์');
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
-  if (isSubmitted) {
-    return (
-        <Result
-            status="success"
-            title="โพสต์โปรไฟล์ของคุณสำเร็จแล้ว!"
-            subTitle="ผู้ประกอบการที่สนใจจะเห็นโปรไฟล์ของคุณและสามารถติดต่อคุณได้โดยตรง"
-            extra={[
-                <Button type="primary" key="view" icon={<HomeOutlined />} onClick={() => navigate('/employer/feed')}>
-                    ดูโพสต์ทั้งหมด
-                </Button>,
-            ]}
-        />
-    );
-  }
+  const uploadProps: UploadProps = {
+    name: 'file',
+    action: 'http://localhost:8080/api/upload',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    maxCount: 1,
+    fileList,
+    onChange(info) {
+      setFileList(info.fileList);
+      if (info.file.status === 'done') {
+        message.success(`${info.file.name} อัปโหลดสำเร็จ`);
+        form.setFieldsValue({ file_url: info.file.response.url }); 
+      } else if (info.file.status === 'error') {
+        message.error(`${info.file.name} อัปโหลดไม่สำเร็จ`);
+      }
+    },
+    onRemove() {
+        form.setFieldsValue({ file_url: null });
+        setFileList([]);
+    }
+  };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: '24px' }}>
-      <Card style={{ width: '100%', maxWidth: '800px', border: 'none' }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <RocketOutlined style={{ fontSize: '32px', color: '#007bff' }} />
-            <Title level={3} style={{ marginTop: '8px' }}>สร้างโพสต์หางานของคุณ</Title>
-            <Text type="secondary">กรอกข้อมูลเพื่อให้ผู้ว่าจ้างรู้ว่าคุณต้องการอะไร</Text>
-        </div>
-        
-        <Form layout="vertical" onFinish={onFinish} autoComplete="off">
-          <Divider orientation="left">รายละเอียดเกี่ยวกับงาน</Divider>
-          
-          <Form.Item name="introduction" label="แนะนำตัวเองและงานที่มองหา" rules={[{ required: true, message: 'กรุณากรอกรายละเอียด'}]}>
-            <TextArea rows={4} placeholder="เช่น กำลังมองหางานพาร์ทไทม์ด้านการตลาด มีความสามารถในการใช้ Photoshop..." />
+    <Form form={form} layout="vertical" onFinish={onFinish} size="large">
+      <Title level={4} style={{ textAlign: 'center' }}>
+        <RocketOutlined /> สร้างโพสต์หางานใหม่
+      </Title>
+      <Divider />
+      <Row gutter={16}>
+        <Col span={24}>
+          <Form.Item name="title" label="หัวข้อโพสต์" rules={[{ required: true, message: 'กรุณากรอกหัวข้อโพสต์' }]}>
+            <Input placeholder="เช่น: 'นักพัฒนา React ตามหางาน Part-time'" />
           </Form.Item>
-
-          <Row gutter={24}>
-            <Col xs={24} sm={12}>
-                <Form.Item name="jobType" label="ประเภทงาน" rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}>
-                    <Select placeholder="เลือกประเภทงาน">
-                        <Option value="พาร์ทไทม์">พาร์ทไทม์</Option>
-                        <Option value="งานประจำ">งานประจำ</Option>
-                        <Option value="ฝึกงาน">ฝึกงาน</Option>
-                    </Select>
-                </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-                <Form.Item name="portfolio" label="ลิงก์ผลงาน/LinkedIn (ถ้ามี)">
-                    <Input prefix={<LinkOutlined />} placeholder="https://..." />
-                </Form.Item>
-            </Col>
-          </Row>
-          
-          <Form.Item name="skills" label="ทักษะและความสามารถ" rules={[{ required: true, message: 'กรุณาระบุทักษะ'}]} extra="คั่นแต่ละทักษะด้วยจุลภาค (,)">
-            <TextArea rows={3} placeholder="Python, Photoshop, การตลาดออนไลน์" />
+        </Col>
+        <Col xs={24} sm={12}>
+          <Form.Item name="job_type" label="ประเภทงานที่มองหา" rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}>
+            <Select placeholder="เลือกประเภทงาน">
+              <Option value="งานประจำ">งานประจำ</Option>
+              <Option value="งานพาร์ทไทม์">งานพาร์ทไทม์</Option>
+              <Option value="ฟรีแลนซ์">ฟรีแลนซ์</Option>
+              <Option value="ฝึกงาน">ฝึกงาน</Option>
+              <Option value="งานชั่วคราว">งานชั่วคราว</Option>
+              <Option value="งานโครงการ">งานโครงการ</Option>
+            </Select>
           </Form.Item>
-          
-          <Form.Item style={{ textAlign: 'right', marginTop: '24px' }}>
-            <Space>
-                <Button htmlType="button" onClick={onSuccess}>
-                    ยกเลิก
-                </Button>
-                <Button type="primary" htmlType="submit" icon={<SolutionOutlined />} loading={loading}>
-                    โพสต์หางาน
-                </Button>
-            </Space>
+        </Col>
+        <Col xs={24} sm={12}>
+          <Form.Item name="year" label="ชั้นปี">
+            <Input placeholder="เช่น ปีที่ 3" />
           </Form.Item>
-        </Form>
-      </Card>
-    </div>
+        </Col>
+        <Col span={24}>
+          <Form.Item name="introduction" label="แนะนำตัวเองสั้นๆ">
+            <TextArea rows={3} placeholder="แนะนำตัว, เป้าหมาย, หรือสิ่งที่น่าสนใจเกี่ยวกับคุณ" />
+          </Form.Item>
+        </Col>
+        <Col span={24}>
+          <Form.Item name="skills" label="ทักษะ (คั่นด้วยเครื่องหมาย ,)" rules={[{ required: true, message: 'กรุณาระบุทักษะของคุณ' }]}>
+            <Input placeholder="เช่น React, TypeScript, Figma, Go" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+            <Form.Item name="portfolio_url" label="แนบลิงก์ผลงาน (ถ้ามี)">
+                <Input prefix={<LinkOutlined />} placeholder="URL ของ GitHub, LinkedIn, Behance" />
+            </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+            <Form.Item label="อัปโหลดไฟล์ (ถ้ามี)">
+                <Upload {...uploadProps}>
+                    <Button icon={<UploadOutlined />} style={{width: '100%'}}>เลือกไฟล์ (Resume, CV, etc.)</Button>
+                </Upload>
+            </Form.Item>
+            <Form.Item name="file_url" hidden>
+                <Input />
+            </Form.Item>
+        </Col>
+      </Row>
+      <Divider />
+      <Form.Item style={{ textAlign: 'right' }}>
+        <Button onClick={onClose} style={{ marginRight: 8 }}>
+          ยกเลิก
+        </Button>
+        <Button type="primary" htmlType="submit" loading={loading} icon={<SolutionOutlined />}>
+          สร้างโพสต์
+        </Button>
+      </Form.Item>
+    </Form>
   );
 };
 
