@@ -1,0 +1,442 @@
+/* src/pages/StudentPost/HelpCenter.css */
+
+/* ===== FULL PAGE BACKGROUND ===== */
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #eff3fb !important;
+    overflow-x: hidden;
+  }
+  
+  #root {
+    min-height: 100vh;
+    width: 100%;
+    background-color: #eff3fb !important;
+  }
+  
+  /* Container หลักของ App */
+  .App {
+    min-height: 100vh;
+    background-color: #eff3fb !important;
+  }
+  
+  /* ===== HELP CENTER STYLES ===== */
+  
+  /* Container หลัก */
+  .help-center-container { 
+    max-width: 1000px; 
+    margin: 0 auto;
+    background-color: transparent !important;
+    min-height: 100vh;
+    padding: 0 20px;
+  }
+  
+  /* Header */
+  .help-center-header { 
+    text-align: center; 
+    padding: 48px 24px; 
+    background-color: transparent !important;
+    border-radius: 16px; 
+    margin-bottom: 32px; 
+  }
+  
+  .help-center-header .ant-typography { 
+    margin-bottom: 16px !important; 
+    color: #1d39c4; 
+  }
+  
+  /* Search */
+  .help-center-search .ant-input-group-wrapper { 
+    max-width: 500px; 
+    margin: 0 auto 24px auto; 
+  }
+  
+  .help-center-search .ant-input, 
+  .help-center-search .ant-btn { 
+    height: 48px; 
+    font-size: 16px; 
+  }
+  
+  /* Tabs */
+  .help-center-tabs .ant-tabs-nav { 
+    margin-bottom: 24px; 
+  }
+  
+  /* ===== BUTTON POSITIONING ===== */
+  .help-center-wrapper {
+    position: relative;
+  }
+  
+  .new-request-button-container {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    z-index: 1000;
+  }
+  
+  /* ===== FAQ COLLAPSE STYLES ===== */
+  .faq-collapse {
+    background: transparent !important;
+    border: none !important;
+  }
+  
+  .faq-collapse > .ant-collapse-item {
+    background-color: #fff;
+    margin-bottom: 16px !important;
+    border-radius: 12px !important;
+    border: 1px solid #e8e8e8 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .faq-collapse > .ant-collapse-item:hover {
+    border-color: #91d5ff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .faq-collapse > .ant-collapse-item > .ant-collapse-header {
+    align-items: center !important;
+    padding: 20px 24px !important;
+  }
+  
+  .faq-collapse .ant-collapse-expand-icon .anticon {
+    font-size: 16px;
+    color: #1890ff;
+  }
+  
+  .faq-collapse > .ant-collapse-item > .ant-collapse-content {
+    border-top: 1px solid #f0f0f0 !important;
+  }
+  
+  .faq-collapse > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+    padding: 16px 24px 24px 24px;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  
+  .faq-answer-text {
+    color: #595959;
+    font-size: 15px;
+  }
+  
+  .faq-feedback-actions {
+    text-align: center;
+    padding: 16px;
+    background-color: #fafafa;
+    border-radius: 8px;
+  }
+  
+  /* ===== COMMENT STYLES ===== */
+  .comment-list .ant-list-items {
+    padding-left: 0;
+  }
+  
+  .custom-comment {
+    display: flex;
+    gap: 12px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+  }
+  
+  .custom-comment-avatar {
+    flex-shrink: 0;
+  }
+  
+  .custom-comment-content {
+    flex-grow: 1;
+  }
+  
+  .custom-comment-author {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  
+  .custom-comment-author .custom-comment-datetime {
+    font-weight: normal;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.45);
+    margin-left: 8px;
+  }
+  
+  /* ===== MODAL STYLES ===== */
+  .ant-modal .ant-modal-body {
+    padding: 24px;
+  }
+  
+  .initial-message-box {
+    background-color: #fff;
+    border: 1px solid #e8e8e8;
+    padding: 12px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    font-size: 14px;
+  }
+  
+  .ant-descriptions-item-label {
+    font-size: 13px;
+  }
+  
+  .ant-descriptions-item-content {
+    font-size: 14px;
+  }
+  
+  .conversation-history {
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border: 1px solid #e8e8e8;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .history-entry {
+    border-radius: 6px;
+    border: 1px solid transparent;
+  }
+  
+  .history-entry.staff-reply {
+    background-color: #e6f7ff;
+    border-color: #91d5ff;
+  }
+  
+  .history-entry.user-reply {
+    background-color: #f6ffed;
+    border-color: #b7eb8f;
+  }
+  
+  .entry-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+  }
+  
+  .entry-timestamp {
+    margin-left: auto;
+    font-size: 11px;
+  }
+  
+  .entry-body {
+    padding: 10px;
+    font-size: 14px;
+  }
+  
+  .reply-section {
+    margin-top: 0;
+  }
+  
+  .ant-modal-body .ant-typography.ant-typography-h5 {
+    font-size: 16px;
+    margin-bottom: 8px !important;
+    margin-top: 0 !important;
+  }
+  
+  /* ===== CARD STYLES ===== */
+  .ant-card {
+    background-color: white !important;
+  }
+  
+  /* ===== RESPONSIVE FIXES ===== */
+  @media (max-width: 768px) {
+    .help-center-container {
+      padding: 0 16px;
+    }
+    
+    .new-request-button-container {
+      right: 16px;
+    }
+  }
+  
+  /* เพิ่มใน HelpCenter.css */
+
+/* Success animation */
+.success-redirect {
+  animation: fadeInOut 2s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(20px); }
+  50% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+
+/* Tab highlight animation */
+.my-requests-highlight {
+  animation: highlightTab 1s ease-in-out;
+}
+
+@keyframes highlightTab {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(24, 144, 255, 0.1); }
+  100% { background-color: transparent; }
+}
+
+/* Custom table styles */
+.custom-request-table .ant-table-thead > tr > th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.custom-request-table .ant-table-tbody > tr:hover > td {
+  background-color: #f0f5ff;
+}
+
+/* Form styles */
+.create-request-form .ant-form-item-label > label {
+  font-weight: 600;
+  color: #1d39c4;
+}
+
+.create-request-form .ant-input:focus,
+.create-request-form .ant-input-focused {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* Success animation for check icon */
+.success-icon {
+  animation: bounce 0.6s ease-out;
+}
+
+@keyframes bounce {
+  0%, 20%, 60%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  80% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Badge styles */
+.ant-badge-count {
+  font-size: 11px;
+  min-width: 16px;
+  height: 16px;
+  line-height: 16px;
+}
+
+/* Loading spinner */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+/* เพิ่มใน HelpCenterPage.css */
+
+/* Image gallery styles */
+.help-center-image-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.help-center-image-gallery .ant-image {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.help-center-image-gallery .ant-image:hover {
+  transform: scale(1.05);
+}
+
+/* Upload progress styles */
+.upload-progress-container {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+}
+
+.upload-progress-item {
+  margin-bottom: 4px;
+}
+
+.upload-progress-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Image preview in conversation */
+.conversation-images {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.conversation-images .ant-image {
+  margin-right: 8px;
+  margin-bottom: 8px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Reply upload section */
+.reply-upload-section {
+  background-color: #fafafa;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.reply-upload-section .ant-upload-list {
+  margin-top: 8px;
+}
+
+/* Responsive image gallery */
+@media (max-width: 768px) {
+  .help-center-image-gallery {
+    justify-content: center;
+  }
+  
+  .help-center-image-gallery .ant-image {
+    width: calc(50% - 4px);
+    height: 80px;
+  }
+}
+
+/* Success animation for image upload */
+.image-upload-success {
+  animation: imageUploadSuccess 0.5s ease-in-out;
+}
+
+@keyframes imageUploadSuccess {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Error state for failed uploads */
+.image-upload-error {
+  border: 2px solid #ff4d4f;
+  background-color: #fff2f0;
+}
+
+/* Loading overlay for images */
+.image-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}

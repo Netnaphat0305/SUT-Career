@@ -306,8 +306,6 @@
 
 
 // src/pages/ProfilePage2/ProfilePage.tsx
-
-// src/pages/ProfilePage2/ProfilePage.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Avatar, Button, Card, Rate, Typography, Divider, Modal, Form, Input, message, Space, Tag, Row, Col, Spin, Alert
@@ -316,7 +314,8 @@ import {
   EditOutlined, UserOutlined, BookOutlined, MailOutlined, PhoneOutlined, PlusOutlined
 } from '@ant-design/icons';
 import './ProfilePage.css';
-import { getMyProfile } from '../../services/profileService';
+// ✨ 1. เปลี่ยนการ import มาใช้ APIกลาง
+import { profileAPI, studentAPI } from '../../services/https/index';
 import type { ProfileResponse, StudentProfilePost } from '../../types';
 import StudentPostForm from '../StudentPost/StudentPostForm';
 
@@ -336,8 +335,13 @@ const ProfilePage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getMyProfile();
-      setProfile(data);
+      // ✨ 2. เรียกใช้ profileAPI.getMyProfile
+      const response = await profileAPI.getMyProfile();
+      if (response && response.data) {
+        setProfile(response.data);
+      } else {
+        throw new Error("Could not get a valid response from the server.");
+      }
     } catch (err) {
       setError('ไม่สามารถโหลดข้อมูลโปรไฟล์ได้ กรุณาลองใหม่');
       console.error(err);
@@ -358,9 +362,25 @@ const ProfilePage: React.FC = () => {
       setIsEditModalVisible(true);
     }
   };
-  const handleSaveEdit = (values: any) => {
-    message.success('บันทึกข้อมูลโปรไฟล์สำเร็จ! (ยังไม่เชื่อม API)');
-    setIsEditModalVisible(false);
+  
+  // ✨ 3. แก้ไขฟังก์ชัน handleSaveEdit ให้เรียก API จริง
+  const handleSaveEdit = async (values: any) => {
+    if (!profile?.student?.id) {
+        message.error("ไม่พบข้อมูลนักศึกษาสำหรับอัปเดต");
+        return;
+    }
+    try {
+        const response = await studentAPI.update(profile.student.ID, { skills: values.skills });
+        if (response && response.data) {
+            message.success('บันทึกข้อมูลโปรไฟล์สำเร็จ!');
+            setIsEditModalVisible(false);
+            loadProfile(); // โหลดข้อมูลโปรไฟล์ใหม่
+        } else {
+            throw new Error(response?.data?.error || "Failed to save profile.");
+        }
+    } catch (err: any) {
+        message.error(err.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+    }
   };
   const handleCancelEdit = () => setIsEditModalVisible(false);
 
@@ -472,7 +492,8 @@ const ProfilePage: React.FC = () => {
         width={800}
         destroyOnClose
       >
-        <StudentPostForm onSuccess={handlePostSuccess} />
+        {/* ✨ 4. เพิ่ม prop onClose ที่จำเป็น */}
+        <StudentPostForm onSuccess={handlePostSuccess} onClose={handleCancelPostModal} />
       </Modal>
     </>
   );

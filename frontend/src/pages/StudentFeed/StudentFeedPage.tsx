@@ -1248,7 +1248,7 @@ const StudentFeedPage: React.FC = () => {
         open={isModalVisible}
         onCancel={closeModal}
         footer={[
-          <Button key="profile" type="primary" onClick={() => goToProfile(selectedPost?.student?.id)}>ดูโปรไฟล์เต็ม</Button>,
+          <Button key="profile" type="primary" onClick={() => goToProfile(selectedPost?.student?.ID)}>ดูโปรไฟล์เต็ม</Button>,
           <Button key="close" onClick={closeModal}>ปิด</Button>,
         ]}
         centered

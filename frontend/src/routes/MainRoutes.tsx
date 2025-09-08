@@ -3,6 +3,8 @@ import { Route, Routes, useOutletContext } from "react-router-dom";
 import FullLayout from '../layouts/FullLayout';
 import StudentPostManager from '../pages/StudentPost';
 import FeedPage from '../components/QA/FeedPage';
+import HelpCenterPage from '../pages/HelpCenter/HelpCenterPage';
+import CreateRequestPage from '../pages/HelpCenter/CreateRequestPage';
 import PostCreator from '../components/QA/PostCreator';
 import ProfilePageV2 from '../pages/ProfilePage2/ProfilePage';
 import FAQPage from '../pages/StudentPost/FAQPage';
@@ -115,13 +117,15 @@ const MainRoutes: React.FC = () => {
             <Route path="/feed" element={<StudentFeedPage />} />
             <Route path="/feed/create" element={<StudentPostForm />} />
 
+            
+
             {/* --- Student-focused Routes (State managed by StudentPostManager) --- */}
             <Route element={<StudentPostManager />}>
               <Route path="/create" element={<PostCreatorRoute />} />
               <Route path="/profile/:userId" element={<ProfilePageV2Route />} />
               <Route path="/profile" element={<ProfilePageV2Route />} />
-              <Route path="/help" element={<FAQPageRoute />} />
-              <Route path="/help/ask" element={<AskQuestionPageRoute />} />
+              <Route path="/help" element={<HelpCenterPage />} />
+              <Route path="/help/ask" element={<CreateRequestPage />} />
               <Route path="/help/request-sent" element={<RequestSentPage />} /> {/* เพิ่ม Route นี้กลับเข้ามา */}
               <Route path="/help/question/:id" element={<QuestionDetailPageRoute />} />
               <Route path="/help/request-status/:id" element={<RequestStatusPageRoute />} />

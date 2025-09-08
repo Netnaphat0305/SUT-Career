@@ -227,11 +227,12 @@
 //   update: (id: number, data: Partial<any>) => Update(`/api/reports/${id}`, data),
 //   delete: (id: number) => Delete(`/api/reports/${id}`),
 // };
-
 import axios from "axios";
 import type { AxiosResponse, AxiosError } from "axios";
 import type { Employer, SignInEmployer } from "../../interfaces/employer";
 import type { Student, SignInStudent } from "../../interfaces/student";
+// ✨ 1. เปลี่ยน path การ import และเพิ่ม TicketAttachment
+import type { FAQ, RequestTicket, TicketAttachment } from '../../interfaces/helpcenter';
 import type {
   Review,
   CreateReviewRequest,
@@ -240,7 +241,6 @@ import type {
 import type { Ratingscore } from "../../interfaces/ratingscore";
 import type { Jobpost, CreateJobpost } from "../../interfaces/jobpost";
 import type { Skill } from "../../interfaces/skill";
-import type { FAQ, RequestTicket } from "../../types";
 
 const API_URL = "http://localhost:8080/api";
 export const UPLOAD_URL = `${API_URL}/upload`;
@@ -332,7 +332,7 @@ export const jobPostAPI = {
   },
 };
 
-// =================== แก้ไขโดยพรศิริ ===================
+// Student Post APIs
 export const studentPostAPI = {
     getStudentPosts: () => get("/student-posts", false),
     getStudentPostById: (id: number) => get(`/student-posts/${id}`, false),
@@ -342,20 +342,32 @@ export const studentPostAPI = {
     getMyStudentPosts: () => get("/my-posts"),
 };
 
+// Skill API
 export const skillAPI = {
     getAllSkills: (): Promise<AxiosResponse<Skill[]>> => get("/skills") as Promise<AxiosResponse<Skill[]>>,
 };
-// =================== สิ้นสุดการแก้ไขโดยพรศิริ ===================
 
-export const profileAPI = {
-    getMyProfile: () => get("/profile"),
+// Q&A and Help Center APIs
+export const qnaAPI = {
+  // FAQ APIs
+  getFaqs: (): Promise<AxiosResponse<FAQ[]>> => get("/faqs", false) as Promise<AxiosResponse<FAQ[]>>,
+  createFaq: (data: { title: string, content: string }) => post("/admin/faqs", data),
+  updateFaq: (id: number, data: { title: string, content: string }) => put(`/admin/faqs/${id}`, data),
+  deleteFaq: (id: number) => del(`/admin/faqs/${id}`),
+
+  // Ticket APIs
+  createTicket: (data: { subject: string; initial_message: string; attachments?: any[] }) => post("/tickets", data),
+  getMyTickets: () => get("/tickets"),
+  getAllTicketsForAdmin: () => get("/admin/tickets"),
+  getTicketById: (ticketId: string) => get(`/tickets/${ticketId}`),
+  // ✨ 2. แก้ไข Type ของ `data` ให้รองรับ `attachments`
+  createTicketReply: (ticketId: string, data: { message: string; is_staff_reply: boolean; attachments?: Omit<TicketAttachment, 'ID'>[] }) => post(`/tickets/${ticketId}/replies`, data),
+  updateTicketStatus: (ticketId: string, status: string) => put(`/admin/tickets/${ticketId}/status`, { status }),
 };
 
-export const qnaAPI = {
-    getFaqs: (): Promise<AxiosResponse<FAQ[]>> => get("/faqs", false) as Promise<AxiosResponse<FAQ[]>>,
-    createTicket: (data: { subject: string; initial_message: string }) => post("/tickets", data),
-    getAllTickets: () => get("/tickets"), // For admin
-    getTicketById: (ticketId: string) => get(`/tickets/${ticketId}`),
+// Profile API
+export const profileAPI = {
+    getMyProfile: () => get("/profile"),
 };
 
 // Job Application APIs
@@ -375,7 +387,7 @@ export const jobCategoryAPI = {
 
 // Job employmentType APIs
 export const employmentTypeAPI = {
-  getAll: () => get("/employmenttypes", false), 
+  getAll: () => get("/employmenttypes", false),
   getById: (id: number) => get(`/employmenttypes/${id}`, false),
 };
 
@@ -408,7 +420,7 @@ export const reportAPI = {
   create: (data: any) => post("/reports", data),
   getAll: () => get("/reports"),
   getById: (id: number) => get(`/reports/${id}`),
-  update: (id: number, data: Partial<any>) => put(`/reports/${id}`, data),
-  delete: (id: number) => del(`/reports/${id}`),
+  update: (id: number, data: Partial<any>) => put(`/api/reports/${id}`, data),
+  delete: (id: number) => del(`/api/reports/${id}`),
 };
 

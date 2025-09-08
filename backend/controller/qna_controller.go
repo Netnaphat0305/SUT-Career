@@ -242,7 +242,6 @@
 // 	c.JSON(http.StatusOK, ticket)
 // }
 
-// backend/controllers/qna_controller.go
 package controller
 
 import (
@@ -442,7 +441,7 @@ func CreateTicketReply(c *gin.Context) {
 		return
 	}
 	reply.AuthorID = authorID.(uint)
-	reply.TicketID = uint(ticketID)
+	reply.RequestTicketID = uint(ticketID)
 
 	// บันทึกการตอบกลับ
 	if err := config.DB().Create(&reply).Error; err != nil {
@@ -491,4 +490,3 @@ func UpdateTicketStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, ticket)
 }
 
-// ======================= END: ของพรศิริ =======================

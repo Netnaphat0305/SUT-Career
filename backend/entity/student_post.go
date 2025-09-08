@@ -10,7 +10,7 @@ type StudentPost struct {
 
 	// --- ข้อมูลเฉพาะของโพสต์ ---
 	Title                string `json:"title" gorm:"type:varchar(255);not null"`
-	JobType              string `json:"job_type" gorm:"type:varchar(100);not null"`
+	
 	Availability         string `json:"availability" gorm:"type:varchar(255);not null"`
 	PreferredLocation    string `json:"preferred_location" gorm:"type:varchar(255);not null"`
 	ExpectedCompensation string `json:"expected_compensation" gorm:"type:text"`
@@ -18,6 +18,9 @@ type StudentPost struct {
 	PortfolioURL         string `json:"portfolio_url" gorm:"type:varchar(500)"`
 	Status               string `json:"status" gorm:"type:varchar(50);default:'active'"`
 	Skills []*Skill `gorm:"many2many:student_post_skills;" json:"skills"`
+
+	EmploymentTypeID *uint `json:"employment_type_id"`
+	EmploymentType   *EmploymentType `json:"employment_type" gorm:"foreignKey:EmploymentTypeID"`
 
 	// --- Foreign Key & Relations ---
 
@@ -27,6 +30,7 @@ type StudentPost struct {
 
 	// 2. ความสัมพันธ์กับไฟล์แนบ
 	Attachments []StudentPostAttachment `json:"attachments" gorm:"foreignKey:StudentPostID"`
+
 
 
 	

@@ -358,10 +358,11 @@ import {
 } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 import { useAuth } from '../context/AuthContext';
-// ✅ 1. Import service และ URL จากไฟล์กลางที่เดียว
-import { studentPostAPI, skillAPI, UPLOAD_URL } from '../services/https/index';
+// ✨ 1. import `employmentTypeAPI` เพิ่ม
+import { studentPostAPI, skillAPI, employmentTypeAPI, UPLOAD_URL } from '../services/https/index';
 import type { Skill } from '../interfaces/skill';
 import type { CreateStudentPostModalProps, StudentPostAttachment } from "../interfaces/studentpost";
+import type { EmploymentType } from '../interfaces/employment_type'; // ✨ 2. Import type เข้ามา
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -378,30 +379,40 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
   const [attachments, setAttachments] = useState<StudentPostAttachment[]>([]);
   const { user } = useAuth();
   const [skills, setSkills] = useState<Skill[]>([]);
+  
+  // ✨ 3. สร้าง State สำหรับเก็บข้อมูลประเภทงาน
+  const [employmentTypes, setEmploymentTypes] = useState<EmploymentType[]>([]);
 
-  const jobTypes = [
-    'งานประจำ', 'งานพาร์ทไทม์', 'ฟรีแลนซ์',
-    'ฝึกงาน', 'งานชั่วคราว', 'งานโครงการ'
-  ];
+  // ❌ ลบ jobTypes ที่ hardcode ไว้ออก
+  // const jobTypes = [ ... ];
 
   useEffect(() => {
     if (visible) {
-      const fetchSkills = async () => {
+      const fetchInitialData = async () => {
         try {
-          // ✅ 2. เรียกใช้ฟังก์ชันผ่าน object ที่ import มา
-          const response = await skillAPI.getAllSkills();
-          setSkills(response.data); // Axios จะคืนข้อมูลใน property .data
+          // ✨ 4. เรียก API ทั้งสองส่วนพร้อมกัน
+          const [skillsResponse, employmentTypesResponse] = await Promise.all([
+            skillAPI.getAllSkills(),
+            employmentTypeAPI.getAll()
+          ]);
+          
+          setSkills(skillsResponse.data);
+          
+          // ตรวจสอบข้อมูลที่ได้จาก employmentTypeAPI
+          const empData = employmentTypesResponse?.data?.data || employmentTypesResponse?.data || [];
+          setEmploymentTypes(empData);
+          
         } catch (error) {
-          message.error('ไม่สามารถโหลดข้อมูลสกิลได้');
+          message.error('ไม่สามารถโหลดข้อมูลเริ่มต้น (Skills, Job Types) ได้');
         }
       };
-      fetchSkills();
+      fetchInitialData();
     }
   }, [visible]);
 
   const handleUpload: UploadProps = {
     name: 'file',
-    action: UPLOAD_URL, // ✅ 3. ใช้ URL ที่ import มา
+    action: UPLOAD_URL,
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     method: 'POST',
     onChange: (info) => {
@@ -451,7 +462,7 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
 
       const postData = {
         title: values.title,
-        job_type: values.jobType,
+        employment_type_id: values.employmentTypeId, // ✨ 5. เปลี่ยน field ที่ส่ง
         availability: values.availability,
         preferred_location: values.preferredLocation,
         expected_compensation: values.expectedCompensation,
@@ -462,7 +473,6 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
         attachments: attachments,
       };
 
-      // ✅ 4. เรียกใช้ฟังก์ชันผ่าน object ที่ import มา
       await studentPostAPI.createStudentPost(postData);
       message.success('สร้างโพสต์ของคุณสำเร็จแล้ว!');
       form.resetFields();
@@ -492,14 +502,24 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
       footer={null}
       width={800}
       centered
-      destroyOnHidden={true}
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Row gutter={16}>
           <Col span={24}><Form.Item label="หัวข้อโพสต์" name="title" rules={[{ required: true, message: 'กรุณาใส่หัวข้อโพสต์' }]}><Input prefix={<BulbOutlined />} placeholder="เช่น มองหางานพาร์ทไทม์ร้านกาแฟ" /></Form.Item></Col>
         </Row>
         <Row gutter={16}>
-          <Col span={12}><Form.Item label="ประเภทงาน" name="jobType" rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}><Select placeholder="เลือกประเภทงาน">{jobTypes.map(type => <Option key={type} value={type}>{type}</Option>)}</Select></Form.Item></Col>
+          {/* ✨ 6. แก้ไข ส่วนแสดงผล Dropdown ประเภทงาน */}
+          <Col span={12}>
+            <Form.Item label="ประเภทงาน" name="employmentTypeId" rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}>
+              <Select placeholder="เลือกประเภทงาน" loading={employmentTypes.length === 0}>
+                {employmentTypes.map(type => 
+                  <Option key={type.id} value={type.id}>
+                    {type.employment_type_name}
+                  </Option>
+                )}
+              </Select>
+            </Form.Item>
+          </Col>
           <Col span={12}><Form.Item label="เวลาที่สะดวก" name="availability" rules={[{ required: true, message: 'กรุณาระบุเวลา' }]}><Input prefix={<ClockCircleOutlined />} placeholder="เช่น จันทร์-ศุกร์ 9:00-17:00" /></Form.Item></Col>
         </Row>
         <Row gutter={16}>
