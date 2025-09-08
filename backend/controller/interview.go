@@ -59,8 +59,10 @@ func BookInterview(c *gin.Context) {
 	//ชั้นจำเป็นต้องอัปเดตฟิลด์ application_status ใน JobApplication เป็น InterviewScheduled
 	if err := tx.Model(&entity.JobApplication{}).
 		Where("id = ?", input.JobApplicationID).
-		Updates(map[string]interface{}{
-			"application_status": entity.StatusInterviewScheduled,
+		Select("application_status", "interview_scheduling_id"). //เปลี่ยนมา select อันที่จะ update ก่อนอันเก่ามันไม่ update interview_scheduling_id ให้ชั้น
+		Updates(entity.JobApplication{
+			ApplicationStatus:     entity.StatusInterviewScheduled,
+			InterviewSchedulingID: &input.ScheduleID,
 		}).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update job application status"})
@@ -70,6 +72,16 @@ func BookInterview(c *gin.Context) {
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Transaction commit failed"})
+		return
+	}
+
+	// เอาไว้ใช้ ดึงข้อมูลการสัมภาษณ์ (Interview) ของนักศึกษาหลังจากที่มีการจองวันสัมภาษณ์แล้ว 
+	// ดึงข้อมูลความสัมพันธ์ มาด้วย
+	if err := config.DB().
+		Preload("InterviewScheduling").
+		Preload("Student").
+		First(&interview, interview.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch interview details"})
 		return
 	}
 
