@@ -1530,6 +1530,7 @@
 // export default HelpCenterPage;
 // src/pages/HelpCenter/HelpCenterPage.tsx
 // src/pages/HelpCenter/HelpCenterPage.tsx
+// src/pages/HelpCenter/HelpCenterPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -1549,10 +1550,10 @@ import {
   Space,
   Table,
   Badge,
-  Image,
-  Upload, // 1. Import Upload component
+  Image, // เพิ่ม Image
+  Upload, 
 } from 'antd';
-import type { CollapseProps, TabsProps, TableColumnsType, UploadProps, UploadFile } from 'antd'; // 2. Import Upload types
+import type { CollapseProps, TabsProps, TableColumnsType, UploadProps, UploadFile } from 'antd'; 
 import {
   QuestionCircleOutlined,
   SendOutlined,
@@ -1562,7 +1563,7 @@ import {
   EyeOutlined,
   FileSearchOutlined,
   PaperClipOutlined,
-  UploadOutlined, // 3. Import UploadOutlined icon
+  UploadOutlined, 
 } from '@ant-design/icons';
 import type { FAQ, RequestTicket, TicketAttachment } from '../../interfaces/helpcenter';
 import { qnaAPI } from '../../services/https/index';
@@ -1613,7 +1614,6 @@ const HelpCenterPage: React.FC = () => {
   const [replyMessage, setReplyMessage] = useState('');
   const [activeTab, setActiveTab] = useState('1');
   
-  // 4. State for reply attachments
   const [replyFileList, setReplyFileList] = useState<UploadFile[]>([]);
   const [replyAttachments, setReplyAttachments] = useState<Omit<TicketAttachment, 'ID'>[]>([]);
 
@@ -1633,7 +1633,6 @@ const HelpCenterPage: React.FC = () => {
     setLoadingFaqs(true);
     try {
       const response = await qnaAPI.getFaqs();
-      // ✅ แก้ไข: จัดการกับการเข้าถึงข้อมูลให้ปลอดภัยและถูกต้อง
       const potentialArray = response?.data;
       const faqsData = (potentialArray as any)?.data || potentialArray;
 
@@ -1646,7 +1645,7 @@ const HelpCenterPage: React.FC = () => {
     } catch (error) {
       console.error("Failed to fetch FAQs:", error);
       message.error('ไม่สามารถดึงข้อมูล FAQ ได้');
-      setFaqs([]); // Ensure faqs is an array on error
+      setFaqs([]); 
     } finally {
       setLoadingFaqs(false);
     }
@@ -1801,7 +1800,6 @@ const HelpCenterPage: React.FC = () => {
     }
   };
 
-  // 5. Upload properties for reply attachments
   const replyUploadProps: UploadProps = {
     name: 'file',
     action: 'http://localhost:8080/api/upload',
@@ -1838,7 +1836,21 @@ const HelpCenterPage: React.FC = () => {
   const faqItems: CollapseProps['items'] = filteredFaqs.map(q => ({
     key: q.ID,
     label: <Text strong>{q.title}</Text>,
-    children: <Text>{q.content || 'ยังไม่มีคำตอบ'}</Text>,
+    children: (
+        <div>
+            {q.image_url && (
+                <div style={{ marginBottom: 16, textAlign: 'center' }}>
+                    <Image 
+                        width={250} 
+                        src={q.image_url} 
+                        alt={q.title} 
+                        style={{ borderRadius: 8 }}
+                    />
+                </div>
+            )}
+            <Text>{q.content || 'ยังไม่มีคำตอบ'}</Text>
+        </div>
+    ),
   }));
 
   const requestColumns: TableColumnsType<RequestTicket> = [
@@ -2048,7 +2060,6 @@ const HelpCenterPage: React.FC = () => {
                 <Title level={5}>ตอบกลับ</Title>
                 <TextArea rows={3} value={replyMessage} onChange={(e) => setReplyMessage(e.target.value)} placeholder="พิมพ์ข้อความตอบกลับของคุณ..." style={{ marginBottom: '12px' }} />
                 
-                {/* 6. Add Upload component to the reply section */}
                 <Upload {...replyUploadProps} >
                   <Button icon={<UploadOutlined />}>แนบไฟล์</Button>
                 </Upload>
@@ -2068,4 +2079,3 @@ const HelpCenterPage: React.FC = () => {
 };
 
 export default HelpCenterPage;
-

@@ -242,6 +242,7 @@
 // 	c.JSON(http.StatusOK, ticket)
 // }
 // backend/controllers/qna_controller.go
+// backend/controllers/qna_controller.go
 package controller
 
 import (
@@ -304,8 +305,9 @@ func UpdateFAQ(c *gin.Context) {
 	}
 
 	var input struct {
-		Title   string `json:"title"`
-		Content string `json:"content"`
+		Title    string  `json:"title"`
+		Content  string  `json:"content"`
+		ImageURL *string `json:"image_url"` // เพิ่ม ImageURL
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -314,6 +316,7 @@ func UpdateFAQ(c *gin.Context) {
 
 	faq.Title = input.Title
 	faq.Content = input.Content
+	faq.ImageURL = input.ImageURL // อัปเดต ImageURL
 	config.DB().Save(&faq)
 
 	c.JSON(http.StatusOK, faq)

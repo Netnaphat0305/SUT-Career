@@ -895,6 +895,8 @@
 // src/pages/StudentFeed/StudentFeedPage.tsx
 // src/pages/StudentFeed/StudentFeedPage.tsx
 // src/pages/StudentFeed/StudentFeedPage.tsx
+// src/pages/StudentFeed/StudentFeedPage.tsx
+// src/pages/StudentFeed/StudentFeedPage.tsx
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
@@ -913,6 +915,7 @@ import {
   Popconfirm,
   Dropdown,
   Divider,
+  Image,
 } from "antd";
 import type { MenuProps } from 'antd';
 import {
@@ -926,6 +929,7 @@ import {
   MoreOutlined,
   SearchOutlined,
   AppstoreOutlined,
+  PaperClipOutlined,
 } from "@ant-design/icons";
 
 import { useNavigate } from "react-router-dom";
@@ -937,11 +941,36 @@ import {
 import CreateStudentPostModal from "../../components/CreateStudentPostModal";
 import EditStudentPostModal from "../../components/EditStudentPostModal";
 
-import type{ StudentPost } from "../../interfaces/studentpost";
+import type{ StudentPost, StudentPostAttachment } from "../../interfaces/studentpost";
 import type{ Skill } from "../../interfaces/skill";
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
+
+const AttachmentDisplay: React.FC<{ attachments?: StudentPostAttachment[] }> = ({ attachments }) => {
+    if (!attachments || attachments.length === 0) {
+      return null;
+    }
+  
+    return (
+      <div style={{ marginTop: '16px' }}>
+        <Text strong>🎨 ผลงานแนบ:</Text>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #f0f0f0' }}>
+            <Image.PreviewGroup>
+            {attachments.map((att, index) => (
+                att.type.startsWith('image/') ? (
+                <Image key={att.ID || index} width={80} height={80} src={att.url} alt={att.name} style={{ objectFit: 'cover', borderRadius: '4px' }}/>
+                ) : (
+                <Button key={att.ID || index} href={att.url} target="_blank" icon={<PaperClipOutlined />}>
+                    {att.name}
+                </Button>
+                )
+            ))}
+            </Image.PreviewGroup>
+        </div>
+      </div>
+    );
+};
 
 const StudentFeedPage: React.FC = () => {
   const navigate = useNavigate();
@@ -963,7 +992,6 @@ const StudentFeedPage: React.FC = () => {
     user?.role && 
     (user.role.toLowerCase() === "student" || user.role.toLowerCase() === "stu");
 
-  // ค่า value ของปุ่มฟิลเตอร์ ต้องตรงกับค่าใน Database
   const jobTypeOptions = [
     { label: "Full-Time", value: "FullTime" },
     { label: "Part-Time", value: "PartTime" },
@@ -996,7 +1024,6 @@ const StudentFeedPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await getStudentProfilePosts();
-      // ให้เข้าถึงข้อมูลใน response.data.data (ตามโครงสร้าง API)
       const postsData = response?.data?.data || response?.data || [];
       if (Array.isArray(postsData)) {
         setPosts(postsData);
@@ -1029,7 +1056,6 @@ const StudentFeedPage: React.FC = () => {
         const title = post.title?.toLowerCase() || "";
         const skillsText = getSkillsAsArray(post.skills).join(' ').toLowerCase();
         const introduction = post.introduction?.toLowerCase() || "";
-        // ✅ **จุดแก้ไขที่ 1**
         const jobType = post.employment_type?.employment_type_name?.toLowerCase() || ""; 
         
         return (
@@ -1043,7 +1069,6 @@ const StudentFeedPage: React.FC = () => {
     }
 
     if (selectedJobType) {
-      // ✅ **จุดแก้ไขที่ 1 (ต่อ)**
       filtered = filtered.filter((post) =>
         post.employment_type?.employment_type_name?.toLowerCase().includes(selectedJobType.toLowerCase())
       );
@@ -1071,7 +1096,6 @@ const StudentFeedPage: React.FC = () => {
   const closeModal = () => setIsModalVisible(false);
   
   const goToProfile = (studentId?: number) => {
-    // ใช้ ID ของ student ไม่ใช่ user
     if (studentId && studentId > 0) {
       navigate(`/profile/${studentId}`);
     } else {
@@ -1197,12 +1221,12 @@ const StudentFeedPage: React.FC = () => {
                 <Col xs={24} sm={12} md={8} lg={6} key={post.ID}>
                   <Card
                     hoverable
-                    style={{ borderRadius: "12px", overflow: "hidden", height: "100%" }}
+                    style={{ borderRadius: "12px", overflow: "hidden", height: "100%", display: 'flex', flexDirection: 'column' }}
+                    bodyStyle={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
                     cover={
                       <div style={{ padding: "16px", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", textAlign: "center" }}>
                         <Avatar src={post.student?.profile_image_url} icon={<UserOutlined />} size={64} style={{ border: "3px solid white" }} />
                         <Title level={5} style={{ color: 'white', marginTop: '8px' }}>{studentName}</Title>
-                        {/* ✅ **จุดแก้ไขที่ 2** */}
                         <Tag color="rgba(255,255,255,0.3)">{post.employment_type?.employment_type_name || 'ไม่ระบุ'}</Tag>
                       </div>
                     }
@@ -1212,11 +1236,13 @@ const StudentFeedPage: React.FC = () => {
                     ]}
                   >
                     {isOwn && <Dropdown menu={{ items: moreOptionsItems }} trigger={['click']}><Button icon={<MoreOutlined />} shape="circle" style={{ position: "absolute", top: "8px", right: "8px", border: 'none' }} /></Dropdown>}
-                    <Card.Meta
-                      title={<Text ellipsis>{post.title || "ไม่มีหัวข้อ"}</Text>}
-                      description={<Paragraph ellipsis={{ rows: 2 }}>{post.introduction || "ไม่มีรายละเอียด"}</Paragraph>}
-                    />
-                    <div style={{ marginTop: '12px' }}>
+                    <div style={{ flexGrow: 1 }}>
+                      <Card.Meta
+                        title={<Text ellipsis>{post.title || "ไม่มีหัวข้อ"}</Text>}
+                        description={<Paragraph ellipsis={{ rows: 2 }}>{post.introduction || "ไม่มีรายละเอียด"}</Paragraph>}
+                      />
+                    </div>
+                    <div>
                       <Text strong>ทักษะ:</Text>
                       <div style={{ marginTop: '4px' }}>
                         {skillsArray.slice(0, 3).map((skill, i) => <Tag key={i} color="blue">{skill}</Tag>)}
@@ -1264,7 +1290,6 @@ const StudentFeedPage: React.FC = () => {
             </div>
             <Divider />
             <p><Text strong>หัวข้อ:</Text> {selectedPost.title}</p>
-            {/* ✅ **จุดแก้ไขที่ 3** */}
             <p><Text strong>ประเภทงาน:</Text> <Tag color="blue">{selectedPost.employment_type?.employment_type_name || 'ไม่ระบุ'}</Tag></p>
             <p><Text strong>เวลาที่สะดวก:</Text> {selectedPost.availability}</p>
             <p><Text strong>สถานที่:</Text> {selectedPost.preferred_location}</p>
@@ -1273,7 +1298,10 @@ const StudentFeedPage: React.FC = () => {
             <Paragraph>{selectedPost.introduction}</Paragraph>
             <p><Text strong>ทักษะ:</Text></p>
             <div>{getSkillsAsArray(selectedPost.skills).map((skill, i) => <Tag key={i} color="processing">{skill}</Tag>)}</div>
-            {selectedPost.portfolio_url && <p style={{marginTop: '16px'}}><Text strong>ผลงาน:</Text> <a href={selectedPost.portfolio_url} target="_blank" rel="noopener noreferrer">ดูผลงาน</a></p>}
+            {selectedPost.portfolio_url && <p style={{marginTop: '16px'}}><Text strong>ผลงาน (ลิงก์):</Text> <a href={selectedPost.portfolio_url} target="_blank" rel="noopener noreferrer">{selectedPost.portfolio_url}</a></p>}
+            
+            <AttachmentDisplay attachments={selectedPost.attachments} />
+
             <Divider />
             <Text strong>ข้อมูลติดต่อ:</Text>
             {selectedPost.student?.email && <div><MailOutlined /> {selectedPost.student.email}</div>}
@@ -1299,3 +1327,4 @@ const StudentFeedPage: React.FC = () => {
 };
 
 export default StudentFeedPage;
+

@@ -16,6 +16,7 @@ export interface FAQ {
   UpdatedAt?: string;
   title: string;
   content: string;
+  image_url?: string; // เพิ่ม field นี้
 }
 
 export interface TicketReply {

@@ -351,9 +351,9 @@ export const skillAPI = {
 export const qnaAPI = {
   // FAQ APIs
   getFaqs: (): Promise<AxiosResponse<FAQ[]>> => get("/faqs", false) as Promise<AxiosResponse<FAQ[]>>,
-  createFaq: (data: { title: string, content: string }) => post("/admin/faqs", data),
-  updateFaq: (id: number, data: { title: string, content: string }) => put(`/admin/faqs/${id}`, data),
-  deleteFaq: (id: number) => del(`/admin/faqs/${id}`),
+  createFaq: (data: { title: string, content: string, image_url?: string }) => post("/admin/faqs", data),
+  updateFaq: (id: string, data: { title: string, content: string, image_url?: string }) => put(`/admin/faqs/${id}`, data),
+  deleteFaq: (id: string) => del(`/admin/faqs/${id}`),
 
   // Ticket APIs
   createTicket: (data: { subject: string; initial_message: string; attachments?: any[] }) => post("/tickets", data),
@@ -423,4 +423,3 @@ export const reportAPI = {
   update: (id: number, data: Partial<any>) => put(`/api/reports/${id}`, data),
   delete: (id: number) => del(`/api/reports/${id}`),
 };
-

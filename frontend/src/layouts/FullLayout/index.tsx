@@ -10,9 +10,10 @@ import {
   Space,
   Dropdown,
 } from "antd";
-import { DownOutlined, BellOutlined } from "@ant-design/icons";
+import { DownOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import logoImage from '../../assets/logo.svg';
+import NotificationBell from '../../components/NotificationBell';
 
 const { Header, Content, Footer } = Layout;
 
@@ -104,7 +105,7 @@ const FullLayout: React.FC = () => {
         </div>
         <Flex align="center">
           <Space size="middle">
-            <BellOutlined style={{ fontSize: "20px", color: colorText }} />
+            <NotificationBell />
             <Dropdown
               menu={{
                 items: [
@@ -152,3 +153,4 @@ const FullLayout: React.FC = () => {
 };
 
 export default FullLayout;
+
