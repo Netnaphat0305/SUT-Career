@@ -189,22 +189,20 @@
 // export default RequestsPage;
 // src/pages/Admin2/RequestsPage.tsx
 // src/pages/Admin2/RequestsPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Table, Tag, Button, Typography, Space, Modal, message, Descriptions, Input, Avatar, Card, Divider, Select, Upload, Image } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-// ✅ แก้ไข: Import UploadProps และ UploadFile จาก 'antd' และ UploadChangeParam แยกต่างหาก
 import type { UploadProps, UploadFile } from 'antd';
 import type { UploadChangeParam } from 'antd/es/upload';
 import { EyeOutlined, UserOutlined, CheckCircleOutlined, SendOutlined, PaperClipOutlined, UploadOutlined } from '@ant-design/icons';
 import type { RequestTicket, TicketAttachment } from '../../interfaces/helpcenter';
-import { qnaAPI } from '../../services/https/index';
+import { qnaAPI, UPLOAD_URL } from '../../services/https/index';
 import '../Admin2/RequestsPage.css';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-// Copied AttachmentDisplay from HelpCenterPage.tsx
 const AttachmentDisplay: React.FC<{ attachments?: TicketAttachment[] }> = ({ attachments }) => {
     if (!attachments || attachments.length === 0) {
       return null;
@@ -239,15 +237,19 @@ const RequestsPage: React.FC = () => {
     const [replyFileList, setReplyFileList] = useState<UploadFile[]>([]);
     const [replyAttachments, setReplyAttachments] = useState<Omit<TicketAttachment, 'ID'>[]>([]);
 
-
     const fetchTickets = async () => {
         setLoading(true);
         try {
             const response = await qnaAPI.getAllTicketsForAdmin();
             if (response && response.data) {
+                // ✅ แก้ไข: จัดการกับการเข้าถึงข้อมูลให้ปลอดภัยและถูกต้อง
                 const data: RequestTicket[] = response.data.data || response.data;
-                const sortedData = data.sort((a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime());
-                setTickets(sortedData);
+                if (Array.isArray(data)) {
+                    const sortedData = data.sort((a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime());
+                    setTickets(sortedData);
+                } else {
+                    throw new Error('Fetched data is not an array');
+                }
             } else {
                  throw new Error('Failed to fetch tickets');
             }
@@ -362,7 +364,7 @@ const RequestsPage: React.FC = () => {
 
     const replyUploadProps: UploadProps = {
         name: 'file',
-        action: 'http://localhost:8080/api/upload',
+        action: UPLOAD_URL,
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -400,7 +402,14 @@ const RequestsPage: React.FC = () => {
             key: 'status', 
             render: (status: RequestTicket['status']) => (
                 <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
-            )
+            ),
+            filters: [
+                { text: 'รอการตอบกลับ', value: 'Open' },
+                { text: 'กำลังดำเนินการ', value: 'In Progress' },
+                { text: 'รอยืนยัน', value: 'Awaiting Confirmation' },
+                { text: 'แก้ไขแล้ว', value: 'Resolved' },
+            ],
+            onFilter: (value, record) => record.status === value,
         },
         { title: 'การดำเนินการ', key: 'action', render: (_, record) => <Button icon={<EyeOutlined />} onClick={() => handleViewDetails(record)}>ตรวจสอบ</Button> },
     ];
