@@ -188,17 +188,47 @@
 
 // export default RequestsPage;
 // src/pages/Admin2/RequestsPage.tsx
+// src/pages/Admin2/RequestsPage.tsx
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Button, Typography, Space, Modal, message, Descriptions, Input, Avatar, Card, Divider, Alert } from 'antd';
+import { Table, Tag, Button, Typography, Space, Modal, message, Descriptions, Input, Avatar, Card, Divider, Select, Upload, Image } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EyeOutlined, UserOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import type { RequestTicket } from '../../types';
-import './RequestsPage.css';
+// ✅ แก้ไข: Import UploadProps และ UploadFile จาก 'antd' และ UploadChangeParam แยกต่างหาก
+import type { UploadProps, UploadFile } from 'antd';
+import type { UploadChangeParam } from 'antd/es/upload';
+import { EyeOutlined, UserOutlined, CheckCircleOutlined, SendOutlined, PaperClipOutlined, UploadOutlined } from '@ant-design/icons';
+import type { RequestTicket, TicketAttachment } from '../../interfaces/helpcenter';
+import { qnaAPI } from '../../services/https/index';
+import '../Admin2/RequestsPage.css';
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
 
-const API_URL = 'http://localhost:8080/api';
+// Copied AttachmentDisplay from HelpCenterPage.tsx
+const AttachmentDisplay: React.FC<{ attachments?: TicketAttachment[] }> = ({ attachments }) => {
+    if (!attachments || attachments.length === 0) {
+      return null;
+    }
+  
+    return (
+      <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #f0f0f0' }}>
+        <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+          <Image.PreviewGroup>
+            {attachments.map(att => (
+              att.type.startsWith('image/') ? (
+                <Image key={att.ID} width={80} height={80} src={att.url} alt={att.name} style={{ objectFit: 'cover', borderRadius: '4px' }}/>
+              ) : (
+                <Button key={att.ID} href={att.url} target="_blank" icon={<PaperClipOutlined />}>
+                  {att.name}
+                </Button>
+              )
+            ))}
+          </Image.PreviewGroup>
+        </div>
+      </div>
+    );
+  };
 
 const RequestsPage: React.FC = () => {
     const [tickets, setTickets] = useState<RequestTicket[]>([]);
@@ -206,27 +236,21 @@ const RequestsPage: React.FC = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState<RequestTicket | null>(null);
     const [replyMessage, setReplyMessage] = useState('');
+    const [replyFileList, setReplyFileList] = useState<UploadFile[]>([]);
+    const [replyAttachments, setReplyAttachments] = useState<Omit<TicketAttachment, 'ID'>[]>([]);
+
 
     const fetchTickets = async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                message.error('ไม่พบ Token สำหรับยืนยันตัวตน');
-                setLoading(false);
-                return;
+            const response = await qnaAPI.getAllTicketsForAdmin();
+            if (response && response.data) {
+                const data: RequestTicket[] = response.data.data || response.data;
+                const sortedData = data.sort((a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime());
+                setTickets(sortedData);
+            } else {
+                 throw new Error('Failed to fetch tickets');
             }
-
-            const response = await fetch(`${API_URL}/admin/tickets`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.ok) throw new Error('Failed to fetch tickets');
-            const data: RequestTicket[] = await response.json();
-            const sortedData = data.sort((a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime());
-            setTickets(sortedData);
         } catch (error) {
             console.error(error);
             message.error('ไม่สามารถดึงข้อมูลคำร้องได้');
@@ -259,72 +283,76 @@ const RequestsPage: React.FC = () => {
         }
     };
 
-    const handleViewDetails = (ticket: RequestTicket) => {
-        setSelectedTicket(ticket);
-        setIsModalVisible(true);
+    const handleViewDetails = async (ticket: RequestTicket) => {
+        try {
+            const response = await qnaAPI.getTicketById(String(ticket.ID));
+            const ticketData = response?.data?.data || response?.data;
+            if(ticketData) {
+                setSelectedTicket(ticketData);
+                setIsModalVisible(true);
+            } else {
+                throw new Error('Could not fetch ticket details');
+            }
+        } catch(error) {
+            message.error("ไม่สามารถโหลดรายละเอียดคำร้องได้");
+        }
     };
 
     const handleCancelModal = () => {
         setIsModalVisible(false);
         setReplyMessage('');
         setSelectedTicket(null);
+        setReplyFileList([]);
+        setReplyAttachments([]);
     };
 
-    // --- vvvv แก้ไขฟังก์ชัน handleSendReply vvvv ---
     const handleSendReply = async () => {
-        if (!replyMessage.trim() || !selectedTicket) {
-            message.error('กรุณาพิมพ์ข้อความตอบกลับ');
+        if ((!replyMessage || !replyMessage.trim()) && replyAttachments.length === 0) {
+            message.error('กรุณาพิมพ์ข้อความหรือแนบไฟล์');
             return;
-        }
-        try {
-            const token = localStorage.getItem('token'); // 1. ดึง Token
-            const response = await fetch(`${API_URL}/tickets/${selectedTicket.ID}/replies`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // 2. เพิ่ม Token ใน Header
-                },
-                body: JSON.stringify({ message: replyMessage, is_staff_reply: true }),
-            });
-            if (!response.ok) throw new Error((await response.json()).error || 'Failed to send reply');
-            
-            message.success(`ตอบกลับคำร้อง "${selectedTicket.subject}" สำเร็จ!`);
-            setReplyMessage('');
-            
-            // 3. รีเฟรชข้อมูลใน Modal และตารางหลัก
-            fetchTickets(); 
-            const updatedTicketResponse = await fetch(`${API_URL}/tickets/${selectedTicket.ID}`, {
-                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const updatedTicketData = await updatedTicketResponse.json();
-            setSelectedTicket(updatedTicketData);
+          }
+        if (!selectedTicket) return;
 
+        try {
+            const response = await qnaAPI.createTicketReply(String(selectedTicket.ID), {
+                message: replyMessage,
+                is_staff_reply: true, // Admin ตอบกลับเสมอ
+                attachments: replyAttachments,
+            });
+
+            if (response && response.status >= 200 && response.status < 300) {
+                message.success(`ตอบกลับคำร้อง "${selectedTicket.subject}" สำเร็จ!`);
+                setReplyMessage('');
+                setReplyFileList([]);
+                setReplyAttachments([]);
+                fetchTickets();
+                
+                const updatedTicketResponse = await qnaAPI.getTicketById(String(selectedTicket.ID));
+                if (updatedTicketResponse && updatedTicketResponse.data) {
+                    const updatedTicketData = updatedTicketResponse.data.data || updatedTicketResponse.data;
+                    setSelectedTicket(updatedTicketData);
+                }
+            } else {
+                 throw new Error(response?.data?.error || 'Failed to send reply');
+            }
         } catch (error) {
             console.error('Error sending reply:', error);
             message.error('เกิดข้อผิดพลาดในการส่งข้อความตอบกลับ');
         }
     };
-    // --- ^^^^ สิ้นสุดการแก้ไข ^^^^ ---
     
     const handleUpdateStatus = async (status: RequestTicket['status']) => {
         if (!selectedTicket) return;
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_URL}/admin/tickets/${selectedTicket.ID}/status`, {
-                method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ status }),
-            });
-            if (!response.ok) throw new Error('Failed to update status');
-
-            message.success(`อัปเดตสถานะเป็น "${getStatusText(status)}" สำเร็จ`);
-            const updatedTicketData = await response.json();
-            setSelectedTicket(updatedTicketData);
-            fetchTickets();
-
+            const response = await qnaAPI.updateTicketStatus(String(selectedTicket.ID), status);
+            if (response && response.status >= 200 && response.status < 300) {
+                const updatedTicketData = response.data.data || response.data;
+                message.success(`อัปเดตสถานะเป็น "${getStatusText(status)}" สำเร็จ`);
+                setSelectedTicket(updatedTicketData); // อัปเดตข้อมูลใน Modal
+                fetchTickets(); // รีเฟรชตารางหลัก
+            } else {
+                throw new Error(response?.data?.error || 'Failed to update status');
+            }
         } catch (error) {
             message.error('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
         }
@@ -332,8 +360,38 @@ const RequestsPage: React.FC = () => {
     
     const formatTime = (ts?: string) => ts ? new Date(ts).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 
+    const replyUploadProps: UploadProps = {
+        name: 'file',
+        action: 'http://localhost:8080/api/upload',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        fileList: replyFileList,
+        onChange(info: UploadChangeParam<UploadFile>) {
+          setReplyFileList(info.fileList);
+          if (info.file.status === 'done') {
+            message.success(`${info.file.name} อัปโหลดสำเร็จ`);
+            const response = info.file.response;
+            if (response && response.url) {
+              const newAttachment: Omit<TicketAttachment, 'ID'> = {
+                url: response.url,
+                name: info.file.name,
+                type: info.file.type || 'application/octet-stream',
+              };
+              setReplyAttachments(prev => [...prev, newAttachment]);
+            }
+          } else if (info.file.status === 'error') {
+            message.error(`${info.file.name} อัปโหลดไม่สำเร็จ`);
+          }
+        },
+        onRemove(file: UploadFile) {
+          const newAttachments = replyAttachments.filter(att => att.name !== file.name);
+          setReplyAttachments(newAttachments);
+        }
+      };
+
     const columns: ColumnsType<RequestTicket> = [
-        { title: 'เวลาที่ส่ง', dataIndex: 'CreatedAt', key: 'CreatedAt', render: formatTime },
+        { title: 'เวลาที่ส่ง', dataIndex: 'CreatedAt', key: 'CreatedAt', render: formatTime, sorter: (a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime(), defaultSortOrder: 'ascend' },
         { title: 'หัวข้อเรื่อง', dataIndex: 'subject', key: 'subject', ellipsis: true },
         { title: 'ผู้ส่ง', key: 'author', render: (_, record) => <Space><Avatar size="small" icon={<UserOutlined />} />{record.user?.username || 'N/A'}</Space> },
         { 
@@ -367,9 +425,17 @@ const RequestsPage: React.FC = () => {
                                 <Descriptions column={1} size="small" layout="horizontal" bordered>
                                     <Descriptions.Item label="ผู้ส่งคำร้อง">{selectedTicket.user?.username || 'N/A'}</Descriptions.Item>
                                     <Descriptions.Item label="สถานะ">
-                                        <Tag color={getStatusColor(selectedTicket.status)}>
-                                            {getStatusText(selectedTicket.status)}
-                                        </Tag>
+                                        <Select
+                                            value={selectedTicket.status}
+                                            onChange={handleUpdateStatus}
+                                            style={{ width: 180 }}
+                                            size="small"
+                                        >
+                                            <Option value="Open">รอการตอบกลับ</Option>
+                                            <Option value="In Progress">กำลังดำเนินการ</Option>
+                                            <Option value="Awaiting Confirmation">รอยืนยัน</Option>
+                                            <Option value="Resolved">แก้ไขแล้ว</Option>
+                                        </Select>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="วันที่ส่ง">{formatTime(selectedTicket.CreatedAt)}</Descriptions.Item>
                                 </Descriptions>
@@ -379,26 +445,29 @@ const RequestsPage: React.FC = () => {
                         </div>
 
                         <div className="conversation-history" style={{ flexGrow: 1, overflowY: 'auto', backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '6px', border: '1px solid #e8e8e8' }}>
-                            <div key={`initial-${selectedTicket.ID}`} className="history-entry user-reply">
-                                <div className="entry-header">
-                                    <Text strong>{selectedTicket.user?.username || 'Unknown'}</Text>
-                                    <Text type="secondary" className="entry-timestamp">{formatTime(selectedTicket.CreatedAt)}</Text>
-                                </div>
-                                <div className="entry-body">
-                                    <Paragraph style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{selectedTicket.initial_message}</Paragraph>
-                                </div>
-                            </div>
-                            {(selectedTicket.replies || []).map((msg: any) => (
-                                <div key={msg.ID} className={`history-entry ${msg.is_staff_reply ? 'staff-reply' : 'user-reply'}`}>
-                                    <div className="entry-header">
-                                        <Text strong>{msg.author?.username || 'Unknown'}</Text>
-                                        {msg.is_staff_reply && <Tag color="blue">เจ้าหน้าที่</Tag>}
-                                        <Text type="secondary" className="entry-timestamp">{formatTime(msg.CreatedAt)}</Text>
-                                    </div>
-                                    <div className="entry-body">
-                                        <Paragraph style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{msg.message}</Paragraph>
-                                    </div>
-                                </div>
+                            <Card size="small" style={{ marginBottom: '8px', background: '#fff' }}>
+                                <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                                    <Space>
+                                        <Text strong>{selectedTicket.user?.username || 'Unknown'}</Text>
+                                        <Text type="secondary" style={{ fontSize: '12px' }}>{formatTime(selectedTicket.CreatedAt)}</Text>
+                                    </Space>
+                                    <Text>{selectedTicket.initial_message}</Text>
+                                    <AttachmentDisplay attachments={selectedTicket.attachments} />
+                                </Space>
+                            </Card>
+
+                            {(selectedTicket.replies || []).map((reply: any, index: number) => (
+                                 <Card key={index} size="small" style={{ marginBottom: '8px', background: reply.is_staff_reply ? '#e6f7ff' : '#fff' }}>
+                                 <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                                   <Space>
+                                     <Text strong>{reply.author?.username || 'Unknown'}</Text>
+                                     {reply.is_staff_reply && <Tag color="blue" >เจ้าหน้าที่</Tag>}
+                                     <Text type="secondary" style={{ fontSize: '12px', marginLeft: 'auto' }}>{formatTime(reply.CreatedAt)}</Text>
+                                   </Space>
+                                   <Text>{reply.message}</Text>
+                                   <AttachmentDisplay attachments={reply.attachments} />
+                                 </Space>
+                               </Card>
                             ))}
                         </div>
                         
@@ -410,25 +479,20 @@ const RequestsPage: React.FC = () => {
                                 value={replyMessage}
                                 onChange={(e) => setReplyMessage(e.target.value)}
                                 placeholder="พิมพ์คำตอบในฐานะเจ้าหน้าที่..."
-                                disabled={selectedTicket.status === 'Resolved' || selectedTicket.status === 'Awaiting Confirmation'}
                             />
-                            <Space style={{ marginTop: '12px', justifyContent: 'space-between', width: '100%' }}>
+                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px'}}>
+                                <Upload {...replyUploadProps}>
+                                    <Button icon={<UploadOutlined />}>แนบไฟล์</Button>
+                                </Upload>
                                 <Button
                                     type="primary"
                                     onClick={handleSendReply}
-                                    disabled={selectedTicket.status === 'Resolved' || selectedTicket.status === 'Awaiting Confirmation'}
+                                    icon={<SendOutlined />}
+                                    disabled={!replyMessage.trim() && replyAttachments.length === 0}
                                 >
                                     ส่งตอบกลับ
                                 </Button>
-                                { (selectedTicket.status === 'Open' || selectedTicket.status === 'In Progress') && (
-                                    <Button
-                                        icon={<CheckCircleOutlined />}
-                                        onClick={() => handleUpdateStatus('Awaiting Confirmation')}
-                                    >
-                                        จบการสนทนา
-                                    </Button>
-                                )}
-                            </Space>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -438,3 +502,4 @@ const RequestsPage: React.FC = () => {
 };
 
 export default RequestsPage;
+

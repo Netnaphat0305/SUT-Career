@@ -1529,6 +1529,7 @@
 
 // export default HelpCenterPage;
 // src/pages/HelpCenter/HelpCenterPage.tsx
+// src/pages/HelpCenter/HelpCenterPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -1548,9 +1549,10 @@ import {
   Space,
   Table,
   Badge,
-  Image, // ✅ 1. Import Image component
+  Image,
+  Upload, // 1. Import Upload component
 } from 'antd';
-import type { CollapseProps, TabsProps, TableColumnsType } from 'antd';
+import type { CollapseProps, TabsProps, TableColumnsType, UploadProps, UploadFile } from 'antd'; // 2. Import Upload types
 import {
   QuestionCircleOutlined,
   SendOutlined,
@@ -1559,7 +1561,8 @@ import {
   MinusOutlined,
   EyeOutlined,
   FileSearchOutlined,
-  PaperClipOutlined, // ✅ 2. Import PaperClipOutlined
+  PaperClipOutlined,
+  UploadOutlined, // 3. Import UploadOutlined icon
 } from '@ant-design/icons';
 import type { FAQ, RequestTicket, TicketAttachment } from '../../interfaces/helpcenter';
 import { qnaAPI } from '../../services/https/index';
@@ -1568,7 +1571,6 @@ import './HelpCenterPage.css';
 const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
 
-// ✅ 3. สร้าง Component สำหรับแสดงไฟล์แนบ
 const AttachmentDisplay: React.FC<{ attachments?: TicketAttachment[] }> = ({ attachments }) => {
   if (!attachments || attachments.length === 0) {
     return null;
@@ -1610,6 +1612,10 @@ const HelpCenterPage: React.FC = () => {
   const [loadingModal, setLoadingModal] = useState(false);
   const [replyMessage, setReplyMessage] = useState('');
   const [activeTab, setActiveTab] = useState('1');
+  
+  // 4. State for reply attachments
+  const [replyFileList, setReplyFileList] = useState<UploadFile[]>([]);
+  const [replyAttachments, setReplyAttachments] = useState<Omit<TicketAttachment, 'ID'>[]>([]);
 
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
@@ -1627,14 +1633,20 @@ const HelpCenterPage: React.FC = () => {
     setLoadingFaqs(true);
     try {
       const response = await qnaAPI.getFaqs();
-      if (response && response.data) {
-        setFaqs(response.data); // Adjust to access nested data property
+      // ✅ แก้ไข: จัดการกับการเข้าถึงข้อมูลให้ปลอดภัยและถูกต้อง
+      const potentialArray = response?.data;
+      const faqsData = (potentialArray as any)?.data || potentialArray;
+
+      if (Array.isArray(faqsData)) {
+        setFaqs(faqsData);
       } else {
-        throw new Error('Failed to fetch FAQs');
+        setFaqs([]);
+        message.error('โครงสร้างข้อมูล FAQ ที่ได้รับไม่ถูกต้อง');
       }
     } catch (error) {
       console.error("Failed to fetch FAQs:", error);
       message.error('ไม่สามารถดึงข้อมูล FAQ ได้');
+      setFaqs([]); // Ensure faqs is an array on error
     } finally {
       setLoadingFaqs(false);
     }
@@ -1647,20 +1659,20 @@ const HelpCenterPage: React.FC = () => {
 
   const filteredFaqs = useMemo(() => {
     if (!searchTerm) {
-      return faqs;
+      return Array.isArray(faqs) ? faqs : [];
     }
-    return faqs.filter(faq =>
+    return Array.isArray(faqs) ? faqs.filter(faq =>
       faq.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       faq.content?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ) : [];
   }, [searchTerm, faqs]);
 
   const fetchMyRequests = async () => {
     setLoadingRequests(true);
     try {
       const response = await qnaAPI.getMyTickets();
-      if (response && response.data) {
-        const data: RequestTicket[] = response.data;
+      const data: RequestTicket[] = response?.data?.data || response?.data || [];
+      if (Array.isArray(data)) {
         const sortedData = data.sort((a, b) => 
           new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
         );
@@ -1669,7 +1681,7 @@ const HelpCenterPage: React.FC = () => {
           message.success(`พบคำร้องของคุณ ${sortedData.length} รายการ`);
         }
       } else {
-        throw new Error('Failed to fetch user requests');
+        throw new Error('User requests data is not an array');
       }
     } catch (error) {
       console.error(error);
@@ -1711,8 +1723,9 @@ const HelpCenterPage: React.FC = () => {
     setIsModalVisible(true);
     try {
       const response = await qnaAPI.getTicketById(String(request.ID));
-      if (response && response.data) {
-        setSelectedTicket(response.data.data); // Adjust to access nested data
+      const ticketData = response?.data?.data || response?.data || null;
+      if (ticketData) {
+        setSelectedTicket(ticketData);
       } else {
         throw new Error('Failed to fetch ticket details');
       }
@@ -1729,29 +1742,37 @@ const HelpCenterPage: React.FC = () => {
     setIsModalVisible(false);
     setSelectedTicket(null);
     setReplyMessage('');
+    setReplyFileList([]);
+    setReplyAttachments([]);
   };
 
   const handleSendReply = async () => {
-    if (!replyMessage.trim() || !selectedTicket) {
-      message.error('กรุณาพิมพ์ข้อความตอบกลับ');
+    if ((!replyMessage || !replyMessage.trim()) && replyAttachments.length === 0) {
+      message.error('กรุณาพิมพ์ข้อความหรือแนบไฟล์');
       return;
     }
+    if (!selectedTicket) return;
 
     try {
-      const response = await qnaAPI.createTicketReply(String(selectedTicket.ID), { 
-          message: replyMessage, 
-          is_staff_reply: false 
+      const response = await qnaAPI.createTicketReply(String(selectedTicket.ID), {
+        message: replyMessage,
+        is_staff_reply: false,
+        attachments: replyAttachments,
       });
 
       if (response && response.status >= 200 && response.status < 300) {
-          message.success(`ส่งข้อความตอบกลับสำเร็จ!`);
-          setReplyMessage('');
-          const updatedTicketResponse = await qnaAPI.getTicketById(String(selectedTicket.ID));
-          if (updatedTicketResponse && updatedTicketResponse.data) {
-              setSelectedTicket(updatedTicketResponse.data.data);
-          }
+        message.success(`ส่งข้อความตอบกลับสำเร็จ!`);
+        setReplyMessage('');
+        setReplyFileList([]);
+        setReplyAttachments([]);
+
+        const updatedTicketResponse = await qnaAPI.getTicketById(String(selectedTicket.ID));
+        if (updatedTicketResponse && updatedTicketResponse.data) {
+          const updatedTicketData = updatedTicketResponse?.data?.data || updatedTicketResponse?.data || null;
+          setSelectedTicket(updatedTicketData);
+        }
       } else {
-          throw new Error(response?.data?.error || 'Failed to send reply');
+        throw new Error(response?.data?.error || 'Failed to send reply');
       }
     } catch (error) {
       console.error('Error sending reply:', error);
@@ -1767,7 +1788,8 @@ const HelpCenterPage: React.FC = () => {
       if (response && response.status >= 200 && response.status < 300) {
         message.success(`อัปเดตสถานะคำร้องสำเร็จ`);
         fetchMyRequests();
-        setSelectedTicket(response.data.data);
+        const updatedTicketData = response?.data?.data || response?.data || null;
+        setSelectedTicket(updatedTicketData);
         if (status === 'Resolved') {
           setIsModalVisible(false);
         }
@@ -1776,6 +1798,37 @@ const HelpCenterPage: React.FC = () => {
       }
     } catch (error) {
       message.error('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+    }
+  };
+
+  // 5. Upload properties for reply attachments
+  const replyUploadProps: UploadProps = {
+    name: 'file',
+    action: 'http://localhost:8080/api/upload',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+    fileList: replyFileList,
+    onChange(info) {
+      setReplyFileList(info.fileList);
+      if (info.file.status === 'done') {
+        message.success(`${info.file.name} อัปโหลดสำเร็จ`);
+        const response = info.file.response;
+        if (response && response.url) {
+          const newAttachment: Omit<TicketAttachment, 'ID'> = {
+            url: response.url,
+            name: info.file.name,
+            type: info.file.type || 'application/octet-stream',
+          };
+          setReplyAttachments(prev => [...prev, newAttachment]);
+        }
+      } else if (info.file.status === 'error') {
+        message.error(`${info.file.name} อัปโหลดไม่สำเร็จ`);
+      }
+    },
+    onRemove(file) {
+      const newAttachments = replyAttachments.filter(att => att.name !== file.name);
+      setReplyAttachments(newAttachments);
     }
   };
 
@@ -1965,7 +2018,6 @@ const HelpCenterPage: React.FC = () => {
                 <Text strong>{selectedTicket.user?.username || 'Unknown'}</Text>
                 <Text type="secondary" style={{ fontSize: '12px' }}>{formatTime(selectedTicket.CreatedAt)}</Text>
                 <Text>{selectedTicket.initial_message}</Text>
-                 {/* ✅ 4. แสดงไฟล์แนบของ Ticket หลัก */}
                 <AttachmentDisplay attachments={selectedTicket.attachments} />
               </Space>
             </Card>
@@ -1983,7 +2035,6 @@ const HelpCenterPage: React.FC = () => {
                           <Text type="secondary" style={{ fontSize: '12px', marginLeft: 'auto' }}>{formatTime(reply.CreatedAt)}</Text>
                         </Space>
                         <Text>{reply.message}</Text>
-                        {/* ✅ 5. แสดงไฟล์แนบของแต่ละ Reply */}
                         <AttachmentDisplay attachments={reply.attachments} />
                       </Space>
                     </Card>
@@ -1996,8 +2047,14 @@ const HelpCenterPage: React.FC = () => {
                 <Divider />
                 <Title level={5}>ตอบกลับ</Title>
                 <TextArea rows={3} value={replyMessage} onChange={(e) => setReplyMessage(e.target.value)} placeholder="พิมพ์ข้อความตอบกลับของคุณ..." style={{ marginBottom: '12px' }} />
-                <div style={{ textAlign: 'right' }}>
-                  <Button type="primary" icon={<SendOutlined />} onClick={handleSendReply} disabled={!replyMessage.trim()}>ส่งข้อความ</Button>
+                
+                {/* 6. Add Upload component to the reply section */}
+                <Upload {...replyUploadProps} >
+                  <Button icon={<UploadOutlined />}>แนบไฟล์</Button>
+                </Upload>
+                
+                <div style={{ textAlign: 'right', marginTop: '12px' }}>
+                  <Button type="primary" icon={<SendOutlined />} onClick={handleSendReply} disabled={!replyMessage.trim() && replyAttachments.length === 0}>ส่งข้อความ</Button>
                 </div>
               </>
             ) : (
@@ -2011,3 +2068,4 @@ const HelpCenterPage: React.FC = () => {
 };
 
 export default HelpCenterPage;
+
