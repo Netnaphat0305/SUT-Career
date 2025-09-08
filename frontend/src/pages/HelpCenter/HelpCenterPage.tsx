@@ -1529,7 +1529,6 @@
 
 // export default HelpCenterPage;
 // src/pages/HelpCenter/HelpCenterPage.tsx
-// src/pages/HelpCenter/HelpCenterPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -1537,7 +1536,6 @@ import {
   Typography,
   Button,
   Tabs,
- 
   Tag,
   message,
   Spin,
@@ -1549,8 +1547,8 @@ import {
   Alert,
   Space,
   Table,
- 
-  Badge
+  Badge,
+  Image, // ✅ 1. Import Image component
 } from 'antd';
 import type { CollapseProps, TabsProps, TableColumnsType } from 'antd';
 import {
@@ -1560,14 +1558,42 @@ import {
   PlusOutlined,
   MinusOutlined,
   EyeOutlined,
-  FileSearchOutlined
+  FileSearchOutlined,
+  PaperClipOutlined, // ✅ 2. Import PaperClipOutlined
 } from '@ant-design/icons';
-import type { FAQ, RequestTicket } from '../../interfaces/helpcenter';
-import { qnaAPI } from '../../services/https/index'; // ✨ 1. Import qnaAPI
+import type { FAQ, RequestTicket, TicketAttachment } from '../../interfaces/helpcenter';
+import { qnaAPI } from '../../services/https/index';
 import './HelpCenterPage.css';
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Paragraph, Text, Link } = Typography;
 const { TextArea } = Input;
+
+// ✅ 3. สร้าง Component สำหรับแสดงไฟล์แนบ
+const AttachmentDisplay: React.FC<{ attachments?: TicketAttachment[] }> = ({ attachments }) => {
+  if (!attachments || attachments.length === 0) {
+    return null;
+  }
+
+  return (
+    <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #f0f0f0' }}>
+      <Text strong><PaperClipOutlined /> ไฟล์แนบ:</Text>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+        <Image.PreviewGroup>
+          {attachments.map(att => (
+            att.type.startsWith('image/') ? (
+              <Image key={att.ID} width={80} height={80} src={att.url} alt={att.name} style={{ objectFit: 'cover', borderRadius: '4px' }}/>
+            ) : (
+              <Button key={att.ID} href={att.url} target="_blank" icon={<PaperClipOutlined />}>
+                {att.name}
+              </Button>
+            )
+          ))}
+        </Image.PreviewGroup>
+      </div>
+    </div>
+  );
+};
+
 
 const HelpCenterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -1597,13 +1623,12 @@ const HelpCenterPage: React.FC = () => {
     }
   }, [searchParams]);
 
-  // ✨ 2. แก้ไข: เรียกใช้ qnaAPI.getFaqs
   const fetchFaqs = async () => {
     setLoadingFaqs(true);
     try {
       const response = await qnaAPI.getFaqs();
       if (response && response.data) {
-        setFaqs(response.data);
+        setFaqs(response.data); // Adjust to access nested data property
       } else {
         throw new Error('Failed to fetch FAQs');
       }
@@ -1614,6 +1639,7 @@ const HelpCenterPage: React.FC = () => {
       setLoadingFaqs(false);
     }
   };
+  
 
   useEffect(() => {
     fetchFaqs();
@@ -1629,7 +1655,6 @@ const HelpCenterPage: React.FC = () => {
     );
   }, [searchTerm, faqs]);
 
-  // ✨ 3. แก้ไข: เรียกใช้ qnaAPI.getMyTickets
   const fetchMyRequests = async () => {
     setLoadingRequests(true);
     try {
@@ -1681,14 +1706,13 @@ const HelpCenterPage: React.FC = () => {
     }
   };
 
-  // ✨ 4. แก้ไข: เรียกใช้ qnaAPI.getTicketById
   const handleRequestClick = async (request: RequestTicket) => {
     setLoadingModal(true);
     setIsModalVisible(true);
     try {
       const response = await qnaAPI.getTicketById(String(request.ID));
       if (response && response.data) {
-        setSelectedTicket(response.data);
+        setSelectedTicket(response.data.data); // Adjust to access nested data
       } else {
         throw new Error('Failed to fetch ticket details');
       }
@@ -1699,6 +1723,7 @@ const HelpCenterPage: React.FC = () => {
       setLoadingModal(false);
     }
   };
+  
 
   const handleCancelModal = () => {
     setIsModalVisible(false);
@@ -1706,7 +1731,6 @@ const HelpCenterPage: React.FC = () => {
     setReplyMessage('');
   };
 
-  // ✨ 5. แก้ไข: เรียกใช้ qnaAPI.createTicketReply
   const handleSendReply = async () => {
     if (!replyMessage.trim() || !selectedTicket) {
       message.error('กรุณาพิมพ์ข้อความตอบกลับ');
@@ -1724,7 +1748,7 @@ const HelpCenterPage: React.FC = () => {
           setReplyMessage('');
           const updatedTicketResponse = await qnaAPI.getTicketById(String(selectedTicket.ID));
           if (updatedTicketResponse && updatedTicketResponse.data) {
-              setSelectedTicket(updatedTicketResponse.data);
+              setSelectedTicket(updatedTicketResponse.data.data);
           }
       } else {
           throw new Error(response?.data?.error || 'Failed to send reply');
@@ -1735,7 +1759,6 @@ const HelpCenterPage: React.FC = () => {
     }
   };
 
-  // ✨ 6. แก้ไข: เรียกใช้ qnaAPI.updateTicketStatus
   const handleUpdateStatus = async (status: RequestTicket['status']) => {
     if (!selectedTicket) return;
     try {
@@ -1744,7 +1767,7 @@ const HelpCenterPage: React.FC = () => {
       if (response && response.status >= 200 && response.status < 300) {
         message.success(`อัปเดตสถานะคำร้องสำเร็จ`);
         fetchMyRequests();
-        setSelectedTicket(response.data);
+        setSelectedTicket(response.data.data);
         if (status === 'Resolved') {
           setIsModalVisible(false);
         }
@@ -1932,16 +1955,18 @@ const HelpCenterPage: React.FC = () => {
             )}
             <Descriptions bordered size="small" style={{ marginBottom: '16px' }}>
               <Descriptions.Item label="หัวข้อ" span={3}><Text strong>{selectedTicket.subject}</Text></Descriptions.Item>
-              <Descriptions.Item label="ผู้ส่ง">{selectedTicket.user?.username || selectedTicket.user?.username || 'N/A'}</Descriptions.Item>
+              <Descriptions.Item label="ผู้ส่ง">{selectedTicket.user?.username || 'N/A'}</Descriptions.Item>
               <Descriptions.Item label="สถานะ"><Tag color={getStatusColor(selectedTicket.status)}>{getStatusText(selectedTicket.status)}</Tag></Descriptions.Item>
               <Descriptions.Item label="วันที่ส่ง">{formatTime(selectedTicket.CreatedAt)}</Descriptions.Item>
             </Descriptions>
             <Title level={5}>ข้อความเริ่มต้น</Title>
             <Card size="small" style={{ marginBottom: '16px', backgroundColor: '#fafafa' }}>
               <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                <Text strong>{selectedTicket.user?.username || selectedTicket.user?.username || 'Unknown'}</Text>
+                <Text strong>{selectedTicket.user?.username || 'Unknown'}</Text>
                 <Text type="secondary" style={{ fontSize: '12px' }}>{formatTime(selectedTicket.CreatedAt)}</Text>
                 <Text>{selectedTicket.initial_message}</Text>
+                 {/* ✅ 4. แสดงไฟล์แนบของ Ticket หลัก */}
+                <AttachmentDisplay attachments={selectedTicket.attachments} />
               </Space>
             </Card>
             {selectedTicket.replies && selectedTicket.replies.length > 0 && (
@@ -1949,15 +1974,17 @@ const HelpCenterPage: React.FC = () => {
                 <Divider />
                 <Title level={5}>ประวัติการสนทนา</Title>
                 <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                  {(selectedTicket.replies || []).map((reply: any, index: number) => (
-                    <Card key={index} size="small" style={{ marginBottom: '8px' }}>
+                  {(selectedTicket.replies || []).map((reply, index) => (
+                    <Card key={index} size="small" style={{ marginBottom: '8px', background: reply.is_staff_reply ? '#e6f7ff' : '#fff' }}>
                       <Space direction="vertical" size={4} style={{ width: '100%' }}>
                         <Space>
-                          <Text strong>{reply.author?.username || reply.Author?.username || 'Unknown'}</Text>
+                          <Text strong>{reply.author?.username || 'Unknown'}</Text>
                           {reply.is_staff_reply && <Tag color="blue" >เจ้าหน้าที่</Tag>}
-                          <Text type="secondary" style={{ fontSize: '12px' }}>{formatTime(reply.CreatedAt)}</Text>
+                          <Text type="secondary" style={{ fontSize: '12px', marginLeft: 'auto' }}>{formatTime(reply.CreatedAt)}</Text>
                         </Space>
                         <Text>{reply.message}</Text>
+                        {/* ✅ 5. แสดงไฟล์แนบของแต่ละ Reply */}
+                        <AttachmentDisplay attachments={reply.attachments} />
                       </Space>
                     </Card>
                   ))}

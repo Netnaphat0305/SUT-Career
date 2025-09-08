@@ -241,7 +241,7 @@
 // 	config.DB().Preload("User").Preload("Replies.Author").First(&ticket, ticket.ID)
 // 	c.JSON(http.StatusOK, ticket)
 // }
-
+// backend/controllers/qna_controller.go
 package controller
 
 import (
@@ -285,7 +285,7 @@ func GetFAQs(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve FAQs"})
 		return
 	}
-	c.JSON(http.StatusOK, faqs)
+	c.JSON(http.StatusOK, gin.H{"data": faqs})
 }
 
 // PUT /faqs/:id
@@ -370,7 +370,7 @@ func GetRequestTickets(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tickets"})
 		return
 	}
-	c.JSON(http.StatusOK, tickets)
+	c.JSON(http.StatusOK, gin.H{"data": tickets})
 }
 
 // GET /tickets (สำหรับผู้ใช้)
@@ -387,7 +387,7 @@ func GetMyRequestTickets(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, tickets)
+	c.JSON(http.StatusOK, gin.H{"data": tickets})
 }
 
 // GET /tickets/:id
@@ -400,7 +400,13 @@ func GetRequestTicketByID(c *gin.Context) {
 	}
 
 	var ticket entity.RequestTicket
-	if err := config.DB().Preload("User").Preload("Replies.Author").First(&ticket, uint(id)).Error; err != nil {
+	// ✅ **แก้ไข:** เพิ่ม Preload สำหรับ Attachments ทั้งใน Ticket หลักและใน Replies
+	if err := config.DB().
+		Preload("User").
+		Preload("Attachments"). // <-- เพิ่ม Preload สำหรับไฟล์แนบของ Ticket
+		Preload("Replies.Author").
+		Preload("Replies.Attachments"). // <-- เพิ่ม Preload สำหรับไฟล์แนบของ Reply
+		First(&ticket, uint(id)).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Ticket not found"})
 			return
@@ -408,12 +414,10 @@ func GetRequestTicketByID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve ticket"})
 		return
 	}
-	c.JSON(http.StatusOK, ticket)
+	c.JSON(http.StatusOK, gin.H{"data": ticket})
 }
-// ======================= START: ของพรศิริ =======================
 
 // POST /tickets/:id/replies
-// เพิ่มการตอบกลับใน Ticket
 func CreateTicketReply(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -427,14 +431,12 @@ func CreateTicketReply(c *gin.Context) {
 		return
 	}
 
-	// ตรวจสอบว่า Ticket มีอยู่จริงหรือไม่
 	var ticket entity.RequestTicket
 	if err := config.DB().First(&ticket, ticketID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Ticket not found"})
 		return
 	}
 
-	// ดึง ID ของผู้ที่ตอบ (คนที่ login อยู่)
 	authorID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Author not identified"})
@@ -443,19 +445,16 @@ func CreateTicketReply(c *gin.Context) {
 	reply.AuthorID = authorID.(uint)
 	reply.RequestTicketID = uint(ticketID)
 
-	// บันทึกการตอบกลับ
 	if err := config.DB().Create(&reply).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create reply"})
 		return
 	}
 
-	// ดึงข้อมูลผู้ตอบกลับเพื่อแสดงผล
-	config.DB().Preload("Author").First(&reply, reply.ID)
+	config.DB().Preload("Author").Preload("Attachments").First(&reply, reply.ID)
 	c.JSON(http.StatusCreated, reply)
 }
 
 // PUT /tickets/:id/status (สำหรับ Admin)
-// อัปเดตสถานะของ Ticket
 func UpdateTicketStatus(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -478,15 +477,19 @@ func UpdateTicketStatus(c *gin.Context) {
 		return
 	}
 
-	// อัปเดตสถานะและบันทึก
 	ticket.Status = statusUpdate.Status
 	if err := config.DB().Save(&ticket).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update ticket status"})
 		return
 	}
+	
+	// ✅ **แก้ไข:** เพิ่ม Preload เหมือนกับ GetRequestTicketByID
+	config.DB().
+		Preload("User").
+		Preload("Attachments").
+		Preload("Replies.Author").
+		Preload("Replies.Attachments").
+		First(&ticket, ticket.ID)
 
-	// ดึงข้อมูลทั้งหมดเพื่อส่งกลับ
-	config.DB().Preload("User").Preload("Replies.Author").First(&ticket, ticket.ID)
-	c.JSON(http.StatusOK, ticket)
+	c.JSON(http.StatusOK, gin.H{"data": ticket})
 }
-
