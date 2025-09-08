@@ -892,7 +892,8 @@
 // };
 
 // export default StudentFeedPage;
-
+// src/pages/StudentFeed/StudentFeedPage.tsx
+// src/pages/StudentFeed/StudentFeedPage.tsx
 // src/pages/StudentFeed/StudentFeedPage.tsx
 import React, { useState, useEffect, useCallback } from "react";
 import {
@@ -913,7 +914,6 @@ import {
   Dropdown,
   Divider,
 } from "antd";
-//import { Menu } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   UserOutlined,
@@ -937,19 +937,15 @@ import {
 import CreateStudentPostModal from "../../components/CreateStudentPostModal";
 import EditStudentPostModal from "../../components/EditStudentPostModal";
 
-// ✅ 1. Import interfaces จากไฟล์ภายนอก
 import type{ StudentPost } from "../../interfaces/studentpost";
-import type{ Skill } from "../../interfaces/skill"; // สมมติว่ามีไฟล์ skill.ts
+import type{ Skill } from "../../interfaces/skill";
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 
-// ❌ 2. ลบ interfaces ที่เคยประกาศไว้ในไฟล์นี้ออกทั้งหมด
-
 const StudentFeedPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  // ✅ 3. อัปเดต Type ของ State ให้เป็น StudentPost
   const [posts, setPosts] = useState<StudentPost[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<StudentPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -967,19 +963,18 @@ const StudentFeedPage: React.FC = () => {
     user?.role && 
     (user.role.toLowerCase() === "student" || user.role.toLowerCase() === "stu");
 
+  // ค่า value ของปุ่มฟิลเตอร์ ต้องตรงกับค่าใน Database
   const jobTypeOptions = [
-    { label: "งานประจำ", value: "งานประจำ" },
-    { label: "งานพาร์ทไทม์", value: "งานพาร์ทไทม์" },
-    { label: "ฟรีแลนซ์", value: "ฟรีแลนซ์" },
-    { label: "ฝึกงาน", value: "ฝึกงาน" },
-    { label: "งานชั่วคราว", value: "งานชั่วคราว" },
-    { label: "งานโครงการ", value: "งานโครงการ" },
+    { label: "Full-Time", value: "FullTime" },
+    { label: "Part-Time", value: "PartTime" },
+    { label: "Freelance", value: "Freelance" },
+    { label: "Contract", value: "Contract" },
   ];
-
+  
   const isOwnPost = (post: StudentPost): boolean => {
     if (!user || !post.student) return false;
     const userId = user.id;
-    const studentUserId = post.student.user_id || post.student.user_id;
+    const studentUserId = post.student.user_id;
     return userId === studentUserId;
   };
 
@@ -1001,7 +996,8 @@ const StudentFeedPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await getStudentProfilePosts();
-      const postsData = response?.data || response || [];
+      // ให้เข้าถึงข้อมูลใน response.data.data (ตามโครงสร้าง API)
+      const postsData = response?.data?.data || response?.data || [];
       if (Array.isArray(postsData)) {
         setPosts(postsData);
         setFilteredPosts(postsData);
@@ -1033,7 +1029,8 @@ const StudentFeedPage: React.FC = () => {
         const title = post.title?.toLowerCase() || "";
         const skillsText = getSkillsAsArray(post.skills).join(' ').toLowerCase();
         const introduction = post.introduction?.toLowerCase() || "";
-        const jobType = post.job_type?.toLowerCase() || "";
+        // ✅ **จุดแก้ไขที่ 1**
+        const jobType = post.employment_type?.employment_type_name?.toLowerCase() || ""; 
         
         return (
           studentName.includes(searchLower) ||
@@ -1046,8 +1043,9 @@ const StudentFeedPage: React.FC = () => {
     }
 
     if (selectedJobType) {
+      // ✅ **จุดแก้ไขที่ 1 (ต่อ)**
       filtered = filtered.filter((post) =>
-        post.job_type?.toLowerCase().includes(selectedJobType.toLowerCase())
+        post.employment_type?.employment_type_name?.toLowerCase().includes(selectedJobType.toLowerCase())
       );
     }
 
@@ -1073,6 +1071,7 @@ const StudentFeedPage: React.FC = () => {
   const closeModal = () => setIsModalVisible(false);
   
   const goToProfile = (studentId?: number) => {
+    // ใช้ ID ของ student ไม่ใช่ user
     if (studentId && studentId > 0) {
       navigate(`/profile/${studentId}`);
     } else {
@@ -1203,7 +1202,8 @@ const StudentFeedPage: React.FC = () => {
                       <div style={{ padding: "16px", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", textAlign: "center" }}>
                         <Avatar src={post.student?.profile_image_url} icon={<UserOutlined />} size={64} style={{ border: "3px solid white" }} />
                         <Title level={5} style={{ color: 'white', marginTop: '8px' }}>{studentName}</Title>
-                        <Tag color="rgba(255,255,255,0.3)">{post.job_type}</Tag>
+                        {/* ✅ **จุดแก้ไขที่ 2** */}
+                        <Tag color="rgba(255,255,255,0.3)">{post.employment_type?.employment_type_name || 'ไม่ระบุ'}</Tag>
                       </div>
                     }
                     actions={[
@@ -1264,7 +1264,8 @@ const StudentFeedPage: React.FC = () => {
             </div>
             <Divider />
             <p><Text strong>หัวข้อ:</Text> {selectedPost.title}</p>
-            <p><Text strong>ประเภทงาน:</Text> <Tag color="blue">{selectedPost.job_type}</Tag></p>
+            {/* ✅ **จุดแก้ไขที่ 3** */}
+            <p><Text strong>ประเภทงาน:</Text> <Tag color="blue">{selectedPost.employment_type?.employment_type_name || 'ไม่ระบุ'}</Tag></p>
             <p><Text strong>เวลาที่สะดวก:</Text> {selectedPost.availability}</p>
             <p><Text strong>สถานที่:</Text> {selectedPost.preferred_location}</p>
             <p><Text strong>ค่าตอบแทนที่คาดหวัง:</Text> {selectedPost.expected_compensation || 'ตามตกลง'}</p>

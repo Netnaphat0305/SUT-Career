@@ -2,6 +2,7 @@
 
 import type { Student } from "./student";
 import type { Skill } from "./skill";
+import type { EmploymentType } from "./employment_type";
 
 
 // Interface สำหรับไฟล์แนบ (ใช้แทน Attachment เดิม)
@@ -51,6 +52,7 @@ export interface StudentPost {
   student?: Student;
 
   attachments?: StudentPostAttachment[];
+  employment_type?: EmploymentType; 
 }
 export interface EditStudentPostModalProps {
     visible: boolean;

@@ -358,11 +358,11 @@ import {
 } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 import { useAuth } from '../context/AuthContext';
-// ✨ 1. import `employmentTypeAPI` เพิ่ม
+// ✅ 1. Import service เพิ่มเติมสำหรับ EmploymentType
 import { studentPostAPI, skillAPI, employmentTypeAPI, UPLOAD_URL } from '../services/https/index';
 import type { Skill } from '../interfaces/skill';
+import type { EmploymentType } from '../interfaces/employment_type'; // ✅ Import interface
 import type { CreateStudentPostModalProps, StudentPostAttachment } from "../interfaces/studentpost";
-import type { EmploymentType } from '../interfaces/employment_type'; // ✨ 2. Import type เข้ามา
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -379,31 +379,29 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
   const [attachments, setAttachments] = useState<StudentPostAttachment[]>([]);
   const { user } = useAuth();
   const [skills, setSkills] = useState<Skill[]>([]);
-  
-  // ✨ 3. สร้าง State สำหรับเก็บข้อมูลประเภทงาน
+  // ✅ 2. สร้าง state สำหรับเก็บข้อมูลประเภทงาน
   const [employmentTypes, setEmploymentTypes] = useState<EmploymentType[]>([]);
-
-  // ❌ ลบ jobTypes ที่ hardcode ไว้ออก
-  // const jobTypes = [ ... ];
 
   useEffect(() => {
     if (visible) {
       const fetchInitialData = async () => {
         try {
-          // ✨ 4. เรียก API ทั้งสองส่วนพร้อมกัน
-          const [skillsResponse, employmentTypesResponse] = await Promise.all([
-            skillAPI.getAllSkills(),
-            employmentTypeAPI.getAll()
-          ]);
-          
+          // Fetch Skills
+          const skillsResponse = await skillAPI.getAllSkills();
           setSkills(skillsResponse.data);
-          
-          // ตรวจสอบข้อมูลที่ได้จาก employmentTypeAPI
-          const empData = employmentTypesResponse?.data?.data || employmentTypesResponse?.data || [];
-          setEmploymentTypes(empData);
-          
+
+          // ✅ 3. Fetch Employment Types
+          const employmentTypesResponse = await employmentTypeAPI.getAll();
+          // ตรวจสอบโครงสร้างข้อมูลที่ได้รับกลับมา
+          const typesData = employmentTypesResponse?.data?.data || employmentTypesResponse?.data || [];
+          if (Array.isArray(typesData)) {
+            setEmploymentTypes(typesData);
+          } else {
+             message.error('โครงสร้างข้อมูลประเภทงานไม่ถูกต้อง');
+          }
+
         } catch (error) {
-          message.error('ไม่สามารถโหลดข้อมูลเริ่มต้น (Skills, Job Types) ได้');
+          message.error('ไม่สามารถโหลดข้อมูลเริ่มต้น (สกิล/ประเภทงาน) ได้');
         }
       };
       fetchInitialData();
@@ -462,7 +460,8 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
 
       const postData = {
         title: values.title,
-        employment_type_id: values.employmentTypeId, // ✨ 5. เปลี่ยน field ที่ส่ง
+        // ✅ 4. เปลี่ยน key จาก job_type เป็น employment_type_id และส่งค่าเป็น ID
+        employment_type_id: values.employment_type_id,
         availability: values.availability,
         preferred_location: values.preferredLocation,
         expected_compensation: values.expectedCompensation,
@@ -502,21 +501,22 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
       footer={null}
       width={800}
       centered
+      destroyOnHidden={true}
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Row gutter={16}>
           <Col span={24}><Form.Item label="หัวข้อโพสต์" name="title" rules={[{ required: true, message: 'กรุณาใส่หัวข้อโพสต์' }]}><Input prefix={<BulbOutlined />} placeholder="เช่น มองหางานพาร์ทไทม์ร้านกาแฟ" /></Form.Item></Col>
         </Row>
         <Row gutter={16}>
-          {/* ✨ 6. แก้ไข ส่วนแสดงผล Dropdown ประเภทงาน */}
+          {/* ✅ 5. แก้ไขส่วนของ Form สำหรับ EmploymentType */}
           <Col span={12}>
-            <Form.Item label="ประเภทงาน" name="employmentTypeId" rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}>
+            <Form.Item label="ประเภทงาน" name="employment_type_id" rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}>
               <Select placeholder="เลือกประเภทงาน" loading={employmentTypes.length === 0}>
-                {employmentTypes.map(type => 
-                  <Option key={type.id} value={type.id}>
+                {employmentTypes.map(type => (
+                  <Option key={type.ID} value={type.ID}>
                     {type.employment_type_name}
                   </Option>
-                )}
+                ))}
               </Select>
             </Form.Item>
           </Col>

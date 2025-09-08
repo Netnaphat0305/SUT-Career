@@ -337,9 +337,9 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Select, Button, message, Row, Col, Typography, Upload } from 'antd';
 import { BulbOutlined, ClockCircleOutlined, EnvironmentOutlined, DollarOutlined, TagOutlined, LinkOutlined, UploadOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
-// ✅ 1. Import service และ URL จากไฟล์กลาง
-import { studentPostAPI, skillAPI, UPLOAD_URL } from '../services/https/index';
+import { studentPostAPI, skillAPI, employmentTypeAPI, UPLOAD_URL } from '../services/https/index';
 import type { Skill } from '../interfaces/skill';
+import type { EmploymentType } from '../interfaces/employment_type';
 import type { EditStudentPostModalProps, StudentPostAttachment } from "../interfaces/studentpost";
 
 const { Title } = Typography;
@@ -352,25 +352,32 @@ const EditStudentPostModal: React.FC<EditStudentPostModalProps> = ({ visible, on
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [attachments, setAttachments] = useState<StudentPostAttachment[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
-
-  const jobTypes = ['งานประจำ', 'งานพาร์ทไทม์', 'ฟรีแลนซ์', 'ฝึกงาน', 'งานชั่วคราว', 'งานโครงการ'];
+  const [employmentTypes, setEmploymentTypes] = useState<EmploymentType[]>([]);
 
   useEffect(() => {
     if (visible) {
-      const fetchSkills = async () => {
+      const fetchInitialData = async () => {
         try {
-          const response = await skillAPI.getAllSkills();
-          setSkills(response.data);
+          const skillsResponse = await skillAPI.getAllSkills();
+          setSkills(skillsResponse.data || []);
+
+          const employmentTypesResponse = await employmentTypeAPI.getAll();
+          const typesData = employmentTypesResponse?.data?.data || employmentTypesResponse?.data || [];
+          if (Array.isArray(typesData)) {
+            setEmploymentTypes(typesData);
+          } else {
+            message.error('โครงสร้างข้อมูลประเภทงานไม่ถูกต้อง');
+          }
         } catch (error) {
-          message.error('ไม่สามารถโหลดข้อมูลสกิลได้');
+          message.error('ไม่สามารถโหลดข้อมูลเริ่มต้นได้');
         }
       };
-      fetchSkills();
+      fetchInitialData();
 
       if (post) {
         form.setFieldsValue({
           title: post.title,
-          jobType: post.job_type,
+          employment_type_id: post.employment_type?.ID,
           availability: post.availability,
           preferredLocation: post.preferred_location,
           expectedCompensation: post.expected_compensation,
@@ -398,7 +405,7 @@ const EditStudentPostModal: React.FC<EditStudentPostModalProps> = ({ visible, on
   
   const handleUpload: UploadProps = {
     name: 'file',
-    action: UPLOAD_URL, // ✅ 2. ใช้ URL ที่ import มา
+    action: UPLOAD_URL,
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     method: 'POST',
     onChange: (info) => {
@@ -442,7 +449,7 @@ const EditStudentPostModal: React.FC<EditStudentPostModalProps> = ({ visible, on
 
       const postData = {
         title: values.title,
-        job_type: values.jobType,
+        employment_type_id: values.employment_type_id,
         availability: values.availability,
         preferred_location: values.preferredLocation,
         expected_compensation: values.expectedCompensation,
@@ -472,14 +479,20 @@ const EditStudentPostModal: React.FC<EditStudentPostModalProps> = ({ visible, on
       footer={null}
       width={800}
       centered
-      destroyOnHidden={true}
+      destroyOnClose={true}
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Row gutter={16}>
           <Col span={24}><Form.Item label="หัวข้อโพสต์" name="title" rules={[{ required: true, message: 'กรุณาใส่หัวข้อโพสต์' }]}><Input prefix={<BulbOutlined />} /></Form.Item></Col>
         </Row>
         <Row gutter={16}>
-          <Col span={12}><Form.Item label="ประเภทงาน" name="jobType" rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}><Select>{jobTypes.map(type => <Option key={type} value={type}>{type}</Option>)}</Select></Form.Item></Col>
+          <Col span={12}>
+            <Form.Item label="ประเภทงาน" name="employment_type_id" rules={[{ required: true, message: 'กรุณาเลือกประเภทงาน' }]}>
+              <Select placeholder="เลือกประเภทงาน" loading={employmentTypes.length === 0}>
+                {employmentTypes.map(type => <Option key={type.ID} value={type.ID}>{type.employment_type_name}</Option>)}
+              </Select>
+            </Form.Item>
+          </Col>
           <Col span={12}><Form.Item label="เวลาที่สะดวก" name="availability" rules={[{ required: true, message: 'กรุณาระบุเวลา' }]}><Input prefix={<ClockCircleOutlined />} /></Form.Item></Col>
         </Row>
         <Row gutter={16}>
@@ -513,4 +526,3 @@ const EditStudentPostModal: React.FC<EditStudentPostModalProps> = ({ visible, on
 };
 
 export default EditStudentPostModal;
-

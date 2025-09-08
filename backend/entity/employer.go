@@ -8,7 +8,7 @@ type Employer struct{
 	gorm.Model
 
 	Firstname 		string		`json:"first_name"`
-	Lasttname 		string		`json:"last_name"`
+	Lastname 		string		`json:"last_name"`
 	Email			string  	`json:"email"`
 	CompanyName   	string   	`gorm:"type:varchar(100);not null" json:"company_name"`
 	ContactPerson 	string    	`gorm:"type:varchar(100);not null" json:"contact_person"`
