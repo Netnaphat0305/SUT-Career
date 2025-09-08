@@ -214,7 +214,7 @@ func SeedDatabase() {
 	employer := entity.Employer{
 		Model:         gorm.Model{ID: 1},
 		Firstname:     "พรศิริ",
-		Lasttname:     "ถาบุญศรี",
+		Lastname:     "ถาบุญศรี",
 		Email:         "hr@hormok.co.th",
 		CompanyName:   "ห่อหมก สตูดิโอ",
 		ContactPerson: "คุณพรศิริ ถาบุญศรี",
@@ -344,8 +344,10 @@ func SeedDatabase() {
 		// สร้างห้องแชทระหว่าง student กับ employer
 		room := entity.ChatRoom{
 			Model:      gorm.Model{ID: 1},
-			StudentID:  1,
+			StudentID:  8,
 			EmployerID: 1,
+			Lastmessage: "ได้เลยครับ ขอบคุณครับ",
+			LastMessageAt: time.Now().Add(-1 * time.Minute),
 		}
 		db.FirstOrCreate(&room, room.ID)
 
@@ -354,21 +356,21 @@ func SeedDatabase() {
 			{
 				Model:         gorm.Model{ID: 1},
 				ChatRoomID:    room.ID,
-				SenderRole:    "student",
+				UserSenderID:  9,
 				Message:       "สวัสดีครับ ผมสนใจงานนักพัฒนา Server ครับ",
 				TimeStampSend: time.Now().Add(-5 * time.Minute),
 			},
 			{
 				Model:         gorm.Model{ID: 2},
 				ChatRoomID:    room.ID,
-				SenderRole:    "employer",
+				UserSenderID:  1,
 				Message:       "ยินดีครับ ส่งเรซูเม่มาได้เลย",
 				TimeStampSend: time.Now().Add(-3 * time.Minute),
 			},
 			{
 				Model:         gorm.Model{ID: 3},
 				ChatRoomID:    room.ID,
-				SenderRole:    "student",
+				UserSenderID:  9,
 				Message:       "ได้เลยครับ ขอบคุณครับ",
 				TimeStampSend: time.Now().Add(-1 * time.Minute),
 			},

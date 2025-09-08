@@ -1,37 +1,36 @@
-export type UserRole = "student" | "employer";
-
 export interface ChatRoom {
-  id: number;
-  student_id?: number;
-  employer_id?: number;
-  last_message_at?: number;
-  last_message?: string;
-  Status_Room: string;
-  WhoBlock?: string;
+  ID: number;
+  Last_Message?: string;
+  last_message_at?: string; // time.Time -> JSON string
 
-  // 👇 เพิ่มเข้ามา
-  Student?: {
-    id: number;
-    User?: {
-      Firstname: string;
-      Lastname: string;
+  Student: {
+    ID: number;
+    first_name?: string;
+    last_name?: string;
+    User: {
+      ID: number;
     };
   };
 
-  Employer?: {
-    id: number;
+  Employer: {
+    ID: number;
+    first_name?: string;
+    last_name?: string;
     User?: {
-      Firstname: string;
-      Lastname: string;
+      ID: number;
     };
   };
 }
 
 export interface ChatHistory {
-  id: number;
-  chat_room_id: number;
-  SenderRole: UserRole;
-  Message: string;
-  ImageURL: string;
-  TimeStampSend: number;
+  ID: number;
+  Chat_Room: number;
+  User: {
+    ID: number;
+    Role: any;
+  };
+  Message_Type: string;
+  Message?: string;
+  Image_URL?: string;
+  Time_Stamp_Send: string; // ถ้า backend ส่งเป็น time.Time → string
 }

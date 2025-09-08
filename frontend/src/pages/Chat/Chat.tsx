@@ -1,8 +1,8 @@
 //Chat.tsx
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Layout, List, Avatar, Input, Button, Space, Typography, Row, Col, type MenuProps, Dropdown } from "antd"
-import { DownOutlined, PictureOutlined, UserOutlined } from "@ant-design/icons"
+import { Layout, List, Avatar, Input, Button, Space, Typography, Row, Col } from "antd"
+import { PictureOutlined, UserOutlined } from "@ant-design/icons"
 import { type ChatHistory, type ChatRoom } from "../../interfaces/Chat"
 import {
   chatAPI
@@ -10,16 +10,6 @@ import {
 import "./Chat.css" // <-- import ไฟล์ CSS ที่สร้างขึ้นมา
 
 const { Text } = Typography
-const items: MenuProps['items'] = [
-  {
-    label: (
-      <a style={{ color: "red" }}>
-        Block
-      </a>
-    ),
-    key: 'Block',
-  }
-];
 const Chat: React.FC = () => {
   // Define Data
   const [selectedUser, setSelectedUser] = useState<number | null>(null)
@@ -101,18 +91,24 @@ const Chat: React.FC = () => {
 
   const getPartnerName = (room: ChatRoom): string => {
     if (role === "student") {
-      return room.Employer?.User
-        ? `${room.Employer.User.Firstname} ${room.Employer.User.Lastname}`
-        : `Employer ${room.employer_id}`;
+      return room.Employer
+        ? `${room.Employer.first_name ?? ""} ${room.Employer.last_name ?? ""}`
+        : `Employer`;
     } else {
-      return room.Student?.User
-        ? `${room.Student.User.Firstname} ${room.Student.User.Lastname}`
-        : `Student ${room.student_id}`;
+      return room.Student
+        ? `${room.Student.first_name ?? ""} ${room.Student.last_name ?? ""}`
+        : `Student`;
     }
   };
 
 
-  const selectedUserData = chatRooms.find((user) => user.id === selectedUser)
+
+  const selectedUserData = chatRooms.find((user) => user.ID === selectedUser)
+
+  //MUST DELETE!!!!!!!!!!!!
+  chatRooms.map((chatroomhetad) =>
+    console.log("chatroom data: ", chatroomhetad)
+  )
 
   return (
     <Layout className="chat-layout">
@@ -123,8 +119,8 @@ const Chat: React.FC = () => {
             dataSource={chatRooms}
             renderItem={(room) => (
               <List.Item
-                onClick={() => setSelectedUser(room.id)}
-                className={`chat-list-item ${selectedUser === room.id ? "selected" : ""
+                onClick={() => setSelectedUser(room.ID)}
+                className={`chat-list-item ${selectedUser === room.ID ? "selected" : ""
                   }`}
               >
                 <List.Item.Meta
@@ -140,7 +136,7 @@ const Chat: React.FC = () => {
                       {getPartnerName(room)}
                     </Text>
                   }
-                  description={room.last_message || ""}
+                  description={room.Last_Message || ""}
                 />
               </List.Item>
             )}
@@ -153,36 +149,21 @@ const Chat: React.FC = () => {
         {/* Chat Header */}
         <div className="chat-conversation-header">
 
-          <Text>{selectedUserData ? getPartnerName(selectedUserData) : "เลือกห้องแชท"}</Text>
+          <Text className="chat-conversation-title">{selectedUserData ? getPartnerName(selectedUserData) : "เลือกห้องแชท"}</Text>
 
-          {/* Help Menu */}
-          {selectedUserData && (
-            <div className="help">
-              <Dropdown menu={{ items }} trigger={['click']}>
-                <a onClick={(e) => e.preventDefault()}>
-                  <Space>
-                    HELP
-                    <DownOutlined />
-                  </Space>
-                </a>
-              </Dropdown>
-            </div>
-          )}
-          {/* Help Menu */}
         </div>
 
         {/* Messages Area */}
         <div className="messages-area">
           <Space direction="vertical" size="large" className="messages-space">
             {currentMessages.map((message) => {
-              const isOwn = message.SenderRole === role; // role มาจาก localStorage
-              const timeStr = new Date(message.TimeStampSend * 1000).toLocaleTimeString(
+              const isOwn = message.User.ID === user.id;  // user.id มาจาก localStorage
+              const timeStr = new Date(message.Time_Stamp_Send).toLocaleTimeString(
                 "th-TH",
                 { hour: "2-digit", minute: "2-digit" }
               );
-
               return (
-                <Row key={message.id} justify={isOwn ? "end" : "start"}>
+                <Row key={message.ID} justify={isOwn ? "end" : "start"}>
                   <Col>
                     <div className={`message-container ${isOwn ? "own" : "other"}`}>
                       {/* Avatar */}
@@ -196,7 +177,14 @@ const Chat: React.FC = () => {
                         {/* Sender name */}
                         {!isOwn && (
                           <div className="message-sender-name">
-                            {message.SenderRole === "student" ? "นักศึกษา" : "นายจ้าง"}
+                            {chatRooms.map((rooms) =>
+                            (() => {
+                              if (role === "student") {
+                                return `${rooms.Employer.first_name} ${rooms.Employer.last_name}`;
+                              } else {
+                                return `${rooms.Student.first_name} ${rooms.Student.last_name}`;
+                              }
+                            })())}
                           </div>
                         )}
                         {isOwn && (

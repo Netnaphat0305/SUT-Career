@@ -50,9 +50,6 @@ const getAuthToken = (): string | null => {
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("token");
-  //edit by book
-  console.log("getAuthConfig token =", token); // 👈 debug ตรงนี้
-  //end edit by book
   return {
     headers: {
       Authorization: token ? `Bearer ${token}` : "",
