@@ -1,8 +1,16 @@
 import type { User } from './user';
 
-// ===== Q&A System (ระบบถาม-ตอบ และส่งคำร้อง) =====
+// ===== New Interface for FAQ Comments =====
+export interface FAQComment {
+  ID: number;
+  CreatedAt: string;
+  content: string;
+  author: User;
+  faq_id: number;
+}
 
-// ✨ 1. เพิ่ม Interface สำหรับไฟล์แนบ
+
+// ===== Q&A System (ระบบถาม-ตอบ และส่งคำร้อง) =====
 export interface TicketAttachment {
   ID: number;
   url: string;
@@ -16,7 +24,10 @@ export interface FAQ {
   UpdatedAt?: string;
   title: string;
   content: string;
-  image_url?: string; // เพิ่ม field นี้
+  image_url?: string;
+  comments_enabled: boolean;
+  comments?: FAQComment[];
+  comment_count: number;
 }
 
 export interface TicketReply {
@@ -25,7 +36,7 @@ export interface TicketReply {
     message: string;
     is_staff_reply: boolean;
     author: User;
-    attachments?: TicketAttachment[]; // ✨ 2. เพิ่มไฟล์แนบใน Reply
+    attachments?: TicketAttachment[];
 }
 
 export interface RequestTicket {
@@ -36,6 +47,5 @@ export interface RequestTicket {
     status: 'Open' | 'In Progress' | 'Awaiting Confirmation' | 'Resolved';
     user: User;
     replies: TicketReply[];
-    attachments?: TicketAttachment[]; // ✨ 3. เพิ่มไฟล์แนบใน Ticket หลัก
+    attachments?: TicketAttachment[];
 }
-

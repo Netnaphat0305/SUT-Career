@@ -9,13 +9,18 @@ import {
   Typography,
   Space,
   Popconfirm,
+  Switch,
+  Tag,
+  Upload,
+  Image, // เพิ่มการ import Image
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { FAQ } from '../../interfaces/helpcenter';
-import { qnaAPI } from '../../services/https/index';
+import { qnaAPI, UPLOAD_URL } from '../../services/https/index';
+import type { UploadFile, UploadProps } from 'antd';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const ManageFaqPage: React.FC = () => {
@@ -24,22 +29,22 @@ const ManageFaqPage: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
   const [form] = Form.useForm();
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   const fetchFaqs = async () => {
     setLoading(true);
     try {
       const response = await qnaAPI.getFaqs();
-      // ✅ แก้ไข: จัดการกับการเข้าถึงข้อมูลให้ปลอดภัยและถูกต้อง
       const faqsData = response?.data?.data || response?.data;
       if (Array.isArray(faqsData)) {
         setFaqs(faqsData);
       } else {
         message.error('Failed to fetch FAQs: Data is not in expected format.');
-        setFaqs([]); // ตั้งค่าเป็น Array ว่างเพื่อป้องกัน Error .map
+        setFaqs([]);
       }
     } catch (error) {
       message.error('ไม่สามารถโหลดข้อมูล FAQ ได้');
-      setFaqs([]); // ตั้งค่าเป็น Array ว่างเมื่อเกิด Error
+      setFaqs([]);
     } finally {
       setLoading(false);
     }
@@ -51,12 +56,29 @@ const ManageFaqPage: React.FC = () => {
 
   const showModal = (faq: FAQ | null = null) => {
     setEditingFaq(faq);
-    form.setFieldsValue(
-      faq || {
-        title: '',
-        content: '',
+    if (faq) {
+      form.setFieldsValue({
+        title: faq.title || '',
+        content: faq.content || '',
+        image_url: faq.image_url || null,
+        comments_enabled: faq.comments_enabled || false,
+      });
+      if (faq.image_url) {
+        setFileList([
+          {
+            uid: '-1',
+            name: faq.image_url.split('/').pop() || 'image.png',
+            status: 'done',
+            url: faq.image_url,
+          },
+        ]);
+      } else {
+        setFileList([]);
       }
-    );
+    } else {
+      form.resetFields();
+      setFileList([]);
+    }
     setIsModalVisible(true);
   };
 
@@ -64,22 +86,27 @@ const ManageFaqPage: React.FC = () => {
     setIsModalVisible(false);
     setEditingFaq(null);
     form.resetFields();
+    setFileList([]);
   };
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
+      const payload = {
+        title: values.title,
+        content: values.content,
+        image_url: values.image_url || null,
+        comments_enabled: values.comments_enabled || false,
+      };
       if (editingFaq) {
-        // Update
-        await qnaAPI.updateFaq(String(editingFaq.ID), values);
+        await qnaAPI.updateFaq(String(editingFaq.ID), payload);
         message.success('อัปเดต FAQ สำเร็จ');
       } else {
-        // Create
-        await qnaAPI.createFaq(values);
+        await qnaAPI.createFaq(payload);
         message.success('สร้าง FAQ ใหม่สำเร็จ');
       }
       handleCancel();
-      fetchFaqs(); // Refresh data
+      fetchFaqs();
     } catch (error) {
       message.error('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
@@ -89,10 +116,35 @@ const ManageFaqPage: React.FC = () => {
     try {
       await qnaAPI.deleteFaq(String(id));
       message.success('ลบ FAQ สำเร็จ');
-      fetchFaqs(); // Refresh data
+      fetchFaqs();
     } catch (error) {
       message.error('เกิดข้อผิดพลาดในการลบข้อมูล');
     }
+  };
+
+  const uploadProps: UploadProps = {
+    name: 'file',
+    action: UPLOAD_URL,
+    listType: 'picture-card',
+    fileList: fileList,
+    maxCount: 1,
+    headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+    onChange(info) {
+        setFileList(info.fileList);
+        if (info.file.status === 'done') {
+            message.success(`${info.file.name} อัปโหลดไฟล์สำเร็จ`);
+            form.setFieldsValue({ image_url: info.file.response.url });
+        } else if (info.file.status === 'error') {
+            message.error(`${info.file.name} อัปโหลดไฟล์ไม่สำเร็จ`);
+        }
+    },
+    onRemove() {
+        form.setFieldsValue({ image_url: null });
+        setFileList([]);
+        return true;
+    },
   };
 
   const columns: ColumnsType<FAQ> = [
@@ -106,6 +158,31 @@ const ManageFaqPage: React.FC = () => {
       dataIndex: 'content',
       key: 'content',
       ellipsis: true,
+    },
+    {
+      title: 'รูปภาพ',
+      dataIndex: 'image_url',
+      key: 'image',
+      width: 120,
+      align: 'center',
+      render: (url: string) => {
+        if (url) {
+          return <Image width={80} src={url} style={{ borderRadius: '4px' }} />;
+        }
+        return <Text type="secondary">ไม่มีรูปภาพ</Text>;
+      },
+    },
+    {
+      title: 'เปิดคอมเมนต์',
+      dataIndex: 'comments_enabled',
+      key: 'comments_enabled',
+      width: 150,
+      render: (enabled: boolean) => <Tag color={enabled ? 'green' : 'red'}>{enabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}</Tag>,
+       filters: [
+        { text: 'เปิดใช้งาน', value: true },
+        { text: 'ปิดใช้งาน', value: false },
+      ],
+      onFilter: (value, record) => record.comments_enabled === value,
     },
     {
       title: 'การดำเนินการ',
@@ -164,6 +241,24 @@ const ManageFaqPage: React.FC = () => {
           >
             <TextArea rows={4} />
           </Form.Item>
+          <Form.Item
+            name="image_url"
+            label="รูปภาพประกอบ"
+          >
+            <Upload {...uploadProps}>
+                <div>
+                    <PlusOutlined />
+                    <div style={{ marginTop: 8 }}>อัปโหลด</div>
+                </div>
+            </Upload>
+          </Form.Item>
+           <Form.Item
+            name="comments_enabled"
+            label="เปิดใช้งานความคิดเห็น"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
         </Form>
       </Modal>
     </div>
@@ -171,3 +266,4 @@ const ManageFaqPage: React.FC = () => {
 };
 
 export default ManageFaqPage;
+

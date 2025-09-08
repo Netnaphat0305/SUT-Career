@@ -59,6 +59,7 @@ func SetupDatabase() {
 		&entity.StudentPostAttachment{},
 		// ✨ [เพิ่ม] Entity ของระบบ Q&A ที่ขาดไป
 		&entity.FAQ{},
+		&entity.FAQComment{},
 		&entity.RequestTicket{},
 		&entity.TicketReply{},
 		&entity.TicketAttachment{},

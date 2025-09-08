@@ -311,6 +311,8 @@ func main() {
 
 		// --- FAQs & Student Profile (Public) ---
 		api.GET("/faqs", controller.GetFAQs)
+		api.GET("/faqs/:id", controller.GetFAQByID) 
+		api.GET("/faqs/:id/comments", controller.GetFAQComments)
 		////////////////////////////////////เเก้ไขโดยพรศิริ ////////////////////////////
 		api.GET("/student-posts", controller.GetStudentPosts)
 		api.GET("/student-posts/:id", controller.GetStudentPostByID)
@@ -355,6 +357,7 @@ func main() {
 		auth.GET("/tickets", controller.GetMyRequestTickets)
 		auth.GET("/tickets/:id", controller.GetRequestTicketByID)
 		auth.POST("/tickets/:id/replies", controller.CreateTicketReply)
+		auth.POST("/faqs/:id/comments", controller.CreateFAQComment)
 
 		// --- Reviews ---
 		auth.POST("/reviews/new-rating", controller.CreateRating)

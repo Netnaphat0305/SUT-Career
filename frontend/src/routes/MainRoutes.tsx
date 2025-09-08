@@ -27,6 +27,7 @@ import ReviewPage from '../pages/review';
 import PaymentPage from '../pages/payment';
 import JobPost from "../pages/JobPost/JobPost";
 import InterviewScheduling from "../pages/InterviewScheduling/InterviewScheduling";
+import FaqDetailPage from "../pages/HelpCenter/FaqDetailPage";
 import EmployerFeedPage from '../pages/Employer/EmployerFeedPage';
 import StudentPostForm from '../pages/StudentPost/StudentPostForm';
 import RequestSentPage from '../pages/StudentPost/RequestSentPage'; // เพิ่ม import นี้
@@ -123,6 +124,7 @@ const MainRoutes: React.FC = () => {
               <Route path="/profile" element={<ProfilePageV2Route />} />
               <Route path="/help" element={<HelpCenterPage />} />
               <Route path="/help/ask" element={<CreateRequestPage />} />
+              <Route path="/help/faq/:id" element={<FaqDetailPage />} />
               <Route path="/help/request-sent" element={<RequestSentPage />} /> {/* เพิ่ม Route นี้กลับเข้ามา */}
               <Route path="/help/question/:id" element={<QuestionDetailPageRoute />} />
               
