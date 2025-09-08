@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Card, Spin, Empty, message, Tag, Progress } from "antd";
+import { Card, Spin, Empty, message, Tag, Progress, Button } from "antd";
+import { useNavigate } from "react-router-dom";
 import { jobApplicationAPI } from "../../services/https";
 import "./MyApplications.css";
 
@@ -8,6 +9,7 @@ import defaultLogo from "../../assets/profile.svg";
 const MyApplications: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [applications, setApplications] = useState<any[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -30,6 +32,10 @@ const MyApplications: React.FC = () => {
         return "blue";
       case "InterviewPending":
         return "orange";
+      case "InterviewScheduled":
+        return "gold";
+      case "Interviewed":
+        return "purple";
       case "Accepted":
         return "green";
       case "Rejected":
@@ -61,12 +67,37 @@ const MyApplications: React.FC = () => {
                     วันที่สมัคร:{" "}
                     {new Date(app.CreatedAt).toLocaleDateString("th-TH")}
                   </p>
+
+                  {/* แสดงสถานะ */}
                   <Tag color={getStatusColor(app.application_status)}>
                     {app.application_status === "Pending" && "รอพิจารณา"}
-                    {app.application_status === "InterviewPending" && "รอสัมภาษณ์"}
+                    {app.application_status === "InterviewPending" && "รอเลือกวันสัมภาษณ์"}
+                    {app.application_status === "InterviewScheduled" && "รอสัมภาษณ์"}
+                    {app.application_status === "Interviewed" && "สัมภาษณ์เสร็จแล้ว"}
                     {app.application_status === "Accepted" && "ผ่านการคัดเลือก"}
                     {app.application_status === "Rejected" && "ไม่ผ่านการคัดเลือก"}
                   </Tag>
+
+                  {/* แสดงวันสัมภาษณ์ */}
+                  {app.application_status === "InterviewScheduled" &&
+                    app.InterviewScheduling && (
+                      <p style={{ marginTop: "8px" }}>
+                        วันสัมภาษณ์:{" "}
+                        {new Date(app.InterviewScheduling.DateAndTime).toLocaleString("th-TH")}
+                      </p>
+                    )}
+
+                  {/* ปุ่มเลือกวันสัมภาษณ์ */}
+                  {app.application_status === "InterviewPending" && (
+                    <Button
+                      type="primary"
+                      style={{ marginTop: "10px" }}
+                       onClick={() => navigate(`/interview?applicationId=${app.ID}`)}
+
+                    >
+                      เลือกวันสัมภาษณ์
+                    </Button>
+                  )}
                 </div>
 
                 <div className="application-logo">
@@ -76,12 +107,18 @@ const MyApplications: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Progress bar */}
               <Progress
                 percent={
                   app.application_status === "Pending"
-                    ? 25
+                    ? 20
                     : app.application_status === "InterviewPending"
-                    ? 50
+                    ? 40
+                    : app.application_status === "InterviewScheduled"
+                    ? 60
+                    : app.application_status === "Interviewed"
+                    ? 80
                     : app.application_status === "Accepted"
                     ? 100
                     : 0

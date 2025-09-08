@@ -26,6 +26,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 const PORT = "8080"
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(CORSMiddleware())
-	
+
 	if err := os.MkdirAll("./static/payment_evidence", 0o755); err != nil {
 		log.Fatal(err)
 	}
@@ -61,25 +62,22 @@ func main() {
 		api.GET("/reviews/scores", controller.ListRatingScores)
 		api.GET("/payments/statuses", controller.ListPaymentStatuses)
 		api.GET("/payments/methods", controller.ListPaymentMethods)
-		
+
 		// api.GET("/banks", controller.ListBanks)
 		// api.GET("/genders", controller.ListGenders)
-		
-		
-
 
 		//=====================================
 		//get report status
-		api.GET("/reportstatus",controller.GetReportstatus)
+		api.GET("/reportstatus", controller.GetReportstatus)
 
 		api.GET("/reports", controller.GetAllReports)
 		api.GET("/reports/:id", controller.GetReportByID)
 		api.GET("/reports/user/:user_id", controller.GetReportByUserID)
 		api.POST("/reports", controller.CreateReport)
-		
+
 		api.DELETE("/reports/:id", controller.DeleteReport)
 		api.PUT("/reports/:id", controller.UpdateReport)
-		
+
 		// worklog
 		api.POST("/worklogs", controller.CreateWorklog)
 		api.GET("/worklogs/student/:id", controller.GetWorklogStudent)
@@ -88,22 +86,20 @@ func main() {
 		// // Extra
 		// api.GET("/jobposts/:id/students", controller.GetStudentInJobpost)
 		// api.GET("/users/:id", controller.GetUserByEmployerID)
-	
 
 		//=====================================
-
 
 		protected := api.Group("")
 		// protected.Use(middleware.Authorizes())
 		// {
-			// JobPost (actions)
+		// JobPost (actions)
 
-			jobpost := protected.Group("/myjobposts")
-			{
-				jobpost.GET("", controller.ListJobPosts)
-				jobpost.GET("/:id", controller.GetJobPostByID)
-				jobpost.GET("/employer/:id", controller.ListJobPostsByEmployerID)
-			}
+		jobpost := protected.Group("/myjobposts")
+		{
+			jobpost.GET("", controller.ListJobPosts)
+			jobpost.GET("/:id", controller.GetJobPostByID)
+			jobpost.GET("/employer/:id", controller.ListJobPostsByEmployerID)
+		}
 
 		// --- Salary Type ---
 		api.GET("/salarytype", controller.ListSalaryType)
@@ -148,10 +144,13 @@ func main() {
 		auth.GET("/jobapplications/job/:jobpost_id", controller.GetApplicantsByJobPost)
 		auth.PUT("/jobapplications/:id/status", controller.UpdateApplicationStatus)
 		auth.GET("/jobapplications/check/:jobpost_id/:student_id", controller.CheckJobApplication)
+		auth.PUT("/api/jobapplications/:id/interview", controller.UpdateInterviewSchedule)
 
-
-
-
+		// Interviews 
+		// ชั้นขออุญาติเพิ่มนะแกชั้นต้องใช้ TT 😭😭😭
+		auth.POST("/interviews/book", controller.BookInterview)
+		auth.GET("/interviews/student/:studentId", controller.GetInterviewsByStudent)
+		auth.GET("/interviews/employer/:employerId", controller.GetInterviewsByEmployer)
 
 		// --- Tickets ---
 		auth.POST("/tickets", controller.CreateRequestTicket)

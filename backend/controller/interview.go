@@ -13,8 +13,10 @@ import (
 // นักศึกษทำการจองตารางสัมภาษณ์
 func BookInterview(c *gin.Context) {
 	var input struct {
-		ScheduleID uint `json:"schedule_id" binding:"required"`
-		StudentID  uint `json:"student_id" binding:"required"`
+		ScheduleID       uint `json:"schedule_id" binding:"required"`
+		StudentID        uint `json:"student_id" binding:"required"`
+		JobApplicationID uint `json:"job_application_id" binding:"required"` // ขอเพิ่มตรงนี้นะ จะใช้ข้อมูล
+
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -52,6 +54,19 @@ func BookInterview(c *gin.Context) {
 		return
 	}
 
+	//  อัปเดตสถานะ JobApplication  InterviewScheduled ขอดเพิ่มเติมตรงนี้นะ
+	//ปหติหลังจากนักศึกษาเลือกวันสัมภาษณ์เสร็จ หน้า MyApplications ยังคงแสดงสถานะเป็น "รอเลือกวันสัมภาษณ์"แต่ความจริงคือ นักศึกษาเลือกวันเรียบร้อยแล้ว ควรแสดงเป็น "รอสัมภาษณ์"
+	//ชั้นจำเป็นต้องอัปเดตฟิลด์ application_status ใน JobApplication เป็น InterviewScheduled
+	if err := tx.Model(&entity.JobApplication{}).
+		Where("id = ?", input.JobApplicationID).
+		Updates(map[string]interface{}{
+			"application_status": entity.StatusInterviewScheduled,
+		}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update job application status"})
+		return
+	}
+
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Transaction commit failed"})
@@ -78,25 +93,25 @@ func GetInterviewsByStudent(c *gin.Context) {
 // GET /interviews/employer/:employerId
 // ดูการนัดหมายทั้งหมดของนายจ้าง
 func GetInterviewsByEmployer(c *gin.Context) {
-    employerId := c.Param("employerId")
-    var interviews []entity.Interview
+	employerId := c.Param("employerId")
+	var interviews []entity.Interview
 
-    // Join ตารางเพื่อค้นหา interview ที่เชื่อมกับ employerId
-    err := config.DB().
-        Joins("JOIN interview_schedulings ON interviews.interview_scheduling_id = interview_schedulings.id").
-        Where("interview_schedulings.employer_id = ?", employerId).
+	// Join ตารางเพื่อค้นหา interview ที่เชื่อมกับ employerId
+	err := config.DB().
+		Joins("JOIN interview_schedulings ON interviews.interview_scheduling_id = interview_schedulings.id").
+		Where("interview_schedulings.employer_id = ?", employerId).
 		Preload("Student").
 		Preload("InterviewScheduling").
-        Find(&interviews).Error
+		Find(&interviews).Error
 
-    if err != nil {
-        if err == gorm.ErrRecordNotFound {
-             c.JSON(http.StatusNotFound, gin.H{"error": "No interviews found for this employer"})
-             return
-        }
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
-        return
-    }
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No interviews found for this employer"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{"data": interviews})
+	c.JSON(http.StatusOK, gin.H{"data": interviews})
 }

@@ -33,12 +33,23 @@ export interface JobPost {
   image_url?: string;
 }
 
+//  เพิ่ม interface InterviewScheduling
+export interface InterviewScheduling {
+  ID: number;
+  DateAndTime: string;  // backend ส่ง ISO string เช่น "2025-09-08T10:00:00Z"
+  Status: string;
+  Description?: string;
+}
+
 // ข้อมูลการสมัครงาน
 export interface JobApplication {
   ID: number;
-  application_status: string;   // Pending / InterviewPending / Accepted / Rejected
+  application_status: string;   // Pending / InterviewPending / InterviewScheduled / Interviewed / Accepted / Rejected
   application_reason: string;
   CreatedAt: string;
   JobPost: JobPost;
   Student: Student;
+
+  //  แก้ให้ใช้ interface ที่เราสร้างด้านบน
+  InterviewScheduling?: InterviewScheduling | null;
 }

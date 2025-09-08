@@ -85,6 +85,7 @@ func GetMyApplications(c *gin.Context) {
     if err := config.DB().
         Preload("JobPost").
         Preload("JobPost.Employer").
+        Preload("InterviewScheduling"). 
         Where("student_id = ?", student.ID).
         Order("created_at DESC").
         Find(&applications).Error; err != nil {
@@ -105,6 +106,7 @@ func GetApplicantsByJobPost(c *gin.Context) {
         Preload("Student.User").
         Preload("Student.Gender").
         Preload("Student.Bank").
+        Preload("InterviewScheduling").
         Where("job_post_id = ?", jobpostID).
         Find(&applications).Error; err != nil {
 
@@ -173,5 +175,40 @@ func CheckJobApplication(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{
         "applied": false,
         "message": "ยังไม่ได้สมัคร",
+    })
+}
+
+// PUT /api/jobapplications/:id/interview
+func UpdateInterviewSchedule(c *gin.Context) {
+    id := c.Param("id")
+
+    var input struct {
+        InterviewSchedulingID uint `json:"interview_scheduling_id" binding:"required"`
+    }
+
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    var app entity.JobApplication
+    if err := config.DB().First(&app, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบใบสมัคร"})
+        return
+    }
+
+    // ผูก InterviewSchedulingID + เปลี่ยนสถานะ
+    app.InterviewSchedulingID = &input.InterviewSchedulingID
+    app.ApplicationStatus = entity.StatusInterviewScheduled
+    app.LastUpdate = time.Now()
+
+    if err := config.DB().Save(&app).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตวันสัมภาษณ์ไม่สำเร็จ"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "เพิ่มวันสัมภาษณ์สำเร็จ",
+        "data":    app,
     })
 }

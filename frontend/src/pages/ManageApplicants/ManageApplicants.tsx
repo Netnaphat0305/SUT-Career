@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Button, Spin, message, Avatar, Empty } from "antd";
+import { Card, Button, Spin, message, Avatar, Empty, Tag } from "antd";
 import { jobApplicationAPI, jobPostAPI } from "../../services/https";
 import defaultProfile from "../../assets/profile.svg";
 import "./ManageApplicants.css";
@@ -15,39 +15,44 @@ const ManageApplicants: React.FC = () => {
     useState<JobApplication | null>(null);
 
   // โหลดข้อมูลโพสต์ + ผู้สมัคร
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const postRes = await jobPostAPI.getById(Number(jobpost_id));
-        setJobpost(postRes.data);
-
-        const appRes = await jobApplicationAPI.getByJobPost(Number(jobpost_id));
-        setApplicants(appRes?.data || []);
-      } catch (error) {
-        message.error("โหลดข้อมูลผู้สมัครไม่สำเร็จ");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [jobpost_id]);
-
-  // ฟังก์ชันเลือกผู้สมัคร
-  const handleSelectApplicant = async (applicationId: number) => {
+  const fetchData = async () => {
     try {
-      // แก้เป็นอัปเดตสถานะเป็น InterviewPending
-      await jobApplicationAPI.updateStatus(applicationId, "InterviewPending");
-      message.success("เลือกผู้สมัครเรียบร้อยแล้ว (รอสัมภาษณ์)");
+      const postRes = await jobPostAPI.getById(Number(jobpost_id));
+      setJobpost(postRes.data);
 
       const appRes = await jobApplicationAPI.getByJobPost(Number(jobpost_id));
       setApplicants(appRes?.data || []);
 
-      const updated = appRes?.data.find(
-        (a: JobApplication) => a.ID === applicationId
-      );
-      if (updated) setSelectedApplicant(updated);
+      // ถ้ามี applicant ถูกเลือกอยู่ ให้ sync ข้อมูลล่าสุดด้วย
+      if (selectedApplicant) {
+        const updated = appRes?.data.find(
+          (a: JobApplication) => a.ID === selectedApplicant.ID
+        );
+        if (updated) setSelectedApplicant(updated);
+      }
     } catch (error) {
-      message.error("ไม่สามารถเลือกผู้สมัครได้");
+      message.error("โหลดข้อมูลผู้สมัครไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [jobpost_id]);
+
+  // ฟังก์ชันอัปเดตสถานะผู้สมัคร
+  const updateApplicantStatus = async (
+    applicationId: number,
+    status: string,
+    successMsg: string
+  ) => {
+    try {
+      await jobApplicationAPI.updateStatus(applicationId, status);
+      message.success(successMsg);
+      fetchData();
+    } catch (error) {
+      message.error("อัปเดตสถานะไม่สำเร็จ");
     }
   };
 
@@ -81,6 +86,7 @@ const ManageApplicants: React.FC = () => {
         <Empty description="ยังไม่มีผู้สมัครงาน" />
       ) : (
         <div className="manage-content">
+          {/* รายชื่อผู้สมัคร */}
           <div className="applicants-list">
             {applicants.map((app) => (
               <Card
@@ -103,12 +109,27 @@ const ManageApplicants: React.FC = () => {
                     <p className="applicant-details">
                       {app.Student?.user?.username} • {app.Student?.phone}
                     </p>
+                    <Tag color={
+                      app.application_status === "Pending" ? "blue" :
+                      app.application_status === "InterviewPending" ? "orange" :
+                      app.application_status === "InterviewScheduled" ? "gold" :
+                      app.application_status === "Interviewed" ? "purple" :
+                      app.application_status === "Accepted" ? "green" : "red"
+                    }>
+                      {app.application_status === "Pending" && "รอพิจารณา"}
+                      {app.application_status === "InterviewPending" && "รอเลือกวันสัมภาษณ์"}
+                      {app.application_status === "InterviewScheduled" && "รอสัมภาษณ์"}
+                      {app.application_status === "Interviewed" && "สัมภาษณ์เสร็จแล้ว"}
+                      {app.application_status === "Accepted" && "ผ่านการคัดเลือก"}
+                      {app.application_status === "Rejected" && "ไม่ผ่านการคัดเลือก"}
+                    </Tag>
                   </div>
                 </div>
               </Card>
             ))}
           </div>
 
+          {/* Panel รายละเอียดผู้สมัคร */}
           <div className="applicant-detail-panel">
             {selectedApplicant ? (
               <>
@@ -131,18 +152,75 @@ const ManageApplicants: React.FC = () => {
                   เหตุผลการสมัคร:{" "}
                   {selectedApplicant.application_reason || "ไม่ได้ระบุเหตุผล"}
                 </p>
-                <Button
-                  type="primary"
-                  size="large"
-                  disabled={
-                    selectedApplicant.application_status === "InterviewPending"
-                  }
-                  onClick={() => handleSelectApplicant(selectedApplicant.ID)}
-                >
-                  {selectedApplicant.application_status === "InterviewPending"
-                    ? "เลือกแล้ว (รอสัมภาษณ์)"
-                    : "เลือก"}
-                </Button>
+
+                {/* แสดงวันสัมภาษณ์ ถ้ามี */}
+                {selectedApplicant.InterviewScheduling && (
+                  <p>
+                    วันสัมภาษณ์:{" "}
+                    {new Date(
+                      selectedApplicant.InterviewScheduling.DateAndTime
+                    ).toLocaleString("th-TH")}
+                  </p>
+                )}
+
+                {/* ปุ่มจัดการสถานะ */}
+                <div style={{ marginTop: 16, display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <Button
+                    type="primary"
+                    disabled={selectedApplicant.application_status !== "Pending"}
+                    onClick={() =>
+                      updateApplicantStatus(
+                        selectedApplicant.ID,
+                        "InterviewPending",
+                        "เลือกผู้สมัครเรียบร้อยแล้ว (รอเลือกวันสัมภาษณ์)"
+                      )
+                    }
+                  >
+                    เลือกผู้สมัคร
+                  </Button>
+
+                  <Button
+                    type="dashed"
+                    disabled={selectedApplicant.application_status !== "InterviewScheduled"}
+                    onClick={() =>
+                      updateApplicantStatus(
+                        selectedApplicant.ID,
+                        "Interviewed",
+                        "อัปเดตเป็นสัมภาษณ์เสร็จแล้ว"
+                      )
+                    }
+                  >
+                    สัมภาษณ์เสร็จ
+                  </Button>
+
+                  <Button
+                    type="primary"
+                    disabled={selectedApplicant.application_status !== "Interviewed"}
+                    onClick={() =>
+                      updateApplicantStatus(
+                        selectedApplicant.ID,
+                        "Accepted",
+                        "รับเข้าทำงานเรียบร้อยแล้ว"
+                      )
+                    }
+                  >
+                    รับเข้าทำงาน
+                  </Button>
+
+                  <Button
+                    danger
+                    disabled={selectedApplicant.application_status !== "Interviewed"}
+                    onClick={() =>
+                      updateApplicantStatus(
+                        selectedApplicant.ID,
+                        "Rejected",
+                        "ปฏิเสธผู้สมัครเรียบร้อยแล้ว"
+                      )
+                    }
+                  >
+                    ไม่รับ
+                  </Button>
+                </div>
               </>
             ) : (
               <p style={{ color: "#999" }}>

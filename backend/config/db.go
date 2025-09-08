@@ -55,6 +55,9 @@ func SetupDatabase() {
 
 		
 		//=========================
+		&entity.Interview{}, //ขอเพิ่มหน่อยนะบุ๊คชั้นต้องใช้ถือว่ายังไงแกก็ต้องใช้
+		&entity.InterviewScheduling{},
+
 	)
 }
 
@@ -210,7 +213,7 @@ func SeedDatabase() {
 	employer := entity.Employer{
 		Model:         gorm.Model{ID: 1},
 		Firstname:     "พรศิริ",
-		Lasttname:     "ถาบุญศรี",
+		Lastname:     "ถาบุญศรี",
 		Email:         "hr@hormok.co.th",
 		CompanyName:   "ห่อหมก สตูดิโอ",
 		ContactPerson: "คุณพรศิริ ถาบุญศรี",
@@ -303,7 +306,7 @@ func SeedDatabase() {
 	admin := entity.Admin{
         Model:     gorm.Model{ID: 1},
         Firstname: "Supanut",
-        Lasttname: "Srisawat",
+        Lastname: "Srisawat",
         Email:     "admin@example.com",
         Phone:     "0812345678",
         Password:  "adminpassword", // ควรเข้ารหัสก่อนใช้งานจริง
