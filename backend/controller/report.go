@@ -82,7 +82,7 @@ func GetReportByUserID(c *gin.Context) {
 	var reports []ResultByUserID //[]เอาข้อมูลออกมาได้หลายrecord
 	if err := config.DB().
 	Table("reports").
-	Select("reports.id,reports.title, reports.datetime, reports.place, reports.discription, users.username, report_statuses.statusname").
+	Select("reports.id,reports.title, reports.datetime, reports.place, reports.discription, users.username, report_statuses.id, report_statuses.statusname").
 	Joins("left join users on users.id = reports.user_id").
     Joins("left join report_statuses on report_statuses.id = reports.report_status_id").
 	Where("user_id = ? AND reports.deleted_at IS NULL", userID).
@@ -90,7 +90,7 @@ func GetReportByUserID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve reports"})
 		return
 	}
-	c.JSON(http.StatusOK, reports)
+	c.JSON(http.StatusOK, gin.H{"data": reports})
 }
 
 // Delete report by ID

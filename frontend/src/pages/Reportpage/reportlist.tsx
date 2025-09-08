@@ -1,0 +1,237 @@
+import React, { useState, useEffect } from "react";
+import { Edit2, Trash2, Search } from "lucide-react";
+import EditIncidentForm from "./editreport";
+import "./reportlist.css";
+import { reportAPI } from "../../services/https/index";
+
+interface User {
+  name: string;
+  department: string;
+}
+
+interface ReportStatus {
+  id: number;
+  name: string;
+}
+
+interface Admin {
+  name: string;
+}
+
+interface Incident {
+  id: number;
+  title: string;
+  place: string;
+  datetime: string;
+  discription: string;
+  user: User;
+  report_status: ReportStatus;
+  admin: Admin;
+}
+
+const IncidentReportList: React.FC = () => {
+  const [currentView, setCurrentView] = useState<"list" | "edit">("list");
+  const [editingIncident, setEditingIncident] = useState<Incident | null>(null);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const userStorage = localStorage.getItem("user");
+  const userid = userStorage ? JSON.parse(userStorage).id : null;
+  console.log("userId from localStorage:", userid);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const res = await reportAPI.getByUserId(userid);
+
+        // map API response → Incident
+        const mappedIncidents: Incident[] = res.data.map((r: any) => ({
+          id: r.id,
+          title: r.title,
+          place: r.place,
+          datetime: r.datetime,
+          discription: r.discription,
+          user: { name: r.username },
+          report_status: { id: r.id, name: r.statusname }, // color ใส่ default
+        }));
+
+        setIncidents(mappedIncidents);
+        console.log("รายงานของ user:", mappedIncidents);
+      } catch (error) {
+        console.error("โหลด report ของ user ไม่สำเร็จ", error);
+        setIncidents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReports();
+  }, [userid]);
+
+  if (loading) return <p>กำลังโหลดข้อมูล...</p>;
+
+  const handleEdit = (incident: Incident) => {
+    setEditingIncident({ ...incident });
+    setCurrentView("edit");
+  };
+
+  const handleDelete = async (incidentId: number) => {
+    if (window.confirm("คุณต้องการลบรายการนี้หรือไม่?")) {
+      try {
+        await reportAPI.delete(incidentId); // 🔹 เรียก API ลบ
+        setIncidents(
+          incidents.filter((incident) => incident.id !== incidentId)
+        ); // 🔹 อัปเดต state
+        console.log(`ลบ incident ${incidentId} สำเร็จ`);
+      } catch (error) {
+        console.error("ลบ report ไม่สำเร็จ", error);
+        alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+      }
+    }
+  };
+
+  const handleSave = (updatedIncident: Incident) => {
+    setIncidents(
+      incidents.map((incident) =>
+        incident.id === updatedIncident.id ? updatedIncident : incident
+      )
+    );
+    setCurrentView("list");
+    setEditingIncident(null);
+  };
+
+  const handleCancel = () => {
+    setCurrentView("list");
+    setEditingIncident(null);
+  };
+
+  const formatDateTime = (datetime: string) => {
+    const date = new Date(datetime);
+    return {
+      date: date.toLocaleDateString("th-TH"),
+      time: date.toLocaleTimeString("th-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+  };
+
+  const getStatusColor = (id: number) => {
+    switch (id) {
+      case 1:
+        return "status-yellow";
+      case 2:
+        return "status-blue";
+      case 3:
+        return "status-green";
+      case 4:
+        return "status-red";
+      default:
+        return "status-default";
+    }
+  };
+
+  if (currentView === "edit" && editingIncident) {
+    return (
+      <EditIncidentForm
+        incident={editingIncident}
+        onSave={handleSave}
+        onCancel={handleCancel}
+      />
+    );
+  }
+
+  return (
+    <div className="incident-container">
+      <div className="page-header">
+        <h1>จัดการเหตุการณ์</h1>
+        <p>ติดตาม ตรวจสอบ และจัดการเหตุการณ์ด้านความปลอดภัยทั้งหมด</p>
+      </div>
+
+      <div className="search-section">
+        <div className="search-bar">
+          <Search className="search-icon" size={20} />
+          <input
+            type="text"
+            placeholder="ค้นหาด้วยชื่อเหตุการณ์ สถานที่ หรือรายละเอียด..."
+          />
+        </div>
+        <div className="result-count">พบ {incidents.length} รายการ</div>
+      </div>
+
+      <div className="table-container">
+        <table className="incident-table">
+          <thead>
+            <tr>
+              <th className="checkbox-col">
+                <input type="checkbox" />
+              </th>
+              <th>ชื่อเหตุการณ์</th>
+              <th>สถานที่</th>
+              <th>วันที่และเวลา</th>
+              <th>สถานะ</th>
+              <th>การดำเนินการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {incidents.map((incident) => {
+              const { date, time } = formatDateTime(incident.datetime);
+              return (
+                <tr key={incident.id}>
+                  <td>
+                    <input type="checkbox" />
+                  </td>
+                  <td>
+                    <div className="title-cell">
+                      <div className="title">{incident.title}</div>
+                      <div className="description">{incident.discription}</div>
+                    </div>
+                  </td>
+                  <td>{incident.place}</td>
+                  <td>
+                    <div className="datetime-cell">
+                      <div className="date">{date}</div>
+                      <div className="time">{time}</div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span
+                      className={`status-badge ${getStatusColor(
+                        incident.report_status.id
+                      )}`}
+                    >
+                      {incident.report_status.name}
+                    </span>
+                  </td>
+                  <td>
+                    {incident.report_status.id !== 3 && (
+                      <div className="action-buttons">
+                        <button
+                          className="action-btn edit-btn"
+                          title="แก้ไข"
+                          onClick={() => handleEdit(incident)}
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          className="action-btn delete-btn"
+                          title="ลบ"
+                          onClick={() => handleDelete(incident.id)}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default IncidentReportList;

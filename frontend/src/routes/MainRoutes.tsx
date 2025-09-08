@@ -30,6 +30,7 @@ import StudentPostForm from '../pages/StudentPost/StudentPostForm';
 import RequestSentPage from '../pages/StudentPost/RequestSentPage'; // เพิ่ม import นี้
 import MyPost from '../pages/MyPost/Mypost'
 import WorklogPage from "../pages/worklog/worklog";
+import IncidentReportList from "../pages/Reportpage/reportlist";
 
 // Helper components to pass context from Outlet
 const FeedPageRoute = () => {
@@ -121,6 +122,8 @@ const MainRoutes: React.FC = () => {
             <Route path="/profile-v1" element={<ProfilePageV1 />} />
             <Route path="/review-page" element={<ReviewPage />} />
             <Route path="/worklog" element={<WorklogPage />} />
+            <Route path="/edit-report" element={<IncidentReportList />} />
+
 
             {/* --- Feed Routes (now independent) --- */}
             <Route path="/feed" element={<EmployerFeedPage />} />

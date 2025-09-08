@@ -40,19 +40,19 @@ func GetStudentInJobpost(c *gin.Context) {
 	c.JSON(http.StatusOK, students)
 }
 
-// Get User by emplyerID
-// func GetUserByEmployerID(c *gin.Context) {
-// 	employerid := c.Param("id")
+//Get User by emplyerID
+func GetUserByEmployerID(c *gin.Context) {
+	employerid := c.Param("id")
 
-// 	var user entity.User
-// 	if err := config.DB().First(&, employerid).Error; err != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, user)
-// }
+	var user entity.User
+	if err := config.DB().First(&user, employerid).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+	c.JSON(http.StatusOK, user)
+}
 
-// Get Worklog of Student
+//Get Worklog of Student
 func GetWorklogStudent(c *gin.Context) {
 	studentID := c.Param("id")
 
@@ -68,9 +68,8 @@ func GetWorklogStudent(c *gin.Context) {
 	c.JSON(http.StatusOK, worklogs)
 }
 
-// -------------------------
+
 // Update Worklog by ID
-// -------------------------
 func UpdateWorklogByID(c *gin.Context) {
 	id := c.Param("id")
 	var worklog entity.Worklog

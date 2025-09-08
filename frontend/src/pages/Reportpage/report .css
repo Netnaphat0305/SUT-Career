@@ -17,7 +17,7 @@
   padding: 50px;
   border-radius: 10px;
   width: 800px;
-  max-height: 100%;
+  max-height: 85%;
   max-width: 90%; /* แก้ไขบรรทัดนี้ */
   height: 85%; /* แก้ไขบรรทัดนี้ */
   display: flex;

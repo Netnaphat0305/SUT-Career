@@ -171,6 +171,7 @@ export const reportAPI = {
   create: (data: any) => Post("/api/reports", data),
   getAll: () => Get("/api/reports"),
   getById: (id: number) => Get(`/api reports/${id}`),
+  getByUserId: (userId: number) => Get(`/api/reports/user/${userId}`),
   update: (id: number, data: Partial<any>) => Update(`/api/reports/${id}`, data),
   delete: (id: number) => Delete(`/api/reports/${id}`),
 };
