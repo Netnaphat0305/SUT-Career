@@ -314,7 +314,7 @@ export const jobPostAPI = {
   update: (id: number, data: Partial<Jobpost>) =>
   put(`/jobposts/${id}`, data),
   delete: (id: number) => del(`/jobposts/${id}`),
-  getMyPosts: () => get("/employer/myposts"), 
+  getMyPosts: () => get("/employer/myposts"),
   uploadPortfolio: (id: number, file: File) => {
     const formData = new FormData();
     formData.append("portfolio", file);
@@ -415,6 +415,13 @@ export const paymentAPI = {
   create: (data: any) => post("/payment", data),
 };
 
+// Notification APIs
+export const notificationAPI = {
+  getMyNotifications: () => get("/notifications"),
+  markAsRead: (id: number) => put(`/notifications/${id}/read`, {}),
+  markAllAsRead: () => put("/notifications/read-all", {}),
+};
+
 // Report APIs
 export const reportAPI = {
   create: (data: any) => post("/reports", data),
@@ -423,3 +430,4 @@ export const reportAPI = {
   update: (id: number, data: Partial<any>) => put(`/api/reports/${id}`, data),
   delete: (id: number) => del(`/api/reports/${id}`),
 };
+
