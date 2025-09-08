@@ -115,10 +115,7 @@ const MainRoutes: React.FC = () => {
 
             {/* --- Feed Routes  เเก้ไขเส้นทางโดยพรศิริ (now independent) --- */}
             <Route path="/feed" element={<StudentFeedPage />} />
-            <Route path="/feed/create" element={<StudentPostForm />} />
-
             
-
             {/* --- Student-focused Routes (State managed by StudentPostManager) --- */}
             <Route element={<StudentPostManager />}>
               <Route path="/create" element={<PostCreatorRoute />} />
@@ -128,6 +125,7 @@ const MainRoutes: React.FC = () => {
               <Route path="/help/ask" element={<CreateRequestPage />} />
               <Route path="/help/request-sent" element={<RequestSentPage />} /> {/* เพิ่ม Route นี้กลับเข้ามา */}
               <Route path="/help/question/:id" element={<QuestionDetailPageRoute />} />
+              
               <Route path="/help/request-status/:id" element={<RequestStatusPageRoute />} />
               <Route path="/help/request/:id" element={<RequestThreadPage />} />
             </Route>
