@@ -10,10 +10,14 @@ import {
   Space,
   Dropdown,
 } from "antd";
-import { DownOutlined } from "@ant-design/icons";
+import { DownOutlined, UserOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import logoImage from '../../assets/logo.svg';
 import NotificationBell from '../../components/NotificationBell';
+//แก้ไขโดยพรศิริ: START
+import { useAuth } from "../../context/AuthContext"; // 1. ดึง Hook สำหรับข้อมูลผู้ใช้มา
+//แก้ไขโดยพรศิริ: END
+
 
 const { Header, Content, Footer } = Layout;
 
@@ -51,6 +55,9 @@ const FullLayout: React.FC = () => {
   const currentPageKey = location.pathname.split("/")[1] || "home";
 
   const context = useOutletContext();
+  //แก้ไขโดยพรศิริ: START
+  const { user } = useAuth(); // 2. เรียกใช้ Hook เพื่อเอาข้อมูล user ออกมา
+  //แก้ไขโดยพรศิริ: END
 
   return (
     <Layout style={{ minHeight: "auto" }}>
@@ -126,19 +133,26 @@ const FullLayout: React.FC = () => {
                 </Space>
               </Button>
             </Dropdown>
+            {/*แก้ไขโดยพรศิริ: START*/}
             <Link to="/profile">
-              <Button
+               <Button
                 type="text"
+                icon={<UserOutlined />}
                 style={{
-                  fontSize: "20px",
+                  fontSize: "16px",
                   border: "1px solid #d9d9d9",
                   borderRadius: "6px",
                   color: "#0088FF",
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '4px 15px'
                 }}
               >
-                Profile
+                {/* 3. นำ username มาแสดงผลตรงนี้ และใส่ข้อความสำรองไว้ */}
+                {user ? user.username : "Profile"}
               </Button>
             </Link>
+             {/*แก้ไขโดยพรศิริ: END*/}
           </Space>
         </Flex>
       </Header>

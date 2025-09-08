@@ -65,7 +65,7 @@ const LoginPage: React.FC = () => {
         if (data.user.role === 'admin') {
             navigate('/admin');
         } else if (data.user.role === 'employer') {
-            navigate('/employer/feed'); // หรือหน้า dashboard ของนายจ้าง
+            navigate('/feed'); // หรือหน้า dashboard ของนายจ้าง
         } else {
             navigate('/feed'); // หน้าของนักศึกษา
         }
