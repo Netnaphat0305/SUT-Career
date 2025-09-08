@@ -151,3 +151,27 @@ func UpdateApplicationStatus(c *gin.Context) {
         "data":    app,
     })
 }
+
+// GET /api/jobapplications/check/:jobpost_id/:student_id
+func CheckJobApplication(c *gin.Context) {
+    jobpostID := c.Param("jobpost_id")
+    studentID := c.Param("student_id")
+
+    var existing entity.JobApplication
+    if err := config.DB().
+        Where("job_post_id = ? AND student_id = ?", jobpostID, studentID).
+        First(&existing).Error; err == nil {
+        // ถ้ามีอยู่แล้ว
+        c.JSON(http.StatusOK, gin.H{
+            "applied": true,
+            "message": "คุณสมัครงานนี้ไปแล้ว",
+        })
+        return
+    }
+
+    // ถ้ายังไม่มี
+    c.JSON(http.StatusOK, gin.H{
+        "applied": false,
+        "message": "ยังไม่ได้สมัคร",
+    })
+}

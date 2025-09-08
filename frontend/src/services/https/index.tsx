@@ -336,6 +336,7 @@ export const jobApplicationAPI = {
   getMyApplications: () => Get(`/api/jobapplications/me`),
   getByJobPost: (jobpost_id: number) => Get(`/api/jobapplications/job/${jobpost_id}`),
   updateStatus: (id: number, status: string) => Update(`/api/jobapplications/${id}/status`, { application_status: status }),
+  checkApplied: (jobpost_id: number, student_id: number) => Get(`/api/jobapplications/check/${jobpost_id}/${student_id}`)
 };
 
 // Job Category APIs

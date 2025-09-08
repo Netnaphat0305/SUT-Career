@@ -17,7 +17,7 @@ type Employer struct{
 	Address       	string    	`gorm:"type:text;not null" json:"address"`
 	
    
-	
+
 
 	// FK
 	UserID 	      	uint 		`gorm:"not null" json:"user_id"`

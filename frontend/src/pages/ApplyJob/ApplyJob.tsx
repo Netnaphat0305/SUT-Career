@@ -70,6 +70,7 @@ const ApplyJob: React.FC = () => {
   const [student, setStudent] = useState<any>({});
   const [jobpost, setJobpost] = useState<any>({});
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
 
   // state สำหรับ Modal
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -135,6 +136,24 @@ const ApplyJob: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const checkIfApplied = async () => {
+      if (!student?.ID || !jobpost?.ID) return;
+
+      try {
+        const res = await jobApplicationAPI.checkApplied(
+          jobpost.ID,
+          student.ID
+        );
+        setAlreadyApplied(res.applied);
+      } catch (error) {
+        console.error("Error checking application:", error);
+      }
+    };
+
+    checkIfApplied();
+  }, [student, jobpost]);
+
   if (loading) return <p>กำลังโหลดข้อมูล...</p>;
 
   return (
@@ -143,11 +162,7 @@ const ApplyJob: React.FC = () => {
 
       {/* ส่วนรายละเอียดประกาศงาน */}
       <div className="apply-job-content">
-        <img
-          src={post?.image_url}
-          alt="Job"
-          className="apply-job-image"
-        />
+        <img src={post?.image_url} alt="Job" className="apply-job-image" />
         <div className="apply-detail-container">
           <div className="apply-detail">
             <h2 className="post-title-AppJob">
@@ -279,14 +294,18 @@ const ApplyJob: React.FC = () => {
 
           {/* ปุ่มยืนยันสมัครงาน */}
           <div className="submit-wrapper">
-            <Button type="primary" size="large" htmlType="submit">
-              ยืนยันสมัครงาน
+            <Button
+              type="primary"
+              size="large"
+              htmlType="submit"
+              disabled={alreadyApplied}
+            >
+              {alreadyApplied ? "คุณสมัครงานนี้ไปแล้ว" : "ยืนยันสมัครงาน"}
             </Button>
           </div>
 
-
           <Modal
-            open={isModalVisible} 
+            open={isModalVisible}
             onCancel={handleClose}
             footer={null}
             centered

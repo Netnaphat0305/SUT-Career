@@ -26,7 +26,7 @@ type Jobpost struct {
 
 	//FK
 	EmployerID			uint    		`gorm:"not null" json:"employer_id"`
-    Employer   			*Employer 		`gorm:"foreignKey:EmployerID;references:ID" json:"Employer"`
+    Employer   			Employer 		`gorm:"foreignKey:EmployerID;references:ID" json:"Employer"`
 
 	JobCategoryID uint        `json:"job_category_id"`
 	JobCategory   JobCategory `gorm:"foreignKey:JobCategoryID"`
