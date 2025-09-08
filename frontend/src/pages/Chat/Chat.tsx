@@ -105,11 +105,6 @@ const Chat: React.FC = () => {
 
   const selectedUserData = chatRooms.find((user) => user.ID === selectedUser)
 
-  //MUST DELETE!!!!!!!!!!!!
-  chatRooms.map((chatroomhetad) =>
-    console.log("chatroom data: ", chatroomhetad)
-  )
-
   return (
     <Layout className="chat-layout">
       {/*Side bar*/}
@@ -157,7 +152,7 @@ const Chat: React.FC = () => {
         <div className="messages-area">
           <Space direction="vertical" size="large" className="messages-space">
             {currentMessages.map((message) => {
-              const isOwn = message.User.ID === user.id;  // user.id มาจาก localStorage
+              const isOwn = message.UserSenderID === user.id;  // user.id มาจาก localStorage
               const timeStr = new Date(message.Time_Stamp_Send).toLocaleTimeString(
                 "th-TH",
                 { hour: "2-digit", minute: "2-digit" }

@@ -115,11 +115,7 @@ func ListRoomMessages(c *gin.Context) {
 	db := config.DB()
 	var msgs []entity.ChatHistory
 
-	db.Where("chat_room_id = ?", roomId).
-		Preload("User").
-		Order("created_at asc").
-		Find(&msgs)
-
+	db.Preload("User").Where("chat_room_id = ?", roomId).Preload("User").Order("created_at asc").Find(&msgs)
 	c.JSON(http.StatusOK, msgs)
 }
 
@@ -156,8 +152,8 @@ func SendMessage(c *gin.Context) {
 	if err := db.Model(&entity.ChatRoom{}).
 		Where("id = ?", roomId).
 		Updates(map[string]interface{}{
-			"last_message":    req.Message,
-			"last_message_at": now, // บันทึกเป็น time.Time
+			"Lastmessage":    req.Message,
+			"LastMessageAt": now, // บันทึกเป็น time.Time
 		}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update chat room"})
 		return
