@@ -25,7 +25,7 @@ const Reportpage: React.FC = () => {
         }));
     };
 
-    // 5. ฟังก์ชันสำหรับส่งข้อมูลเมื่อกดปุ่ม submit
+    // 5. ป
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault(); // ป้องกันการรีเฟรชหน้า
 
@@ -50,8 +50,8 @@ const Reportpage: React.FC = () => {
             // 7. เรียกใช้ฟังก์ชัน create จาก reportAPI ที่เราสร้างไว้
             const response = await reportAPI.create(reportData);
 
-            console.log('Report submission response:', response);
-            console.log('Report submission response:', reportData);
+            // console.log('Report submission response:', response);
+            // console.log('Report submission response:', reportData);
 
             // ตรวจสอบ response จาก axios (ใน service)
             if (response && response.status >= 200 && response.status < 300) {

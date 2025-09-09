@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import './editreport.css';
+import { message } from 'antd';
+import { reportAPI } from "../../services/https/index";
+
 
 interface User {
   name: string;
@@ -92,14 +95,38 @@ const EditIncidentForm: React.FC<EditIncidentFormProps> = ({ incident, onSave, o
     return !Object.values(newErrors).some(error => error !== '');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => { // 3. ทำให้ handleSubmit เป็น async
     e.preventDefault();
     
     if (validateForm()) {
-      onSave({
-        ...incident,
-        ...formData
-      });
+      // 4. ใส่โค้ดเรียก API ตรงนี้
+      try {
+        // ใช้ ID จาก formData และส่งข้อมูลที่อัปเดตไป
+        const response = await reportAPI.update(formData.id, {
+          title: formData.title,
+          place: formData.place,
+          datetime: new Date(formData.datetime).toISOString(), // แปลงเป็น ISO string format ที่ backend รับได้
+          discription: formData.discription,
+        });
+
+        // ตรวจสอบ response จาก API
+        if (response && response.status >= 200 && response.status < 300) {
+          message.success('บันทึกการแก้ไขสำเร็จ!');
+          // เรียก onSave เพื่อแจ้ง parent component และส่งข้อมูลที่อัปเดตกลับไป
+         
+        } else {
+          message.error(response?.data?.error || 'บันทึกการแก้ไขไม่สำเร็จ');
+        }
+      } catch (error) {
+        console.error("Failed to save incident:", error);
+        message.error('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+      }
+       onSave({
+            ...incident,
+            ...formData,
+            datetime: new Date(formData.datetime).toISOString(),
+          });
     }
   };
 
@@ -111,11 +138,6 @@ const EditIncidentForm: React.FC<EditIncidentFormProps> = ({ incident, onSave, o
   return (
     <div className="edit-form-container">
       <div className="breadcrumb">
-        <span>แดชบอร์ด</span>
-        <span className="separator">›</span>
-        <span>จัดการเหตุการณ์</span>
-        <span className="separator">›</span>
-        <span>แก้ไขเหตุการณ์</span>
       </div>
 
       <div className="page-header">

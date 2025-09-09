@@ -8,6 +8,34 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
+
+/* Refresh Button */
+.refresh-btn {
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  min-width: 24px;
+  height: 24px;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.refresh-section{
+  display: flex;
+  align-items: center;
+  justify-content: center; /* จัดให้อยู่ตรงกลาง */
+  gap: 10px; /* ระยะห่างระหว่างปุ่มกับข้อความ */
+}
+
 /* Breadcrumb */
 .breadcrumb {
   display: flex;
@@ -79,6 +107,7 @@
 .result-count {
   font-size: 14px;
   color: #6b7280;
+ 
 }
 
 /* Table Container */

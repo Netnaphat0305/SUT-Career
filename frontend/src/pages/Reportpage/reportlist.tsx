@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Edit2, Trash2, Search } from "lucide-react";
+import { Edit2, Trash2, Search, RefreshCw } from "lucide-react";
 import EditIncidentForm from "./editreport";
 import "./reportlist.css";
 import { reportAPI } from "../../services/https/index";
@@ -39,32 +39,32 @@ const IncidentReportList: React.FC = () => {
   const userid = userStorage ? JSON.parse(userStorage).id : null;
   console.log("userId from localStorage:", userid);
 
+  const fetchReports = async () => {
+    try {
+      const res = await reportAPI.getByUserId(userid);
+      // console.log("API response:", res);
+      // map API response → Incident
+      const mappedIncidents: Incident[] = res.data.map((r: any) => ({
+        id: r.id,
+        title: r.title,
+        place: r.place,
+        datetime: r.datetime,
+        discription: r.discription,
+        user: { name: r.username },
+        report_status: { id: r.status_id, name: r.status_name }, // color ใส่ default
+      }));
+
+      setIncidents(mappedIncidents);
+      console.log("รายงานของ user:", mappedIncidents);
+    } catch (error) {
+      console.error("โหลด report ของ user ไม่สำเร็จ", error);
+      setIncidents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const res = await reportAPI.getByUserId(userid);
-
-        // map API response → Incident
-        const mappedIncidents: Incident[] = res.data.map((r: any) => ({
-          id: r.id,
-          title: r.title,
-          place: r.place,
-          datetime: r.datetime,
-          discription: r.discription,
-          user: { name: r.username },
-          report_status: { id: r.id, name: r.statusname }, // color ใส่ default
-        }));
-
-        setIncidents(mappedIncidents);
-        console.log("รายงานของ user:", mappedIncidents);
-      } catch (error) {
-        console.error("โหลด report ของ user ไม่สำเร็จ", error);
-        setIncidents([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchReports();
   }, [userid]);
 
@@ -78,10 +78,10 @@ const IncidentReportList: React.FC = () => {
   const handleDelete = async (incidentId: number) => {
     if (window.confirm("คุณต้องการลบรายการนี้หรือไม่?")) {
       try {
-        await reportAPI.delete(incidentId); // 🔹 เรียก API ลบ
+        await reportAPI.delete(incidentId);
         setIncidents(
           incidents.filter((incident) => incident.id !== incidentId)
-        ); // 🔹 อัปเดต state
+        );
         console.log(`ลบ incident ${incidentId} สำเร็จ`);
       } catch (error) {
         console.error("ลบ report ไม่สำเร็จ", error);
@@ -155,8 +155,19 @@ const IncidentReportList: React.FC = () => {
             type="text"
             placeholder="ค้นหาด้วยชื่อเหตุการณ์ สถานที่ หรือรายละเอียด..."
           />
-        </div>
+        </div >
+        <div className="refresh-section">
+          <button
+          className="refresh-btn"
+          onClick={fetchReports}
+          disabled={loading}
+          title="รีเฟรชข้อมูล"
+        >
+          <RefreshCw size={15} className={loading ? "spinning" : ""} />
+        </button>
         <div className="result-count">พบ {incidents.length} รายการ</div>
+        </div>
+        
       </div>
 
       <div className="table-container">
@@ -164,7 +175,7 @@ const IncidentReportList: React.FC = () => {
           <thead>
             <tr>
               <th className="checkbox-col">
-                <input type="checkbox" />
+                {/* Checkbox for select all could go here */}
               </th>
               <th>ชื่อเหตุการณ์</th>
               <th>สถานที่</th>
@@ -178,9 +189,7 @@ const IncidentReportList: React.FC = () => {
               const { date, time } = formatDateTime(incident.datetime);
               return (
                 <tr key={incident.id}>
-                  <td>
-                    <input type="checkbox" />
-                  </td>
+                  <td></td>
                   <td>
                     <div className="title-cell">
                       <div className="title">{incident.title}</div>
@@ -205,7 +214,7 @@ const IncidentReportList: React.FC = () => {
                     </span>
                   </td>
                   <td>
-                    {incident.report_status.id !== 3 && (
+                    {incident.report_status.id == 1 && (
                       <div className="action-buttons">
                         <button
                           className="action-btn edit-btn"
