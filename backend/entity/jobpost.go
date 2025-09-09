@@ -40,8 +40,12 @@ type Jobpost struct {
 	SalaryTypeID uint       `gorm:"not null" json:"salary_type_id"`
 	SalaryType   SalaryType `gorm:"foreignKey:SalaryTypeID;references:ID"`
 
-	StudentID			uint			`json:"student_id"`
-	Student				*Student		`gorm:"foreignKey: StudentID;references:ID" json:"student"`
+	//เหมือนจะไม่ได้ใช้แล้วเพราะว่ามันรู้ในหน้า jopappแล้วว่าสมัครโพสต์ไหน
+	// StudentID			uint			`json:"student_id"`
+	// Student				*Student		`gorm:"foreignKey: StudentID;references:ID" json:"student"`
+
+	// เพิ่มตรงนี้ preload ผู้สมัครในโพสต์งาน
+	Applications []JobApplication `gorm:"foreignKey:JobPostID" json:"applications,omitempty"`
 
 	// เผื่อได้ Preload
 	BillableItem 	   *BillableItems 	`gorm:"foreignKey:OrderID;references:ID" json:"billable_item,omitempty"`

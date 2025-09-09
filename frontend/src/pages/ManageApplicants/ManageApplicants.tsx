@@ -109,19 +109,36 @@ const ManageApplicants: React.FC = () => {
                     <p className="applicant-details">
                       {app.Student?.user?.username} • {app.Student?.phone}
                     </p>
-                    <Tag color={
-                      app.application_status === "Pending" ? "blue" :
-                      app.application_status === "InterviewPending" ? "orange" :
-                      app.application_status === "InterviewScheduled" ? "gold" :
-                      app.application_status === "Interviewed" ? "purple" :
-                      app.application_status === "Accepted" ? "green" : "red"
-                    }>
+                    <Tag
+                      color={
+                        app.application_status === "Pending"
+                          ? "blue"
+                          : app.application_status === "InterviewPending"
+                          ? "orange"
+                          : app.application_status === "InterviewScheduled"
+                          ? "gold"
+                          : app.application_status === "Interviewed"
+                          ? "purple"
+                          : app.application_status === "Accepted"
+                          ? "green"
+                          : app.application_status === "Cancelled"
+                          ? "default"
+                          : "red"
+                      }
+                    >
                       {app.application_status === "Pending" && "รอพิจารณา"}
-                      {app.application_status === "InterviewPending" && "รอเลือกวันสัมภาษณ์"}
-                      {app.application_status === "InterviewScheduled" && "รอสัมภาษณ์"}
-                      {app.application_status === "Interviewed" && "สัมภาษณ์เสร็จแล้ว"}
-                      {app.application_status === "Accepted" && "ผ่านการคัดเลือก"}
-                      {app.application_status === "Rejected" && "ไม่ผ่านการคัดเลือก"}
+                      {app.application_status === "InterviewPending" &&
+                        "รอเลือกวันสัมภาษณ์"}
+                      {app.application_status === "InterviewScheduled" &&
+                        "รอสัมภาษณ์"}
+                      {app.application_status === "Interviewed" &&
+                        "สัมภาษณ์เสร็จแล้ว"}
+                      {app.application_status === "Accepted" &&
+                        "ผ่านการคัดเลือก"}
+                      {app.application_status === "Rejected" &&
+                        "ไม่ผ่านการคัดเลือก"}
+                      {app.application_status === "Cancelled" &&
+                        "นักศึกษายกเลิกการสมัคร"}
                     </Tag>
                   </div>
                 </div>
@@ -164,10 +181,20 @@ const ManageApplicants: React.FC = () => {
                 )}
 
                 {/* ปุ่มจัดการสถานะ */}
-                <div style={{ marginTop: 16, display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    marginTop: 16,
+                    display: "flex",
+                    gap: "10px",
+                    flexWrap: "wrap",
+                  }}
+                >
                   <Button
                     type="primary"
-                    disabled={selectedApplicant.application_status !== "Pending"}
+                    disabled={
+                      selectedApplicant.application_status === "Cancelled" ||
+                      selectedApplicant.application_status !== "Pending"
+                    }
                     onClick={() =>
                       updateApplicantStatus(
                         selectedApplicant.ID,
@@ -181,7 +208,10 @@ const ManageApplicants: React.FC = () => {
 
                   <Button
                     type="dashed"
-                    disabled={selectedApplicant.application_status !== "InterviewScheduled"}
+                    disabled={
+                      selectedApplicant.application_status !==
+                      "InterviewScheduled"
+                    }
                     onClick={() =>
                       updateApplicantStatus(
                         selectedApplicant.ID,
@@ -195,7 +225,9 @@ const ManageApplicants: React.FC = () => {
 
                   <Button
                     type="primary"
-                    disabled={selectedApplicant.application_status !== "Interviewed"}
+                    disabled={
+                      selectedApplicant.application_status !== "Interviewed"
+                    }
                     onClick={() =>
                       updateApplicantStatus(
                         selectedApplicant.ID,
@@ -209,7 +241,9 @@ const ManageApplicants: React.FC = () => {
 
                   <Button
                     danger
-                    disabled={selectedApplicant.application_status !== "Interviewed"}
+                    disabled={
+                      selectedApplicant.application_status !== "Interviewed"
+                    }
                     onClick={() =>
                       updateApplicantStatus(
                         selectedApplicant.ID,

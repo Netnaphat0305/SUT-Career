@@ -39,6 +39,7 @@ func GetJobPostByID(c *gin.Context) {
         Preload("Employer.User").      
         Preload("JobCategory").
         Preload("EmploymentType").
+		Preload("Applications.Student"). //preload นักศึกษาที่สมัครงานนี้
         Preload("SalaryType").
         First(&jobpost, id).Error; err != nil {
         c.JSON(http.StatusNotFound, gin.H{"error": "Job post not found"})
@@ -89,23 +90,36 @@ func CreateJobPost(c *gin.Context) {
 
 // PUT /jobposts/:id
 // อัปเดตข้อมูลประกาศงาน
+// PUT /jobposts/:id
 func UpdateJobPost(c *gin.Context) {
-	var jobpost entity.Jobpost
-	id := c.Param("id")
-	if err := config.DB().First(&jobpost, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Job post not found"})
-		return
-	}
-	if err := c.ShouldBindJSON(&jobpost); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if err := config.DB().Save(&jobpost).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"data": jobpost})
+    var jobpost entity.Jobpost
+    id := c.Param("id")
+
+    // หาโพสต์ก่อน
+    if err := config.DB().First(&jobpost, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Job post not found"})
+        return
+    }
+
+    // อ่านข้อมูลจาก Body
+    var request map[string]interface{}
+    if err := c.ShouldBindJSON(&request); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    // อัปเดตเฉพาะฟิลด์ที่ส่งมา
+    if err := config.DB().Model(&jobpost).Updates(request).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถอัปเดตโพสต์ได้"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "อัปเดตโพสต์สำเร็จ",
+        "data":    jobpost,
+    })
 }
+
 
 // DELETE /jobposts/:id
 // ลบประกาศงาน
@@ -190,3 +204,4 @@ func UploadPortfolio(c *gin.Context) {
 		"data":     jobpost,
 	})
 }
+

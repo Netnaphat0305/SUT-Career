@@ -1,0 +1,21 @@
+#nprogress .bar {
+  background: #1677ff !important; /* สีฟ้าของ Ant Design */
+  height: 3px;
+}
+
+/* เพิ่มเงาให้แถบโหลดดูสวยขึ้น */
+#nprogress .peg {
+  display: block;
+  position: absolute;
+  right: 0px;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 10px #1677ff, 0 0 5px #1677ff;
+  opacity: 1.0;
+  transform: rotate(3deg) translate(0px, -4px);
+}
+
+/* ซ่อนสปินเนอร์ */
+#nprogress .spinner {
+  display: none;
+}

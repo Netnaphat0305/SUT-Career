@@ -40,13 +40,17 @@ const MyApplications: React.FC = () => {
         return "green";
       case "Rejected":
         return "red";
+      case "Cancelled":
+        return "gray";
       default:
         return "default";
     }
   };
 
   if (loading) {
-    return <Spin size="large" style={{ display: "block", margin: "50px auto" }} />;
+    return (
+      <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
+    );
   }
 
   return (
@@ -71,11 +75,16 @@ const MyApplications: React.FC = () => {
                   {/* แสดงสถานะ */}
                   <Tag color={getStatusColor(app.application_status)}>
                     {app.application_status === "Pending" && "รอพิจารณา"}
-                    {app.application_status === "InterviewPending" && "รอเลือกวันสัมภาษณ์"}
-                    {app.application_status === "InterviewScheduled" && "รอสัมภาษณ์"}
-                    {app.application_status === "Interviewed" && "สัมภาษณ์เสร็จแล้ว"}
+                    {app.application_status === "InterviewPending" &&
+                      "รอเลือกวันสัมภาษณ์"}
+                    {app.application_status === "InterviewScheduled" &&
+                      "รอสัมภาษณ์"}
+                    {app.application_status === "Interviewed" &&
+                      "สัมภาษณ์เสร็จแล้ว"}
                     {app.application_status === "Accepted" && "ผ่านการคัดเลือก"}
-                    {app.application_status === "Rejected" && "ไม่ผ่านการคัดเลือก"}
+                    {app.application_status === "Cancelled" && "ยกเลิกการสมัคร"}
+                    {app.application_status === "Rejected" &&
+                      "ไม่ผ่านการคัดเลือก"}
                   </Tag>
 
                   {/* แสดงวันสัมภาษณ์ */}
@@ -83,17 +92,49 @@ const MyApplications: React.FC = () => {
                     app.InterviewScheduling && (
                       <p style={{ marginTop: "8px" }}>
                         วันสัมภาษณ์:{" "}
-                        {new Date(app.InterviewScheduling.DateAndTime).toLocaleString("th-TH")}
+                        {new Date(
+                          app.InterviewScheduling.DateAndTime
+                        ).toLocaleString("th-TH")}
                       </p>
                     )}
+                  {/* ยกเลิกการสมัคร */}
+                  {app.application_status === "Pending" && (
+                    <Button
+                      danger
+                      style={{ marginTop: "10px" }}
+                      onClick={async () => {
+                        try {
+                          await jobApplicationAPI.updateStatus(
+                            app.ID,
+                            "Cancelled"
+                          );
+                          message.success("ยกเลิกการสมัครเรียบร้อยแล้ว");
+
+                          // อัปเดต state ให้ UI เปลี่ยนสถานะทันที
+                          setApplications((prev) =>
+                            prev.map((item) =>
+                              item.ID === app.ID
+                                ? { ...item, application_status: "Cancelled" }
+                                : item
+                            )
+                          );
+                        } catch (error) {
+                          message.error("ยกเลิกการสมัครไม่สำเร็จ");
+                        }
+                      }}
+                    >
+                      ยกเลิกการสมัคร
+                    </Button>
+                  )}
 
                   {/* ปุ่มเลือกวันสัมภาษณ์ */}
                   {app.application_status === "InterviewPending" && (
                     <Button
                       type="primary"
                       style={{ marginTop: "10px" }}
-                       onClick={() => navigate(`/interview?applicationId=${app.ID}`)}
-
+                      onClick={() =>
+                        navigate(`/interview?applicationId=${app.ID}`)
+                      }
                     >
                       เลือกวันสัมภาษณ์
                     </Button>

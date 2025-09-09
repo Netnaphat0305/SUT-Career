@@ -14,6 +14,7 @@ const (
 	StatusInterviewed        ApplicationStatusEnum = "Interviewed"        // สัมภาษณ์เสร็จแล้ว
 	StatusAccepted           ApplicationStatusEnum = "Accepted"           // ผ่านการคัดเลือก
 	StatusRejected           ApplicationStatusEnum = "Rejected"           // ไม่ผ่านการคัดเลือก
+    StatusCancelled          ApplicationStatusEnum = "Cancelled"          // ยกเลิกการสมัคร เพิ่มอันนี้
 )
 
 type JobApplication struct {

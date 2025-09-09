@@ -1,134 +1,5 @@
-// import React, { useEffect, useState } from "react";
-// import { Button } from "antd";
-// import lahui from "../../assets/lahui.svg";
-// import { useNavigate, useParams } from "react-router-dom";
-// import "./JobDetail.css";
-// import "../../index.css";
-// import "../../Layout.css";
-// import {
-//   ClockCircleOutlined,
-//   DollarCircleOutlined,
-//   EnvironmentOutlined,
-// } from "@ant-design/icons";
-// import { jobPostAPI } from "../../services/https";
-
-// interface Post {
-//   id: number;
-//   title: string;
-//   image: string;
-//   description?: string;
-//   duration?: string;
-//   salary: string;
-//   location: string;
-//   timestamp?: number;
-// }
-
-// const PostLayout: React.FC = () => {
-//   const [posts, setPosts] = useState<Post[]>([]);
-//   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-//   const { id } = useParams<{ id: string }>(); // ดึง id ที่เราคลิกมา
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     const savedPosts = JSON.parse(localStorage.getItem("posts") || "[]");
-
-//     setPosts(savedPosts);
-
-//     // หาโพสต์ที่ id ตรงกับใน URL
-//     const foundPost = savedPosts.find((p: Post) => p.id === Number(id));
-
-//     if (foundPost) {
-//       setSelectedPost(foundPost);
-//     } else if (savedPosts.length > 0) {
-//       // ถ้า id ไม่เจอ เลือกโพสต์แรก
-//       setSelectedPost(savedPosts[0]);
-//     }
-//   }, [id]);
-
-//   return (
-//     <div className="post-layout-container">
-//       {/* ฝั่งซ้าย: รายการโพสต์ */}
-//       <div className="post-list-sidebar">
-//         {posts.map((post) => (
-//           <div
-//             key={post.id}
-//             className={`post-preview ${
-//               selectedPost?.id === post.id ? "selected" : ""
-//             }`}
-//             onClick={() => setSelectedPost(post)}
-//           >
-//             <div className="post-text">
-//               <h4>{post.title}</h4>
-//               <p className="post-subtitle">
-//                 LAHUI MALATANG <br />
-//                 ร้านล่าฮุยมาล่าทัง
-//               </p>
-
-//               <div className="post-meta-icons">
-//                 <div className="meta-item">
-//                   <ClockCircleOutlined />
-//                   <span>{post.duration || "ยังไม่ระบุ"}</span>
-//                 </div>
-//                 <div className="meta-item">
-//                   <DollarCircleOutlined />
-//                   <span>{post.salary}</span>
-//                 </div>
-//                 <div className="meta-item">
-//                   <EnvironmentOutlined />
-//                   <span>{post.location}</span>
-//                 </div>
-//               </div>
-//             </div>
-
-//             <div className="post-image-wrapper">
-//               <img className="post-image-detail" src={post.image || lahui} />
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* ฝั่งขวา: รายละเอียดโพสต์ที่เลือก */}
-//       <div className="post-full-detail">
-//         {selectedPost && (
-//           <>
-//             <div className="wrap-title-detail">
-//               <div>
-//                 <h2 className="title-detail">{selectedPost.title}</h2>
-//                 <div className="image-subtitle-row">
-//                   <img
-//                     src={selectedPost.image}
-//                     className="post-detail-image"
-//                     alt={selectedPost.title}
-//                   />
-//                   <p className="post-subtitle-detail">
-//                     LAHUI MALATANG <br />
-//                     ร้านล่าฮุยมาล่าทัง
-//                   </p>
-//                 </div>
-//               </div>
-
-//               <Button
-//                 className="btn-Job-Application"
-//                 type="primary"
-//                 onClick={() =>
-//                   navigate("/Job/ApplyJob", { state: { post: selectedPost } })
-//                 }
-//               >
-//                 ยื่นสมัครงาน
-//               </Button>
-//             </div>
-//             <div className="box-with-top-bottom-border">
-//               {selectedPost.description || "ไม่มีรายละเอียดเพิ่มเติม"}
-//             </div>
-//           </>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button, Spin, message } from "antd";
+import { Button, Spin, message, Tag } from "antd";
 import lahui from "../../assets/lahui.svg";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import "./JobDetail.css";
@@ -157,55 +28,68 @@ const PostLayout: React.FC = () => {
 
   const [messageApi, contextHolder] = message.useMessage();
 
-  // เก็บ scroll ใน sessionStorage (ไม่หายเมื่อ navigate)
   const SCROLL_KEY = "sidebar-scroll";
 
-  // ดึงโพสต์ทั้งหมดจาก API
   useEffect(() => {
     const fetchPost = async () => {
-      try {
-        setLoading(true);
-        const res = await jobPostAPI.getAll();
-        const data = res.data?.data || res.data || res;
+  try {
+    setLoading(true);
+    const res = await jobPostAPI.getAll();
+    const data = res.data?.data || res.data || res;
 
-        if (!data || data.length === 0) {
-          messageApi.warning("ยังไม่มีประกาศงาน");
-          setPosts([]);
-          return;
-        }
+    if (!data || data.length === 0) {
+      messageApi.warning("ยังไม่มีประกาศงาน");
+      setPosts([]);
+      return;
+    }
 
-        const sortedData = data.sort(
-          (a: Jobpost, b: Jobpost) =>
-            new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
-        );
+    // กรองเฉพาะโพสต์เปิดอยู่ (ทุก role)
+    const visiblePosts = data.filter((p: Jobpost) => p.status === "Open");
 
-        setPosts(sortedData);
+    const sortedData = visiblePosts.sort(
+      (a: Jobpost, b: Jobpost) =>
+        new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
+    );
 
-        const statePost = (location.state as { post?: Jobpost })?.post;
-        if (statePost) {
-          setSelectedPost(statePost);
-          return;
-        }
+    setPosts(sortedData);
 
-        if (id) {
-          const found = sortedData.find((p: Jobpost) => p.ID === Number(id));
-          setSelectedPost(found || sortedData[0]);
-          return;
-        }
-
-        setSelectedPost(sortedData[0]);
-      } catch (err) {
-        console.error("Error fetching job post:", err);
-        messageApi.error("โหลดโพสต์งานไม่สำเร็จ");
-      } finally {
-        setLoading(false);
+    const statePost = (location.state as { post?: Jobpost })?.post;
+    if (statePost) {
+      // ถ้าโพสต์ปิด เด้งกลับไปหน้า PostBoard
+      if (statePost.status === "Close") {
+        messageApi.warning("โพสต์นี้ถูกปิดรับสมัครแล้ว");
+        navigate("/Job/PostBoard");
+        return;
       }
-    };
+      setSelectedPost(statePost);
+      return;
+    }
+
+    if (id) {
+      const found = sortedData.find((p: Jobpost) => p.ID === Number(id));
+      if (!found) {
+        // ถ้าโพสต์ปิด เด้งกลับไปหน้า PostBoard
+        messageApi.warning("โพสต์นี้ถูกปิดรับสมัครแล้ว");
+        navigate("/Job/PostBoard");
+        return;
+      }
+      setSelectedPost(found);
+      return;
+    }
+
+    setSelectedPost(sortedData[0]);
+  } catch (err) {
+    console.error("Error fetching job post:", err);
+    messageApi.error("โหลดโพสต์งานไม่สำเร็จ");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     fetchPost();
-  }, [id, location.state]);
+  }, [id, location.state, role]);
 
-  //  restore scroll position ก่อน render
   useLayoutEffect(() => {
     const savedScroll = sessionStorage.getItem(SCROLL_KEY);
     if (sidebarRef.current && savedScroll) {
@@ -213,7 +97,6 @@ const PostLayout: React.FC = () => {
     }
   }, [location.pathname]);
 
-  // โหลดข้อมูลอยู่ → แสดง Loading
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: 40 }}>
@@ -236,31 +119,25 @@ const PostLayout: React.FC = () => {
               className={`post-preview ${
                 selectedPost?.ID === post.ID ? "selected" : ""
               }`}
-              // onClick={() => {
-              //   // บนทึกตำแหน่ง scroll ก่อน navigate
-              //   if (sidebarRef.current) {
-              //     sessionStorage.setItem(
-              //       SCROLL_KEY,
-              //       sidebarRef.current.scrollTop.toString()
-              //     );
-              //   }
-
-              //   // navigate ไปโพสต์ที่เลือก โดยไม่ reset scroll
-              //   navigate(`/Job/post-detail/${post.ID}`, {
-              //     state: { post },
-              //     replace: true,
-              //   });
-              // }}
               onClick={() => {
-              // ไม่ใช้ navigate  เปลี่ยนเฉพาะ selectedPost
-              setSelectedPost(post);
-
-              // เปลี่ยน URL ให้เหมือน navigate แต่ไม่ reload หน้า
-              window.history.replaceState(null, "", `/Job/post-detail/${post.ID}`);
-              }}  
+                setSelectedPost(post);
+                window.history.replaceState(
+                  null,
+                  "",
+                  `/Job/post-detail/${post.ID}`
+                );
+              }}
             >
               <div className="post-text">
-                <h4>{post.title}</h4>
+                <h4>
+                  {post.title}{" "}
+                  <Tag
+                    color={post.status === "Open" ? "green" : "red"}
+                    style={{ marginLeft: 8 }}
+                  >
+                    {post.status === "Open" ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
+                  </Tag>
+                </h4>
                 <p className="post-subtitle">
                   {post.Employer?.company_name || "ไม่ระบุบริษัท"}
                 </p>
@@ -300,10 +177,20 @@ const PostLayout: React.FC = () => {
             <>
               <div className="wrap-title-detail">
                 <div>
-                  <h2 className="title-detail">{selectedPost.title}</h2>
+                  <h2 className="title-detail">
+                    {selectedPost.title}{" "}
+                    <Tag
+                      color={selectedPost.status === "Open" ? "green" : "red"}
+                      style={{ marginLeft: 10 }}
+                    >
+                      {selectedPost.status === "Open"
+                        ? "เปิดรับสมัคร"
+                        : "ปิดรับสมัคร"}
+                    </Tag>
+                  </h2>
                   <div className="image-subtitle-row">
                     <img
-                      src={selectedPost.image_url}
+                      src={selectedPost.image_url || lahui}
                       className="post-detail-image"
                       alt={selectedPost.title}
                     />
@@ -315,15 +202,23 @@ const PostLayout: React.FC = () => {
 
                 {/* ปุ่มยื่นสมัครงาน */}
                 {role === "student" ? (
-                  <Button
-                    className="btn-Job-Application"
-                    type="primary"
-                    onClick={() =>
-                      navigate("/Job/ApplyJob", { state: { post: selectedPost } })
-                    }
-                  >
-                    ยื่นสมัครงาน
-                  </Button>
+                  selectedPost.status === "Open" ? (
+                    <Button
+                      className="btn-Job-Application"
+                      type="primary"
+                      onClick={() =>
+                        navigate("/Job/ApplyJob", {
+                          state: { post: selectedPost },
+                        })
+                      }
+                    >
+                      ยื่นสมัครงาน
+                    </Button>
+                  ) : (
+                    <Button className="btn-Job-Application" type="primary" disabled>
+                      ปิดรับสมัครแล้ว
+                    </Button>
+                  )
                 ) : role === "employer" ? null : (
                   <Button
                     className="btn-Job-Application"

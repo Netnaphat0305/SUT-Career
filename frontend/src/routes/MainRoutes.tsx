@@ -32,6 +32,7 @@ import MyPost from '../pages/MyPost/Mypost'
 import WorklogPage from "../pages/worklog/worklog";
 import ManageApplicants from "../pages/ManageApplicants/ManageApplicants"; // เพิ่ม import นี้
 import MyApplications from "../pages/MyApplications/MyApplications"; // เพิ่ม import นี้
+import EditJobPost from "../pages/EditJobPost/EditJobPost";
 
 
 
@@ -103,6 +104,7 @@ const MainRoutes: React.FC = () => {
             <Route path="/Job/Mypost-job" element={<MyPost />} />
             <Route path="/job-ManageApplicants/:jobpost_id" element={<ManageApplicants />} />
             <Route path="/my-applications" element={<MyApplications />} />
+            <Route path="/jobpost/edit/:id" element={<EditJobPost />} />
             <Route path="/interview" element={<Interview />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/students" element={<StudentListPage />} />

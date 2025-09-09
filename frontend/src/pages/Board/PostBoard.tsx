@@ -11,30 +11,34 @@ const PostBoard: React.FC = () => {
   const [posts, setPosts] = useState<Jobpost[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        const res = await jobPostAPI.getAll();
-        const result: Jobpost[] = res.data || res;
+useEffect(() => {
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const res = await jobPostAPI.getAll();
+      const result: Jobpost[] = res.data || res;
 
-        // เรียงโพสต์จากใหม่ → เก่า
-        const sorted = result.sort(
-          (a: Jobpost, b: Jobpost) =>
-            new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
-        );
+      // กรองเฉพาะโพสต์ที่เปิดอยู่ (status = Open)
+      const filtered = result.filter((post) => post.status === "Open");
 
-        setPosts(sorted);
-      } catch (err) {
-        console.error("Error fetching posts:", err);
-        message.error("โหลดโพสต์งานไม่สำเร็จ");
-      } finally {
-        setLoading(false);
-      }
-    };
+    
+      const sorted = filtered.sort(
+        (a: Jobpost, b: Jobpost) =>
+          new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
+      );
 
-    fetchPosts();
-  }, []);
+      setPosts(sorted);
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+      message.error("โหลดโพสต์งานไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchPosts();
+}, []);
+
 
   return (
     <div className="bg-gray">

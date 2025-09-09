@@ -16,6 +16,7 @@ func BookInterview(c *gin.Context) {
 		ScheduleID       uint `json:"schedule_id" binding:"required"`
 		StudentID        uint `json:"student_id" binding:"required"`
 		JobApplicationID uint `json:"job_application_id" binding:"required"` // ขอเพิ่มตรงนี้นะ จะใช้ข้อมูล
+		Description   string    `json:"description"`
 
 	}
 
@@ -59,10 +60,11 @@ func BookInterview(c *gin.Context) {
 	//ชั้นจำเป็นต้องอัปเดตฟิลด์ application_status ใน JobApplication เป็น InterviewScheduled
 	if err := tx.Model(&entity.JobApplication{}).
 		Where("id = ?", input.JobApplicationID).
-		Select("application_status", "interview_scheduling_id"). //เปลี่ยนมา select อันที่จะ update ก่อนอันเก่ามันไม่ update interview_scheduling_id ให้ชั้น
+		Select("application_status", "interview_scheduling_id", "interview_date").//เปลี่ยนมา select อันที่จะ update ก่อนอันเก่ามันไม่ update interview_scheduling_id ให้ชั้น
 		Updates(entity.JobApplication{
 			ApplicationStatus:     entity.StatusInterviewScheduled,
 			InterviewSchedulingID: &input.ScheduleID,
+			 InterviewDate:         &schedule.DateAndTime, 
 		}).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update job application status"})

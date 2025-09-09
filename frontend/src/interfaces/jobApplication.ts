@@ -41,10 +41,18 @@ export interface InterviewScheduling {
   Description?: string;
 }
 
+export type ApplicationStatus =
+  | "Pending"
+  | "InterviewPending"
+  | "InterviewScheduled"
+  | "Interviewed"
+  | "Accepted"
+  | "Rejected"
+  | "Cancelled";
 // ข้อมูลการสมัครงาน
 export interface JobApplication {
   ID: number;
-  application_status: string;   // Pending / InterviewPending / InterviewScheduled / Interviewed / Accepted / Rejected
+  application_status: ApplicationStatus;   
   application_reason: string;
   CreatedAt: string;
   JobPost: JobPost;
@@ -53,3 +61,4 @@ export interface JobApplication {
   //  แก้ให้ใช้ interface ที่เราสร้างด้านบน
   InterviewScheduling?: InterviewScheduling | null;
 }
+

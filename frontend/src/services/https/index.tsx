@@ -312,6 +312,8 @@ export const jobPostAPI = {
   delete: (id: number) => Delete(`/api/jobposts/${id}`),
   getMyPosts: () => Get("/api/employer/myposts"), // ใช้ token จาก localStorage
 
+
+
   uploadPortfolio: (id: number, file: File) => {
     const formData = new FormData();
     formData.append("portfolio", file);
