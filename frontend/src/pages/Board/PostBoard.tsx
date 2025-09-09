@@ -5,40 +5,45 @@ import PageHeader from "../../components/PageHeader";
 import "./PostBoard.css";
 import { jobPostAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
+import { FileTextOutlined, DownloadOutlined } from "@ant-design/icons";
+
+import {
+  ClockCircleOutlined,
+  DollarCircleOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 
 const PostBoard: React.FC = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Jobpost[]>([]);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const fetchPosts = async () => {
-    try {
-      setLoading(true);
-      const res = await jobPostAPI.getAll();
-      const result: Jobpost[] = res.data || res;
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const res = await jobPostAPI.getAll();
+        const result: Jobpost[] = res.data || res;
 
-      // กรองเฉพาะโพสต์ที่เปิดอยู่ (status = Open)
-      const filtered = result.filter((post) => post.status === "Open");
+        // กรองเฉพาะโพสต์ที่เปิดอยู่ (status = Open)
+        const filtered = result.filter((post) => post.status === "Open");
 
-    
-      const sorted = filtered.sort(
-        (a: Jobpost, b: Jobpost) =>
-          new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
-      );
+        const sorted = filtered.sort(
+          (a: Jobpost, b: Jobpost) =>
+            new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
+        );
 
-      setPosts(sorted);
-    } catch (err) {
-      console.error("Error fetching posts:", err);
-      message.error("โหลดโพสต์งานไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
-  };
+        setPosts(sorted);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+        message.error("โหลดโพสต์งานไม่สำเร็จ");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchPosts();
-}, []);
-
+    fetchPosts();
+  }, []);
 
   return (
     <div className="bg-gray">
@@ -75,39 +80,63 @@ useEffect(() => {
 
                   <div className="job-details">
                     <div className="job-detail">
-                      <span>⏳ ระยะเวลาการรับสมัคร</span>
-                      <strong> {deadlineText}</strong>
+                      <ClockCircleOutlined className="job-icon" />
+                      <div>
+                        <span>ระยะเวลาการรับสมัคร</span>
+                        <strong>{deadlineText}</strong>
+                      </div>
                     </div>
                     <div className="job-detail">
-                      <span>💼 ค่าตอบแทน</span>
-                      <strong> {post.salary.toLocaleString()} บาท</strong>
+                      <DollarCircleOutlined className="job-icon" />
+                      <div>
+                        <span>ค่าตอบแทน</span>
+                        <strong>{post.salary.toLocaleString()} บาท</strong>
+                      </div>
                     </div>
                     <div className="job-detail">
-                      <span>📍 สถานที่</span>
-                      <strong> {post.locationjob}</strong>
+                      <EnvironmentOutlined className="job-icon" />
+                      <div>
+                        <span>สถานที่</span>
+                        <strong>{post.locationjob}</strong>
+                      </div>
                     </div>
                   </div>
 
                   {/* ลิงก์ดาวน์โหลด Portfolio */}
-                  {post.portfolio_required && post.portfolio_required !== "false" && (
-                    <a
-                      href={`http://localhost:8080/download/${post.portfolio_required
-                        ?.split("/")
-                        .pop()}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      ดาวน์โหลด Portfolio
-                    </a>
-                  )}
+                  {post.portfolio_required &&
+                    post.portfolio_required !== "false" && (
+                      <a
+                        className="portfolio-link"
+                        href={`http://localhost:8080/download/${post.portfolio_required
+                          ?.split("/")
+                          .pop()}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <FileTextOutlined className="portfolio-icon" />
+                        ดาวน์โหลด Portfolio
+                      </a>
+                    )}
                 </div>
 
                 {/* ฝั่งขวา */}
                 <div className="job-right">
-                  <img
-                    src={post.image_url || "/src/assets/profile.svg"}
-                    alt={post.title}
-                  />
+                  {post.image_url ? (
+                    <img
+                      src={post.image_url}
+                      alt={post.title}
+                      className="job-image"
+                    />
+                  ) : (
+                    <div className="job-image-fallback">
+                      <img
+                        src="/src/assets/profile.svg"
+                        alt="Default Logo"
+                        className="job-image"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             );
