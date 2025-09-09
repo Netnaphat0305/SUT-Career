@@ -284,16 +284,9 @@ const EditJobPost: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
-            <input type="file" accept="image/*" onChange={handleImageChange} />
-            {imagePreview && (
-              <img
-                src={imagePreview || defaultLogo}
-                alt="preview"
-                className="jobpost-logo-preview"
-              />
-            )}
-          </Form.Item>
+           <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
+                      <input type="file" accept="image/*" onChange={handleImageChange} />
+                    </Form.Item>
 
           <Alert
             message="สำหรับโพสต์จ้างงานเท่านั้น"

@@ -124,6 +124,11 @@ func main() {
 	auth := api.Group("/")
 	auth.Use(middleware.AuthMiddleware()) // ต้องมี JWT Token
 	{
+
+		// --- Employer Profile (me) ---
+		auth.GET("/employer/me", controller.GetEmployerProfile)
+		auth.PUT("/employer/me/avatar", controller.UpdateMyEmployerAvatar) 
+
 		// --- JobPosts (สร้าง/แก้ไข/ลบ) ---
 		auth.POST("/jobposts", controller.CreateJobPost)
 		auth.PUT("/jobposts/:id", controller.UpdateJobPost)
@@ -146,7 +151,7 @@ func main() {
 		auth.GET("/jobapplications/check/:jobpost_id/:student_id", controller.CheckJobApplication)
 		auth.PUT("/api/jobapplications/:id/interview", controller.UpdateInterviewSchedule)
 
-		// Interviews 
+		// Interviews
 		// ชั้นขออุญาติเพิ่มนะแกชั้นต้องใช้ TT 😭😭😭
 		auth.POST("/interviews/book", controller.BookInterview)
 		auth.GET("/interviews/student/:studentId", controller.GetInterviewsByStudent)

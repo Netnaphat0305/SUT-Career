@@ -241,6 +241,32 @@ export const employerAPI = {
   delete: (id: number) => DeleteReq(`/employers/${id}`),
 };
 
+
+// Employer Profile APIs (Base64 JSON version)
+export const employerProfileAPI = {
+  getMe: () =>
+    axios.get(`${API_URL}/api/employer/me`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      withCredentials: true,
+    }),
+
+  // ส่ง JSON: { avatar_url: "data:image/png;base64,..." }
+  uploadAvatar: (payload: { avatar_url: string }) =>
+    axios.put(`${API_URL}/api/employer/me/avatar`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      withCredentials: true,
+    }),
+};
+
+
+
+
+
 export const jobpostAPI = {
   create: (data: Jobpost) => Post("/api/myjobposts", data),
   getAll: () => Get("/api/myjobposts"),

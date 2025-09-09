@@ -16,7 +16,7 @@ type Employer struct{
 	Phone         	string   	`gorm:"type:varchar(20);not null" json:"phone"`
 	Address       	string    	`gorm:"type:text;not null" json:"address"`
 	
-   
+   AvatarURL   		string 	`gorm:"type:varchar(255)" json:"avatar_url"` // เพิ่มฟิลด์รูป
 
 
 	// FK

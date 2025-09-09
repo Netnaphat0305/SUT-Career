@@ -10,6 +10,7 @@ import AskQuestionPage from "../pages/StudentPost/AskQuestionPage";
 import QuestionDetailPage from "../pages/StudentPost/QuestionDetailPage";
 import RequestThreadPage from "../pages/RequestThreadPage/RequestThreadPage";
 import RequestStatusPage from "../pages/RequestThreadPage/RequestStatusPage";
+import EmployerProfile from "../pages/EmployerProfile/EmployerProfile";
 import Homepage from "../pages/Home/Home";
 import Board from "../pages/Board/Board";
 import JobDetail from "../pages/Board/JobDetail";
@@ -30,8 +31,8 @@ import StudentPostForm from '../pages/StudentPost/StudentPostForm';
 import RequestSentPage from '../pages/StudentPost/RequestSentPage'; // เพิ่ม import นี้
 import MyPost from '../pages/MyPost/Mypost'
 import WorklogPage from "../pages/worklog/worklog";
-import ManageApplicants from "../pages/ManageApplicants/ManageApplicants"; // เพิ่ม import นี้
-import MyApplications from "../pages/MyApplications/MyApplications"; // เพิ่ม import นี้
+import ManageApplicants from "../pages/ManageApplicants/ManageApplicants"; 
+import MyApplications from "../pages/MyApplications/MyApplications"; 
 import EditJobPost from "../pages/EditJobPost/EditJobPost";
 
 
@@ -95,6 +96,7 @@ const MainRoutes: React.FC = () => {
       <Routes>
         <Route element={<FullLayout />}>
             {/* --- General Routes --- */}
+            <Route path="/employer/profile" element={<EmployerProfile />} />
             <Route path="/" element={<Homepage />} />
             <Route path="/home" element={<Homepage />} />
             <Route path="/Job/Board" element={<Board />} />
