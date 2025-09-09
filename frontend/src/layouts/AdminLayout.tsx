@@ -8,7 +8,8 @@ import {
   UserOutlined,
   BookOutlined,
   TeamOutlined,
-  SettingOutlined
+  SettingOutlined,
+  MoneyCollectFilled
 } from '@ant-design/icons';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import '../pages/Admin2/Admin.css';
@@ -26,6 +27,7 @@ const AdminLayout: React.FC = () => {
     { key: '/admin/requests', icon: <QuestionCircleOutlined />, label: <Link to="/admin/requests">จัดการคำร้อง</Link> },
     { key: '/admin/reports', icon: <FlagOutlined />, label: <Link to="/admin/reports">โพสต์ที่ถูกรายงาน</Link> },
     { key: '/admin/manage-faq', icon: <BookOutlined />, label: <Link to="/admin/manage-faq">จัดการ FAQ</Link> },
+    { key: '/admin/finance/summary', icon: <MoneyCollectFilled/>, label: <Link to="/admin/finance/summary">สรุปยอด</Link>}
   ];
   
   const profileMenuItems = [

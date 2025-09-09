@@ -6,26 +6,6 @@ export const getNum = (v: any, def = 0) => (Number.isFinite(Number(v)) ? Number(
 // แปลง Date เป็นวันที่ภาษาไทยแบบ “02 กันยายน 2568”
 export const toTHDate = (d?: Date | null) =>
   d ? d.toLocaleDateString("th-TH", { day: "2-digit", month: "long", year: "numeric" }) : "-";
-// เช็กสตริงสถานะว่าดูเป็น “จ่ายแล้ว” ไหม (เช่น paid, ชำระ, สำเร็จ, success)
-export const isPaidStatus = (s?: string | null) => /paid|ชำระ|สำเร็จ|success/i.test(String(s || ""));
-// สรุปว่า “จ่ายแล้ว” ถ้าพบหลักฐาน (proof_of_payment/evidence ฯลฯ) หรือ สถานะที่แสดงว่าชำระแล้ว
-export const hasPaidWithProof = (p: any) => {
-  const proof = p?.proof_of_payment || p?.ProofOfPayment || p?.proof || p?.evidence || "";
-  const statusName =
-    p?.PaymentStatus?.status_name ||
-    p?.payment_status?.status_name ||
-    p?.Status?.status_name ||
-    p?.status_name ||
-    p?.status ||
-    "";
-  return Boolean(proof) || isPaidStatus(statusName);
-};
-// หายอดเต็มก่อนหักส่วนลด จากฟิลด์ที่อยู่ใน job หรือ order
-export const resolveGrossAmount = (job?: any, order?: any): number => {
-  const fromJob = getNum(job?.amount) || getNum(job?.salary) || getNum(job?.price);
-  const fromOrder = getNum(order?.subtotal) || getNum(order?.total);
-  return Math.max(0, fromJob || fromOrder || 0);
-};
 // เช็กว่าขณะนี้อยู่ในช่วงวันที่กำหนดหรือไม่ (ใช้กับช่วงเวลาคูปอง)
 export const isWithin = (now: Date, from?: Date | string, to?: Date | string) => {
   const f = from ? new Date(from) : undefined;
@@ -52,92 +32,6 @@ export const getHttpMessage = (e: any) => {
   return d?.error || e?.message || "";
 };
 
-// ----- Payment-like checks -----
-export const getStatusName = (p: any) =>
-  p?.PaymentStatus?.status_name ??
-  p?.payment_status?.status_name ??
-  p?.Status?.status_name ??
-  p?.status_name ??
-  p?.status ??
-  "";
-
-export const getStatusId = (p: any) =>
-  Number(p?.status_id ?? p?.StatusID ?? p?.payment_status_id ?? NaN);
-
-export const isPaidWord = (s?: string | null) =>
-  /paid|success|settled|complete|completed|ชำระ|สำเร็จ|เรียบร้อย|เสร็จ/i.test(
-    String(s || "")
-  );
-
-export const hasPaidFlag = (p: any) =>
-  Boolean(
-    p?.paid === true ||
-    p?.is_paid === true ||
-    p?.settled === true ||
-    p?.isSettled === true
-  );
-
-/** ดึง URL หลักฐาน (คงตัวนี้ไว้ตามที่คุณมี) */
-export const extractProofUrls = (p: any): string[] => {
-  const c: string[] = [];
-  const v = [
-    p?.proof_of_payment,
-    p?.ProofOfPayment,
-    p?.proof,
-    p?.evidence,
-  ].filter(Boolean);
-  v.forEach((x) => {
-    if (!x) return;
-    if (Array.isArray(x)) c.push(...x.map(String));
-    else c.push(String(x));
-  });
-  return c.filter(Boolean);
-};
-
-export const isPaidLike = (p: any): boolean => {
-  if (!p) return false;
-
-  const hasProof = extractProofUrls(p).length > 0;
-
-  const statusId = Number(
-    p?.status_id ??
-    p?.StatusID ??
-    p?.payment_status_id ??
-    p?.PaymentStatusID
-  );
-
-  const code = String(
-    p?.status_code ??
-    p?.StatusCode ??
-    p?.payment_status?.code ??
-    p?.PaymentStatus?.code ??
-    ""
-  ).toLowerCase();
-
-  const name = String(
-    p?.status_name ??
-    p?.StatusName ??
-    p?.payment_status?.status_name ??
-    p?.PaymentStatus?.status_name ??
-    ""
-  ).toLowerCase();
-
-  const PAID_STATUS_IDS = new Set<number>();
-  const PAID_CODES = new Set(["paid", "settled", "completed"]);
-  const isPaidById = PAID_STATUS_IDS.has(statusId);
-  const isPaidByCode = code && PAID_CODES.has(code);
-  const isPaidByName = /(paid|ชำระแล้ว|ชำระเงินแล้ว)/i.test(name);
-
-  return hasProof || isPaidById || isPaidByCode || isPaidByName;
-};
-
-export const pickPaid = (res: any) => {
-  const data = (res?.data?.data ?? res?.data ?? res) as any;
-  if (!data) return null;
-  if (Array.isArray(data)) return data.find(isPaidLike) || null;
-  return isPaidLike(data) ? data : null;
-};
-
 export const pickCompanyName = (obj: any): string => {
   const e = obj?.employer ?? obj?.Employer ?? obj ?? {};
   const fullName = [e?.first_name, e?.last_name].filter(Boolean).join(" ").trim();
@@ -162,19 +56,6 @@ export const pickFullName = (e: any): string | null => {
   const merged = [first, last].filter(Boolean).join(" ").trim();
   return merged || null;
 };
-
-export const triggerDownload = (url: string, filename?: string) => {
-  if (!url) return;
-  const a = document.createElement("a");
-  a.href = url;
-  if (filename) a.download = filename;
-  a.rel = "noopener";
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-};
-
 
 // review utils
 export const parseToDate = (v?: string | number | Date | null): Date | null => {

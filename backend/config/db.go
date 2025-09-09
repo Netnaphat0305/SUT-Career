@@ -166,19 +166,19 @@ func SeedDatabase() {
 	discounts := []entity.Discounts{
 		{
 			Model:         gorm.Model{ID: 1},
-			DiscountName:  "ส่วนลด 5%",
+			DiscountName:  "ส่วนลดเดือนกันยายน",
 			DiscountValue: 5,
 			Discounttype:  "percentage",
-			ValidFrom:     time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC),
-			ValidUntil:    time.Date(2024, 8, 31, 0, 0, 0, 0, time.UTC),
+			ValidFrom:     time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC),
+			ValidUntil:    time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC),
 		},
 		{
 			Model:         gorm.Model{ID: 2},
-			DiscountName:  "ส่วนลด 3%",
+			DiscountName:  "ส่วนลดวันเกิด",
 			DiscountValue: 3,
 			Discounttype:  "percentage",
-			ValidFrom:     time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC),
-			ValidUntil:    time.Date(2024, 9, 30, 0, 0, 0, 0, time.UTC),
+			ValidFrom:     time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC),
+			ValidUntil:    time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC),
 		},
 	}
 	for _, d := range discounts {
@@ -186,13 +186,13 @@ func SeedDatabase() {
 	}
 
 	// Billable Items
-	billableItems := []entity.BillableItems{
-		{Model: gorm.Model{ID: 1}, Description: "ค่าจ้างพาร์ทไทม์ร้านชาบู", Amount: 250},
-		{Model: gorm.Model{ID: 2}, Description: "ค่าบริการแพลตฟอร์ม", Amount: 50},
-	}
-	for _, bi := range billableItems {
-		db.FirstOrCreate(&bi, bi.ID)
-	}
+	// billableItems := []entity.BillableItems{
+	// 	{Model: gorm.Model{ID: 1}, Description: "ค่าจ้างพาร์ทไทม์ร้านชาบู", Amount: 250},
+	// 	{Model: gorm.Model{ID: 2}, Description: "ค่าบริการแพลตฟอร์ม", Amount: 50},
+	// }
+	// for _, bi := range billableItems {
+	// 	db.FirstOrCreate(&bi, bi.ID)
+	// }
 
 	password1, _ := bcrypt.GenerateFromPassword([]byte("123456"), 14)
 	password2, _ := bcrypt.GenerateFromPassword([]byte("167980"), 14)

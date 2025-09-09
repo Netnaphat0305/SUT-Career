@@ -3,6 +3,6 @@ export interface Discount {
     discount_name: string;
     discount_value: number;
     discount_type: string;
-    validfrom: Date;
-    validUntil: Date;
+    valid_from: Date;
+    valid_until: Date;
 }

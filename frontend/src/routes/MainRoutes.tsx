@@ -32,6 +32,7 @@ import MyPost from '../pages/MyPost/Mypost'
 import WorklogPage from "../pages/worklog/worklog";
 import ManageApplicants from "../pages/ManageApplicants/ManageApplicants"; // เพิ่ม import นี้
 import MyApplications from "../pages/MyApplications/MyApplications"; // เพิ่ม import นี้
+import QRPaymentPage from "../pages/payment/qrpaymentpage";
 
 
 
@@ -109,8 +110,9 @@ const MainRoutes: React.FC = () => {
             <Route path="/report" element={<Reportpage />} />
             <Route path="/my-jobs" element={<JobsPage />} />
             <Route path="/payment-report" element={<PaymentReportPage />} />
-            <Route path="/payment" element={<PaymentPage />} />
-            <Route path="/review" element={<ReviewPage />} />
+            <Route path="/payment/:jobId" element={<PaymentPage />} />
+            <Route path="/qr-payment/:paymentId" element={<QRPaymentPage />} />
+            <Route path="/review/:jobId" element={<ReviewPage />} />
             <Route path="/Interview-Schedule" element={<InterviewScheduling/>} />
             <Route path="/profile-v1" element={<ProfilePageV1 />} />
             <Route path="/review-page" element={<ReviewPage />} />

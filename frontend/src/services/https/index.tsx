@@ -17,6 +17,8 @@ import type { EmploymentType } from "../../interfaces/employment_type";
 import type { JobCategory } from "../../interfaces/job_category";
 import type { SalaryType } from "../../interfaces/salary_type";
 import type { SignInCommon } from "../../interfaces/user";
+import type { CreateBillableitemPayload } from "../../interfaces/billableitem";
+import type { Paymentmethod } from "../../interfaces/paymentmethod";
 
 /** ใช้ VITE_API_KEY เป็น baseURL เหมือนเดิม */
 const API_URL = import.meta.env.VITE_API_KEY || "http://localhost:8080";
@@ -216,43 +218,43 @@ export const Delete = async (
 
 // Authentication APIs
 export const authAPI = {
-  login: (data: SignInCommon) => Post("/login", data, false),
+  login: (data: SignInCommon) => Post("/api/login", data, false),
 };
 
 export const studentAPI = {
-  signup: (data: Student) => Post("/students", data, false),
-  getAll: () => Get("/students"),
-  getById: (id: number) => Get(`/students/${id}`),
-  update: (id: number, data: Partial<Student>) => Update(`/students/${id}`, data),
-  delete: (id: number) => DeleteReq(`/students/${id}`),
+  signup: (data: Student) => Post("/api/students", data, false),
+  getAll: () => Get("/api/students"),
+  getById: (id: number) => Get(`/api/students/${id}`),
+  update: (id: number, data: Partial<Student>) => Update(`/api/students/${id}`, data),
+  delete: (id: number) => DeleteReq(`/api/students/${id}`),
 };
 
 export const employerAPI = {
-  signup: (data: Employer) => Post("/employers", data, false),
-  getAll: () => Get("/employers"),
-  getById: (id: number) => Get(`/employers/${id}`),
-  update: (id: number, data: Partial<Employer>) => Update(`/employers/${id}`, data),
-  delete: (id: number) => DeleteReq(`/employers/${id}`),
+  signup: (data: Employer) => Post("/api/employers", data, false),
+  getAll: () => Get("/api/employers"),
+  getById: (id: number) => Get(`/api/employers/${id}`),
+  update: (id: number, data: Partial<Employer>) => Update(`/api/employers/${id}`, data),
+  delete: (id: number) => DeleteReq(`/api/employers/${id}`),
 };
 
-export const jobpostAPI = {
-  create: (data: Jobpost) => Post("/api/myjobposts", data),
-  getAll: () => Get("/api/myjobposts"),
-  getById: (id: number): Promise<{ data: Jobpost }> =>
-    Get<{ data: Jobpost }>(`/api/myjobposts/${id}`),
-  getByEmployerId: (id: number): Promise<{ data: Jobpost[] }> =>
-    Get<{ data: Jobpost[] }>(`/api/myjobposts/employer/${id}`),
-  update: (id: number, data: Partial<Jobpost>) => Update(`/api/myjobposts/${id}`, data),
-  delete: (id: number) => DeleteReq(`/api/myjobposts/${id}`),
+export const myjobpostAPI = {
+  getAcceptedApplications: () => Get(`/api/my-jobs/accepted`),
+  getById: (id: number) => Get(`/api/my-jobs/${id}`),
+};
+
+export const billableItemAPI = {
+  create: (data: CreateBillableitemPayload) => Post("/api/billable_items", data),
+  getById: (id: number) => Get(`/api/billable_items/${id}`),
+  getByJobPostId: (jobPostId: number) => Get(`/api/billable_items/jobpost/${jobPostId}`),
+  list: () => Get("/billable_items"),
+  delete: (id: number) => DeleteReq(`/api/billable_items/${id}`),
 };
 
 export const paymentAPI = {
   create: (data: CreatePaymentPayload) => Post("/api/payments", data),
   getById: (id: number): Promise<{ data: Payment }> =>
     Get(`/api/payments/${id}`, true, { silent404: true }),
-  getByBillableItem: (billableId: number): Promise<{ data: Payment }> =>
-    Get(`/api/payments/billable/${billableId}`, true, { silent404: true }),
-  getByJobId: (jobId: number) => Get(`/api/payments/job/${jobId}`),
+  getLatestByBillable: (billableId: number) => Get(`/api/payments/billable/${billableId}`),
   getByEmployerId: (employerId: number): Promise<{ data: Payment[] }> =>
     Get(`/api/payments/employer/${employerId}`),
   update: (id: number, data: Partial<Payment>) => Update(`/api/payments/${id}`, data),
@@ -268,6 +270,24 @@ export const paymentAPI = {
     }),
 };
 
+export const PaymentmethodAPI = {
+  list: () => Get<Paymentmethod[]>(`/api/paymentmethods`),
+};
+
+export const discountAPI = {
+  list: () => Get<Discount[]>(`/api/discounts`),
+  getApplicableByJob: (jobPostId: number) =>
+    Get<Discount[]>(`/discounts/applicable?job_post_id=${jobPostId}`),
+  getUsedByEmployer: (employerId: number) =>
+    Get<number[] | { discount_id: number }[]>(
+      `/discounts/used?employer_id=${employerId}&employerId=${employerId}`
+    ),
+  checkUsage: (discountId: number, employerId: number) =>
+    Get<{ used: boolean } | { data: { used: boolean } }>(
+      `/discounts/${discountId}/usage?employer_id=${employerId}&employerId=${employerId}`
+    ),
+};
+
 export const paymentReportAPI = {
   getMine: () => Get("/api/payment-reports/me"),
   getByEmployerId: (id: number) => Get(`/api/payment-reports/employer/${id}`),
@@ -278,6 +298,11 @@ export const paymentReportAPI = {
         ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
       },
     }),
+};
+
+export const adminFinanceAPI = {
+  summary: (from?: string, to?: string) =>
+    Get(`/api/admin/finance/summary${from ? `?from=${from}&to=${to ?? from}` : ""}`),
 };
 
 export const reviewAPI = {

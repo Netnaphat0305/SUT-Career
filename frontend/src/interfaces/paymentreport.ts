@@ -9,3 +9,13 @@ export interface Paymentreport {
     file_path: string;
     create_date: Date;
 }
+
+export type PaymentReportInput = {
+  paymentId: number;
+  amount: number;
+  date: string;
+  jobTitle?: string;
+  employerName?: string;
+  payerFullName?: string;
+  method_name?: string;
+};

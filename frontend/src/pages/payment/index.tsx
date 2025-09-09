@@ -1,239 +1,475 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
-  Typography,
-  Flex,
-  Button,
-  Divider,
-  Collapse,
-  Radio,
-  Space,
-  Avatar,
   Card,
+  Typography,
+  Divider,
+  Button,
+  Space,
+  message,
+  Skeleton,
+  Flex,
 } from "antd";
+import type { Jobpost } from "../../interfaces/jobpost";
+import type { Payment, CreatePaymentPayload } from "../../interfaces/payment";
+import type { Discount } from "../../interfaces/discount";
 import {
-  UserOutlined,
-  QrcodeOutlined,
-  BankOutlined,
-} from "@ant-design/icons";
-
-import './payment.css';
+  myjobpostAPI,
+  billableItemAPI,
+  paymentAPI,
+  discountAPI,
+} from "../../services/https";
+import PaymentMethodSelector from "./paymentmethodselector";
+import CouponSelector from "./couponselector";
+import "./payment.css";
+import { calcDiscount, isWithin, toTHDate } from "../../utils/index";
 
 const { Title, Text } = Typography;
-const { Panel } = Collapse;
+type TimesheetSum = { total_hours?: number };
 
+/* ---------- Utils ---------- */
+const asData = <T,>(r: any): T => (r?.data?.data ?? r?.data ?? r) as T;
+
+const detectSalaryType = (jp?: Jobpost | null) => {
+  const raw =
+    (jp as any)?.salary_type?.salary_type_name ??
+    (jp as any)?.SalaryType?.salary_type_name ??
+    (jp as any)?.SalaryType?.SalaryTypeName ??
+    (jp as any)?.salary_type_name ??
+    "";
+  const s = String(raw || "").toLowerCase();
+  if (s.includes("ชั่วโมง") || s.includes("hour"))
+    return { key: "hourly", label: "รายชั่วโมง" };
+  if (s.includes("วัน") || s.includes("day"))
+    return { key: "daily", label: "รายวัน" };
+  if (s.includes("เดือน") || s.includes("month"))
+    return { key: "monthly", label: "รายเดือน" };
+  if (s.includes("โปรเจกต์") || s.includes("project") || s.includes("ครั้ง"))
+    return { key: "project", label: "เหมาจ่าย/โปรเจกต์" };
+  return { key: "unknown", label: raw || "ไม่ระบุ" };
+};
+
+/* ---------- Small UI ---------- */
 const DetailRow: React.FC<{
-  label: string;
-  value: string;
+  label: React.ReactNode;
+  value: React.ReactNode;
   isBold?: boolean;
-}> = ({ label, value, isBold = false }) => (
-  <Flex justify="space-between" align="center" style={{ marginBottom: "16px" }}>
-    <Text style={{ color: "#595959", fontSize: "16px" }}>{label}</Text>
-    <Text strong={isBold} style={{ fontSize: "16px" }}>
-      {value}
-    </Text>
-  </Flex>
+}> = ({ label, value, isBold }) => (
+  <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+    <Text type="secondary">{label}</Text>
+    {isBold ? <Text strong>{value}</Text> : <Text>{value}</Text>}
+  </div>
 );
 
+/* ---------- Page ---------- */
 const PaymentPage: React.FC = () => {
-  const [paymentMethod, setPaymentMethod] = useState("promptpay");
-  
-  const [paymentData] = useState({
-    employer: {
-      name: "คุณ ล่า ฮุย หม่าล่าทัง",
-      shopName: "ร้านล่า ฮุย หม่าล่าทัง",
-      location: "นครราชสีมา"
-    },
-    jobDetails: {
-      StudentName: "คุณพนิดา โ.",
-      jobTitle: "งานหาพนักงานพาร์ทไทม์",
-      workPeriod: "ทำงาน 21 - 30 มิถุนายน 2568",
-      workDays: "10 วัน",
-      hoursPerDay: "5 ชั่วโมง",
-      hourlyRate: "50 บาท",
-      totalAmount: "2,500 บาท"
-    },
-    payment: {
-      serviceCharge: "2,500 บาท",
-      discount: "0 บาท",
-      totalPayment: "2,500 บาท"
-    },
-    coupons: {
-      available: false,
-      message: "ยังไม่มีคูปองส่วนลดที่ใช้ได้"
+  const { jobId } = useParams<{ jobId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [job, setJob] = useState<Jobpost | null>(null);
+  const [billableId, setBillableId] = useState<number | null>(null);
+
+  const [gross, setGross] = useState<number>(0);
+  const [manualGross, setManualGross] = useState<number | null>(null);
+
+  const [method, setMethod] = useState<number>(1);
+  const [promptpayId, setPromptpayId] = useState<number>(1);
+
+  const [coupons, setCoupons] = useState<Discount[]>([]);
+  const [usedCouponIds, setUsedCouponIds] = useState<Set<number>>(new Set());
+  const [couponId, setCouponId] = useState<number>(0);
+
+  const [timesheetSum, setTimesheetSum] = useState<TimesheetSum>({});
+  const [alreadyPaid, setAlreadyPaid] = useState<boolean>(false);
+
+  const now = useMemo(() => new Date(), []);
+  const navState = (location.state || {}) as any;
+  const billableFromState = Number(navState.billableId || 0) || null;
+  const amountFromState = Number(navState.amount || 0) || null;
+
+  /* ----- load: job + ensure/create billable item ----- */
+  useEffect(() => {
+    if (!billableId || alreadyPaid) return; // มีแล้วไม่ต้องเช็คซ้ำ
+    let alive = true;
+
+    (async () => {
+      try {
+        const resp = await paymentAPI.getLatestByBillable(billableId); // service ควรตั้ง silent404 ไว้
+        if (!alive || !resp?.data?.data) {
+          setAlreadyPaid(false);
+          return;
+        }
+        const p = resp.data.data as any;
+        const st = String(
+          p?.Status?.status_name ?? p?.status?.status_name ?? ""
+        ).toLowerCase();
+        setAlreadyPaid(st === "paid" || st === "success");
+      } catch {
+        // 404 = ยังไม่เคยจ่าย → ไม่ต้องขึ้น error
+        setAlreadyPaid(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [billableId, alreadyPaid]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await myjobpostAPI.getById(Number(jobId));
+        const jp = asData<Jobpost>(resp);
+        if (cancelled) return;
+        setJob(jp);
+
+        if (!cancelled && Number.isFinite(amountFromState)) {
+          setGross(amountFromState!);
+        } else {
+          const fallback = Number((jp as any)?.salary ?? 0);
+          setGross(Number.isFinite(fallback) ? fallback : 0);
+        }
+
+        if (billableFromState) {
+          setBillableId(billableFromState);
+          return;
+        }
+
+        const createdRes = await billableItemAPI.create({
+          jobpost_id: Number(jobId),
+        } as any);
+        const created = asData<any>(createdRes);
+
+        const createdAmount = Number(
+          created?.amount ?? created?.billable_item?.amount ?? created?.Amount
+        );
+        if (!cancelled && Number.isFinite(createdAmount)) {
+          setGross(createdAmount);
+        }
+        const bid =
+          Number(
+            created?.ID ??
+              created?.id ??
+              created?.billable_item?.ID ??
+              created?.billable_item?.id ??
+              0
+          ) || null;
+
+        setBillableId(bid);
+      } catch (e: any) {
+        if (!cancelled) {
+          const msg =
+            e?.response?.data?.error || e?.message || "โหลดข้อมูลไม่สำเร็จ";
+          setError(msg);
+          message.error(msg);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [jobId]);
+
+  /* ----- load: coupons + used coupons ----- */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        let res: any = null;
+        if ((discountAPI as any)?.getAll)
+          res = await (discountAPI as any).getAll();
+        else if ((discountAPI as any)?.list)
+          res = await (discountAPI as any).list();
+
+        const list = asData<any[]>(res) ?? [];
+        const mapped: Discount[] = list.map((d: any) => ({
+          ID: Number(d?.ID ?? d?.id),
+          discount_name: String(d?.discount_name ?? d?.name ?? "-"),
+          discount_value: Number(d?.discount_value ?? d?.value ?? 0),
+          discount_type: String(
+            d?.discount_type ?? d?.type ?? ""
+          ).toLowerCase(),
+          valid_from: d?.validfrom ?? d?.valid_from ?? d?.start_date ?? null,
+          valid_until: d?.validuntil ?? d?.valid_until ?? d?.end_date ?? null,
+        }));
+        if (!cancelled) setCoupons(mapped);
+
+        const profileRaw = localStorage.getItem("profile");
+        let employerId = 0;
+        try {
+          employerId = Number(JSON.parse(profileRaw || "{}")?.ID ?? 0);
+        } catch {}
+        if (employerId && (discountAPI as any)?.getUsedByEmployer) {
+          const usedRes = await (discountAPI as any).getUsedByEmployer(
+            employerId
+          );
+          const usedIds = new Set<number>(
+            (asData<any[]>(usedRes) ?? []).map((x: any) =>
+              Number(x?.discount_id ?? x)
+            )
+          );
+          if (!cancelled) setUsedCouponIds(usedIds);
+        }
+      } catch (e) {
+        console.warn("โหลดคูปองไม่สำเร็จ (ข้ามได้):", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* ----- รับค่าจาก state ที่ส่งมาจากหน้าเดิม (ถ้ามี) ----- */
+  useEffect(() => {
+    const st = (location.state || {}) as any;
+    if (st?.amount && Number.isFinite(Number(st.amount))) {
+      setManualGross(Number(st.amount));
     }
-  });
+    if (st?.billableId && Number.isFinite(Number(st.billableId))) {
+      setBillableId(Number(st.billableId));
+    }
+  }, [location.state]);
+
+  /* ---------- Derived view ---------- */
+  const salaryType = detectSalaryType(job);
+  const grossAmount = Number(manualGross ?? (gross || 0));
+  const selectedCoupon = useMemo(
+    () => (couponId ? coupons.find((c) => c.ID === couponId) ?? null : null),
+    [couponId, coupons]
+  );
+  const discountAmount = useMemo(
+    () => (selectedCoupon ? calcDiscount(selectedCoupon, grossAmount) : 0),
+    [selectedCoupon, grossAmount]
+  );
+  const netAmount = useMemo(
+    () => Math.max(0, grossAmount - discountAmount),
+    [grossAmount, discountAmount]
+  );
+
+  const view = useMemo(
+    () => ({
+      employerName:
+        (job as any)?.employer?.company_name ??
+        (job as any)?.Employer?.CompanyName ??
+        "",
+      employerAddress:
+        (job as any)?.employer?.address ??
+        (job as any)?.Employer?.Address ??
+        "",
+      jobTitle: (job as any)?.title ?? "",
+      salaryTypeKey: salaryType.key,
+      salaryTypeLabel: salaryType.label,
+      grossAmount,
+    }),
+    [job, salaryType, grossAmount]
+  );
+
+  /* ---------- Submit ---------- */
+  const handleCreatePayment = async () => {
+    try {
+      if (billableId == null) {
+        message.error("ข้อมูลยังไม่พร้อม กรุณาลองใหม่");
+        return;
+      }
+      if (netAmount <= 0) {
+        message.error("ยอดสุทธิไม่ถูกต้อง");
+        return;
+      }
+      if (method !== promptpayId) {
+        message.warning("ระบบอนุญาตเฉพาะการชำระด้วย QR PromptPay");
+        setMethod(promptpayId);
+        return;
+      }
+
+      // ถ้าเคยจ่ายแล้วและไม่ใช่รายเดือน → ไปหน้ารายละเอียด
+      if (alreadyPaid && salaryType.key !== "monthly") {
+        navigate(`/qr-payment/${billableId}`, {
+          state: { jobId: Number(jobId), title: view.jobTitle },
+        });
+        return;
+      }
+
+      setCreating(true);
+
+      const payload: CreatePaymentPayload = {
+        billable_item_id: Number(billableId),
+        payment_method_id: Number(promptpayId),
+        amount: Number(netAmount),
+        ...(couponId ? { discount_id: Number(couponId) } : {}),
+        status_id: 1,
+        jobTitle: view.jobTitle,
+      };
+
+      const res = await paymentAPI.create(payload);
+      const created = asData<Payment>(res);
+
+      message.success("สร้างรายการชำระเงินสำเร็จ");
+
+      navigate(`/qr-payment/${billableId}`, {
+        state: {
+          paymentId: (created as any)?.ID ?? (created as any)?.id,
+          amount: netAmount,
+          jobId: Number(jobId),
+          title: view.jobTitle,
+        },
+        replace: true,
+      });
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.error ||
+        e?.message ||
+        "สร้างรายการชำระเงินไม่สำเร็จ";
+      message.error(msg);
+    } finally {
+      setCreating(false);
+    }
+  };
+  /* ---------- Render ---------- */
+  if (loading) {
+    return (
+      <div style={{ maxWidth: 960, margin: "24px auto" }}>
+        <Skeleton active paragraph={{ rows: 6 }} />
+      </div>
+    );
+  }
 
   return (
-    <div style={{ background: '#fff', padding: '24px 32px', minHeight: '85vh' }}>
-        <div 
-          style={{ 
-            maxWidth: "900px",
-            margin: "0 auto",
-            width: "100%",
+    <div
+      className="payment-page-container"
+      style={{ background: "#fff", padding: "16px 24px 32px" }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          alignItems: "center",
+          maxWidth: 960,
+          margin: "0 auto 24px auto",
+          columnGap: 12,
+        }}
+      >
+        <div style={{ justifySelf: "start" }}>
+          <Button onClick={() => navigate("/my-jobs")}>ย้อนกลับ</Button>
+        </div>
+        <Title
+          level={2}
+          style={{
+            margin: 0,
+            textAlign: "center",
+            justifySelf: "center",
+            color: "#1E3A5F",
           }}
         >
-          <div style={{ position: "relative", marginBottom: "24px" }}>
-            <Title 
-              level={2} 
-              style={{ 
-                margin: 0, 
-                color: "#1E3A5F",
-                textAlign: "center"
-              }}
-            >
-              รายการชำระเงิน
-            </Title>
-          </div>
+          รายการชำระเงิน
+        </Title>
+        <div />
+      </div>
 
-          <Card
-            bordered={false}
-            style={{ marginBottom: "16px", borderRadius: "8px" }}
-            bodyStyle={{ padding: "28px" }}
-          >
-            <Flex align="center" gap="middle">
-              <Avatar
-                size={64}
-                icon={<UserOutlined />}
-                style={{ backgroundColor: "#1890ff" }}
-              />
-              <Flex vertical>
-                <Text strong style={{ fontSize: "18px", color: "#1E3A5F" }}>
-                  {paymentData.employer.name}
-                </Text>
-                <Text type="secondary" style={{ fontSize: "16px" }}>
-                  {paymentData.employer.shopName}, {paymentData.employer.location}
-                </Text>
-              </Flex>
-            </Flex>
-          </Card>
-
-          <Card
-            bordered={false}
-            style={{ marginBottom: "16px", borderRadius: "8px" }}
-            bodyStyle={{ padding: "20px" }}
-          >
-            <Title level={5} style={{ marginBottom: "16px", color: "#1E3A5F" }}>
-              รายละเอียดการจ้างงาน
-            </Title>
-            <Divider style={{ margin: "16px 0" }} />
-
-            <div style={{ marginBottom: "16px" }}>
-              <Text strong style={{ fontSize: "15px", color: "#1E3A5F" }}>
-                {paymentData.jobDetails.StudentName} ({paymentData.jobDetails.jobTitle})
+      <div style={{ maxWidth: 960, margin: "8px auto 0", width: "100%" }}>
+        {/* นายจ้าง/ชื่องาน */}
+        <Card style={{ borderRadius: 12, marginBottom: 12 }}>
+          <Flex align="center" gap={16}>
+            <div>
+              <Text strong style={{ fontSize: 16 }}>
+                {view.employerName || view.jobTitle}
+              </Text>
+              <br />
+              <Text type="secondary">
+                {view.employerName ? view.employerAddress : ""}
               </Text>
             </div>
+          </Flex>
+        </Card>
 
-            <DetailRow label={paymentData.jobDetails.workPeriod} value={paymentData.jobDetails.workDays} />
-            <DetailRow label="ทำงานวันละ" value={paymentData.jobDetails.hoursPerDay} />
-            <DetailRow label="ค่าตอบแทนชั่วโมงละ" value={paymentData.jobDetails.hourlyRate} />
+        {/* รายละเอียดการจ้างงาน */}
+        <Card style={{ borderRadius: 12, marginBottom: 12 }}>
+          <Title level={5} style={{ textAlign: "left", marginBottom: 10 }}>
+            รายละเอียดการจ้างงาน
+          </Title>
+          <Divider style={{ margin: "12px 0" }} />
+          <Space direction="vertical" style={{ width: "100%" }} size={10}>
+            <DetailRow label="ชื่องาน" value={view.jobTitle || "-"} />
+            <DetailRow
+              label="ประเภทการจ้าง (SalaryType)"
+              value={view.salaryTypeLabel}
+            />
+            {view.salaryTypeKey === "hourly" && (
+              <DetailRow
+                label="ชั่วโมงที่ทำงาน (รวม)"
+                value={`${Number(timesheetSum?.total_hours || 0)} ชม.`}
+              />
+            )}
+            <DetailRow
+              label="รวมยอดเงินที่ต้องชำระ"
+              value={`${Number(view.grossAmount || 0).toLocaleString()} บาท`}
+              isBold
+            />
+          </Space>
+        </Card>
 
-            <Divider style={{ margin: "16px 0" }} />
-            <DetailRow label="รวมยอดเงินที่ต้องชำระ" value={paymentData.jobDetails.totalAmount} isBold />
-          </Card>
+        {/* คูปองส่วนลด */}
+        <CouponSelector
+          coupons={coupons as any}
+          usedCouponIds={usedCouponIds}
+          now={now}
+          grossAmount={Number(view.grossAmount || 0)}
+          couponId={couponId}
+          setCouponId={setCouponId}
+          isWithin={isWithin as any}
+          calcDiscount={calcDiscount as any}
+          toTHDate={(d) => toTHDate(d as any)}
+        />
 
-          <Card
-            bordered={false}
-            style={{ marginBottom: "16px", borderRadius: "8px" }}
-            bodyStyle={{ padding: "0" }}
-          >
-            <Collapse
-              ghost
-              expandIconPosition="end"
-              style={{ backgroundColor: "transparent" }}
-            >
-              <Panel
-                header={
-                  <Text strong style={{ fontSize: "15px", color: "#1E3A5F" }}>
-                    คูปองส่วนลด
-                  </Text>
-                }
-                key="1"
-                style={{ padding: "20px 0" }}
-              >
-                <div style={{ padding: "0 20px 20px" }}>
-                  <Text type="secondary">{paymentData.coupons.message}</Text>
-                </div>
-              </Panel>
-            </Collapse>
-          </Card>
+        {/* ช่องทางการชำระเงิน */}
+        <PaymentMethodSelector method={method} setMethod={setMethod} />
 
-          <Card
-            bordered={false}
-            style={{ marginBottom: "16px", borderRadius: "8px" }}
-            bodyStyle={{ padding: "20px" }}
-          >
-            <Flex
-              justify="space-between"
-              align="center"
-              style={{ marginBottom: "16px" }}
-            >
-              <Title level={5} style={{ margin: 0, color: "#1E3A5F" }}>
-                ช่องทางการชำระเงิน
-              </Title>
-              <Button type="link" style={{ color: "#1890ff" }}>
-                ดูทั้งหมด
-              </Button>
-            </Flex>
-            <Divider style={{ margin: "16px 0" }} />
+        {/* สรุปยอด */}
+        <Card style={{ borderRadius: 12, marginBottom: 16 }}>
+          <Title level={5} style={{ textAlign: "left", margin: 0 }}>
+            ข้อมูลการชำระเงิน
+          </Title>
+          <Divider style={{ margin: "12px 0" }} />
+          <Space direction="vertical" style={{ width: "100%" }} size={10}>
+            <DetailRow
+              label="ค่าบริการ/งาน"
+              value={`${Number(view.grossAmount || 0).toLocaleString()} บาท`}
+            />
+            <DetailRow
+              label="ส่วนลด"
+              value={`${discountAmount.toLocaleString()} บาท`}
+            />
+            <Divider style={{ margin: "12px 0" }} />
+            <DetailRow
+              label={<Text strong>ยอดชำระเงินทั้งหมด</Text>}
+              value={<Text strong>{netAmount.toLocaleString()} บาท</Text>}
+            />
+          </Space>
+        </Card>
 
-            <Radio.Group
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              value={paymentMethod}
-              style={{ width: "100%" }}
-            >
-              <Flex vertical gap="16px">
-                <Radio value="promptpay" style={{ fontSize: "15px" }}>
-                  <Space size="middle">
-                    <QrcodeOutlined
-                      style={{ color: "#52c41a", fontSize: "18px" }}
-                    />
-                    <span>QR Promptpay</span>
-                  </Space>
-                </Radio>
-                <Radio value="mobile_banking" style={{ fontSize: "15px" }}>
-                  <Space size="middle">
-                    <BankOutlined
-                      style={{ color: "#1890ff", fontSize: "18px" }}
-                    />
-                    <span>Mobile Banking</span>
-                  </Space>
-                </Radio>
-              </Flex>
-            </Radio.Group>
-          </Card>
-
-          <Card
-            bordered={false}
-            style={{ marginBottom: "24px", borderRadius: "8px" }}
-            bodyStyle={{ padding: "20px" }}
-          >
-            <Title level={5} style={{ marginBottom: "16px", color: "#1E3A5F" }}>
-              ข้อมูลการชำระเงิน
-            </Title>
-            <Divider style={{ margin: "16px 0" }} />
-            <DetailRow label="ค่าบริการ/งาน" value={paymentData.payment.serviceCharge} />
-            <DetailRow label="ส่วนลด" value={paymentData.payment.discount} />
-            <Divider style={{ margin: "16px 0" }} />
-            <DetailRow label="ยอดชำระเงินทั้งหมด" value={paymentData.payment.totalPayment} isBold />
-          </Card>
-
+        {/* ปุ่มชำระเงิน */}
+        <Flex justify="center">
           <Button
             type="primary"
             size="large"
-            block
-            style={{
-              height: "48px",
-              fontSize: "16px",
-              fontWeight: "bold",
-              borderRadius: "8px",
-              boxShadow: "0 2px 8px rgba(24, 144, 255, 0.3)",
-            }}
+            style={{ minWidth: 220, height: 44, borderRadius: 12 }}
+            loading={creating}
+            onClick={handleCreatePayment}
           >
-            ชำระเงิน
+            {alreadyPaid && view.salaryTypeKey !== "monthly"
+              ? "ดูรายละเอียดการชำระเงิน"
+              : "ชำระเงิน"}
           </Button>
-
-          <div style={{ height: "24px" }} />
-        </div>
+        </Flex>
+      </div>
     </div>
   );
 };

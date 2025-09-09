@@ -3,6 +3,7 @@ import type { Paymentmethod } from "./paymentmethod";
 import type { Paymentreport } from "./paymentreport";
 import type { Status } from "./payment_status";
 import type { Discount } from "./discount";
+import type { Jobpost } from "./jobpost";
 
 export interface Payment {
     ID: number;
@@ -22,11 +23,12 @@ export interface Payment {
 }
 
 export type CreatePaymentPayload = {
-    amount: number;
+    jobTitle: Jobpost['title'];
+    amount: Billableitem['amount'];
     datetime?: Date;
     payment_method_id: number;
-    billable_item_id?: number;
-    status_id?: number;
+    billable_item_id: Billableitem['ID'];
+    status_id: number;
     proof_of_payment?: string;
-    discount_id?: number;
+    discount_id?: Discount['ID'];
 };

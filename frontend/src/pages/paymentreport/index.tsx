@@ -51,20 +51,6 @@ const formatThaiDateTime = (iso?: string) => {
   }
 };
 
-const getStatusTag = (name?: string) => {
-  if (!name) return <Tag>UNKNOWN</Tag>;
-  const n = String(name).toLowerCase();
-  const color =
-    n.includes("สำเร็จ") || n === "success"
-      ? "green"
-      : n.includes("ค้าง") || n.includes("pending")
-        ? "orange"
-        : n.includes("ล้มเหลว") || n.includes("fail")
-          ? "red"
-          : "default";
-  return <Tag color={color}>{name}</Tag>;
-};
-
 const PaymentReportPage: React.FC = () => {
   useEffect(() => {
     document.body.classList.add("kanit-font");

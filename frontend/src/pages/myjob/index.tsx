@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   Button,
@@ -12,51 +12,103 @@ import {
   Modal,
 } from "antd";
 import { useNavigate } from "react-router-dom";
-import { jobpostAPI, paymentAPI, reviewAPI } from "../../services/https";
+import { myjobpostAPI, billableItemAPI, reviewAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
 import type { ColumnsType } from "antd/es/table";
-
+import { useAuth } from "../../context/AuthContext";
 import "./myjob.css";
 
 const { Title, Text } = Typography;
-
-const isClosed = (name?: string | null) => {
-  const n = (name || "").trim().toLowerCase();
-  return n === "ปิด" || n === "close" || n === "closed";
+type StatusTh = "รอการชำระ" | "รอตรวจสอบ" | "ชำระแล้ว" | "ล้มเหลว";
+const norm = (s?: string | null) => (s ?? "").trim().toLowerCase();
+const STATUS_ALIASES: Record<string, StatusTh> = {
+  "": "รอการชำระ",
+  รอการชำระ: "รอการชำระ",
+  รอตรวจสอบ: "รอตรวจสอบ",
+  ชำระแล้ว: "ชำระแล้ว",
+  ล้มเหลว: "ล้มเหลว",
+  ชำระไม่สำเร็จ: "ล้มเหลว",
 };
 
-const isOpen = (name?: string | null) => {
-  const n = (name || "").trim().toLowerCase();
-  return n === "เปิด" || n === "open" || n === "opened";
+const normalizeStatus = (s?: string | null): StatusTh =>
+  STATUS_ALIASES[norm(s)] ?? "รอการชำระ";
+
+export const getStatusFromPayload = (row: any): StatusTh => {
+  const raw =
+    row?.payment_status_name ??
+    row?.payment?.status?.status_name ??
+    row?.Payment?.Status?.status_name ??
+    row?.status_name ??
+    null;
+  return normalizeStatus(raw);
+};
+
+export const canPay = (row: any) => {
+  const s = getStatusFromPayload(row);
+  return s === "รอการชำระ" || s === "ล้มเหลว";
+};
+
+export const canReview = (row: any) => {
+  const s = getStatusFromPayload(row);
+  return s === "รอตรวจสอบ" || s === "ชำระแล้ว";
+};
+
+export const statusColor = (row: any) => {
+  const s = getStatusFromPayload(row);
+  if (s === "รอการชำระ") return "red";
+  if (s === "รอตรวจสอบ") return "gold";
+  if (s === "ชำระแล้ว") return "green";
+  if (s === "ล้มเหลว") return "volcano";
+  return "default";
 };
 
 const asData = <T,>(r: any): T => (r?.data?.data ?? r?.data ?? r) as T;
-
-const hasProof = (p: any) =>
-  Boolean(p?.proof_of_payment || p?.ProofOfPayment || p?.proof || p?.evidence);
-
-const extractReview = (raw: any) => {
-  if (!raw) return null;
-  if (Array.isArray(raw)) return raw[0] ?? null;
-  if (raw.review) return raw.review;
-  if (raw.data && typeof raw.data === "object" && raw.data.review) return raw.data.review;
-  return raw;
-};
-
-const hasReview = (r: any) => {
-  const x = extractReview(r);
-  return !!x && (
-    x.review_id != null ||
-    x.ID != null || x.id != null ||
-    x.rating_score_id != null || x.ratingscore_id != null ||
-    (typeof x.comment === "string" && x.comment.trim() !== "")
+const toJobId = (r: any) =>
+  Number(r.jobpost_id ?? r.JobpostID ?? r.id ?? r.ID ?? 0);
+export const hasPaymentProofInPayload = (row: any): boolean =>
+  Boolean(
+    row?.proof_of_payment ??
+      row?.ProofOfPayment ??
+      row?.payment?.proof_of_payment ??
+      row?.Payment?.ProofOfPayment
   );
+
+const pick = <T,>(...vals: T[]) =>
+  vals.find((v) => v !== undefined && v !== null);
+
+/* ----------------- Review helpers ----------------- */
+const extractReview = (raw: unknown): any | null => {
+  if (!raw) return null;
+  const any = raw as any;
+
+  if (Array.isArray(any)) return any[0] ?? null;
+  if (Array.isArray(any?.data)) return any.data[0] ?? null;
+
+  const cand =
+    any.review ??
+    any.Review ??
+    any.data?.review ??
+    any.data?.Review ??
+    any.data ??
+    any;
+
+  return cand && typeof cand === "object" ? cand : null;
 };
 
-const getStatusColor = (name?: string | null) => {
-  if (isOpen(name)) return "blue";
-  if (isClosed(name)) return "red";
-  return "default";
+export const hasReview = (raw: unknown): boolean => {
+  const r = extractReview(raw);
+  if (!r) return false;
+
+  const id = pick(r.ID, r.id);
+  const scoreId = pick(
+    r.ratingscore_id,
+    (r as any).ratingScoreId,
+    r.ratingscore?.ID,
+    r.RatingScore?.ID
+  );
+  const comment = String(pick(r.comment, r.Comment, "")).trim();
+
+  return (id != null && scoreId != null) || comment.length > 0;
 };
 
 const MyJobPage: React.FC = () => {
@@ -65,119 +117,104 @@ const MyJobPage: React.FC = () => {
     return () => document.body.classList.remove("kanit-font");
   }, []);
 
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
   const [jobs, setJobs] = useState<Jobpost[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const fetchedRef = useRef(false);
 
+  const [error, setError] = useState<string | null>(null);
   const [checkingId, setCheckingId] = useState<number | null>(null);
+
   const [paidModalOpen, setPaidModalOpen] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<any>(null);
-  const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const [reviewedModalOpen, setreviewedModalOpen] = useState(false);
   const [reviewInfo, setReviewInfo] = useState<any>(null);
 
+  // ตรวจรีวิว
   const handleReviewClick = async (jobId: number) => {
+    if (checkingId) return; // กันคลิกรัว
     setCheckingId(jobId);
-    setCurrentJobId(jobId);
     try {
       const res = await reviewAPI.getForJob(jobId);
-      const raw = asData<any>(res);
-      const review = extractReview(raw);
-  
-      if (hasReview(review)) {
+
+      if (hasReview(res)) {
+        const review = extractReview(res);
         setReviewInfo(review);
         setreviewedModalOpen(true);
         return;
       }
+      navigate(`/review/${jobId}`);
     } catch (e: any) {
-      const st = e?.status ?? e?.response?.status;
-      if (st && st !== 404) {
-        message.error(e?.response?.data?.error || "เกิดข้อผิดพลาดในการตรวจสอบรีวิว");
-        return;
+      if (e?.response?.status === 404) {
+        navigate(`/review/${jobId}`);
+      } else {
+        message.error(e?.message || "เกิดข้อผิดพลาดในการตรวจสอบรีวิว");
       }
     } finally {
       setCheckingId(null);
     }
-    
-    navigate(`/review/${jobId}`);
   };
+
+  // ตรวจการชำระ
   const handlePayClick = async (jobId: number) => {
-    setCheckingId(jobId);
-    setCurrentJobId(jobId);
-    try {
-      const res = await paymentAPI.getByJobId(jobId);
-      const pay = asData<any>(res);
+    // 1) เรียก backend ให้มี BillableItem ของงานนี้แน่นอน
+    const res = await billableItemAPI.create({ jobpost_id: jobId } as any);
+    const created = (res as any)?.data?.data ?? {};
 
-      if (pay && hasProof(pay)) {
-        setPaymentInfo(pay);
-        setPaidModalOpen(true);
-        return;
-      }
-    } catch (e: any) {
-      const st = e?.status ?? e?.response?.status;
-      if (st && st !== 404) {
-        message.error(e?.message || "เกิดข้อผิดพลาดในการตรวจสอบสถานะการชำระ");
-        return;
-      }
-    } finally {
-      setCheckingId(null);
-    }
+    const amount =
+      Number(created?.amount ?? created?.billable_item?.amount ?? 0) ||
+      undefined;
 
-    navigate(`/payment/${jobId}`);
+    const billableId =
+      Number(created?.ID ?? created?.id ?? created?.billable_item_id) ||
+      undefined;
+
+    // 2) ไปหน้า Payment พร้อม state
+    navigate(`/payment/${jobId}`, {
+      state: { amount, billableId },
+      replace: true,
+    });
   };
 
+  // โหลดรายการงานที่ Accepted ของ employer ปัจจุบัน
   useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
+    if (!isAuthenticated) {
+      setLoading(false);
+      setError("กรุณาล็อกอินเพื่อดูข้อมูลงานของคุณ");
+      return;
+    }
+    let cancelled = false;
 
-    const load = async () => {
+    (async () => {
       try {
         setLoading(true);
-
-        const profileRaw = localStorage.getItem("profile");
-        if (!profileRaw) {
-          setError("กรุณาล็อกอินเพื่อดูข้อมูลงานของคุณ");
-          return;
-        }
-
-        let employerId: number | undefined;
-        try {
-          const profile = JSON.parse(profileRaw);
-          employerId = profile?.ID ?? profile?.id;
-        } catch {
-          /* ignore parse error */
-        }
-
-        if (!employerId) {
-          setError("ไม่พบรหัสนายจ้าง (Employer ID) ในระบบ");
-          return;
-        }
-
-        // ดึงงานทั้งหมดของนายจ้าง แล้วกรองเฉพาะงานที่ปิด
-        const resp = await jobpostAPI.getByEmployerId(employerId);
-        const list = (resp as any)?.data ?? [];
-        const arr: Jobpost[] = Array.isArray(list) ? list : [];
-        const closedOnly = arr.filter((j) => isClosed((j as any).status));
-        setJobs(closedOnly);
+        const resp = await myjobpostAPI.getAcceptedApplications();
+        const list = asData<Jobpost[]>(resp);
+        if (!cancelled) setJobs(list);
       } catch (err) {
-        console.error("Failed to fetch jobs:", err);
-        setError("ไม่สามารถโหลดข้อมูลงานได้ กรุณาลองใหม่อีกครั้ง");
-        message.error("เกิดข้อผิดพลาดในการดึงข้อมูลงาน");
+        if (!cancelled) {
+          setError("ไม่สามารถโหลดข้อมูลงานได้ กรุณาลองใหม่อีกครั้ง");
+          message.error("เกิดข้อผิดพลาดในการดึงข้อมูลงาน");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    };
+    })();
 
-    load();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, user]);
 
   const columns: ColumnsType<Jobpost> = [
     {
       title: "รหัสงาน",
       dataIndex: "ID",
       key: "id",
+      sorter: (a, b) => toJobId(a) - toJobId(b),
+      defaultSortOrder: "descend",
+      sortDirections: ["descend", "ascend"],
       width: "12%",
       render: (v: any) => <span>{v ?? "-"}</span>,
     },
@@ -185,14 +222,14 @@ const MyJobPage: React.FC = () => {
       title: "ชื่องาน",
       dataIndex: "title",
       key: "title",
-      width: "34%",
+      width: "31%",
       render: (text: string) => <span>{text || "-"}</span>,
     },
     {
       title: "ยอดชำระ",
       dataIndex: "salary",
       key: "salary",
-      width: "18%",
+      width: "15%",
       render: (salary: number) =>
         typeof salary === "number" ? (
           <span>{salary.toLocaleString()} บาท</span>
@@ -202,17 +239,16 @@ const MyJobPage: React.FC = () => {
     },
     {
       title: "สถานะ",
-      key: "status",
-      width: "12%",
+      key: "payment_status",
+      width: "18%",
       render: (_: any, row: any) => {
-        const label = isClosed(row?.status)
-          ? "ปิด"
-          : isOpen(row?.status)
-          ? "เปิด"
-          : row?.status ?? "-";
+        const s = getStatusFromPayload(row);
         return (
-          <Tag color={getStatusColor(row?.status)} style={{ fontFamily: "Kanit, sans-serif" }}>
-            {label}
+          <Tag
+            color={statusColor(row)}
+            style={{ fontFamily: "Kanit, sans-serif" }}
+          >
+            {s}
           </Tag>
         );
       },
@@ -220,34 +256,31 @@ const MyJobPage: React.FC = () => {
     {
       title: "การจัดการ",
       key: "actions",
-      width: "24%",
-      render: (_: any, record: Jobpost) => {
-        const closed = isClosed((record as any)?.status);
-        if (!closed) return null;
+      render: (_: any, row: any) => {
+        const id = Number(row?.ID ?? (row as any)?.id ?? 0);
 
-        const id = Number((record as any)?.ID ?? 0);
-        return (
-          <Space wrap>
+        if (canPay(row)) {
+          return (
             <Button
               type="primary"
-              size="small"
-              style={{ backgroundColor: "#52c41a" }}
-              onClick={() => (id ? handleReviewClick(id) : message.error("ไม่พบรหัสงาน ไม่สามารถไปหน้ารีวิวได้"))}
-            >
-              รีวิวการทำงาน
-            </Button>
-
-            <Button
-              type="primary"
-              size="small"
-              style={{ backgroundColor: "#ffa940" }}
               loading={checkingId === id}
-              onClick={() => (id ? handlePayClick(id) : message.error("ไม่พบรหัสงาน ไม่สามารถไปหน้าชำระเงินได้"))}
+              onClick={() => handlePayClick(id)}
             >
               ชำระเงิน
             </Button>
-          </Space>
-        );
+          );
+        }
+        if (canReview(row)) {
+          return (
+            <Button
+              loading={checkingId === id}
+              onClick={() => handleReviewClick(id)}
+            >
+              รีวิวการทำงาน
+            </Button>
+          );
+        }
+        return <Text type="secondary">ไม่มีการดำเนินการ</Text>;
       },
     },
   ];
@@ -290,11 +323,13 @@ const MyJobPage: React.FC = () => {
           style={{ maxWidth: 1200, margin: "0 auto 24px auto" }}
         >
           <Title level={2} style={{ marginBottom: 0, color: "#1E3A5F" }}>
-            งานที่ปิดแล้วของฉัน ({jobs.length} งาน)
+            งานที่พร้อมชำระของฉัน ({jobs.length} งาน)
           </Title>
           <Space>
             <Button onClick={handleRefresh}>รีเฟรช</Button>
-            <Button onClick={() => navigate("/payment-report")}>รายงานการชำระเงิน</Button>
+            <Button onClick={() => navigate("/payment-report")}>
+              รายงานการชำระเงิน
+            </Button>
           </Space>
         </Flex>
 
@@ -307,45 +342,52 @@ const MyJobPage: React.FC = () => {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} จาก ${total} รายการ`,
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} จาก ${total} รายการ`,
           }}
           locale={{
             emptyText: (
               <div>
-                <p>ไม่พบงานที่ปิดแล้ว</p>
-                <p>ระบบจะแสดงเฉพาะงานที่มีสถานะ “ปิด” เท่านั้น</p>
+                <p>ยังไม่มีงานที่พร้อมชำระ</p>
               </div>
             ),
           }}
         />
       </div>
 
+      {/* Modal: แจ้งเคยรีวิวแล้ว */}
       <Modal
         open={reviewedModalOpen}
         onCancel={() => setreviewedModalOpen(false)}
         footer={null}
         centered
         maskClosable={false}
-      ><Result status="success"
+      >
+        <Result
+          status="success"
           title="งานนี้เคยได้รับรีวิวแล้ว"
           subTitle={
             <>
               <div>ระบบตรวจพบว่ารายการนี้เคยได้รับรีวิวแล้ว</div>
               {reviewInfo?.ID || reviewInfo?.id ? (
                 <div style={{ marginTop: 4 }}>
-                  หมายเลขการรีวิว <Text strong>#{reviewInfo?.ID ?? reviewInfo?.id}</Text>
+                  หมายเลขการรีวิว{" "}
+                  <Text strong>#{reviewInfo?.ID ?? reviewInfo?.id}</Text>
                 </div>
               ) : null}
             </>
-          }extra={
+          }
+          extra={
             <Space direction="vertical" style={{ width: "100%" }}>
-              <Button block onClick={() => setreviewedModalOpen(false)}>ปิด</Button>
+              <Button block onClick={() => setreviewedModalOpen(false)}>
+                ปิด
+              </Button>
             </Space>
           }
-          />
-          </Modal>
+        />
+      </Modal>
 
-      {/* Modal: ชำระแล้ว + มีหลักฐาน */}
+      {/* Modal: พบหลักฐานการชำระแล้ว */}
       <Modal
         open={paidModalOpen}
         onCancel={() => setPaidModalOpen(false)}
@@ -361,21 +403,24 @@ const MyJobPage: React.FC = () => {
               <div>ระบบพบหลักฐานการชำระเงินของงานนี้</div>
               {paymentInfo?.ID || paymentInfo?.id ? (
                 <div style={{ marginTop: 4 }}>
-                  หมายเลขการชำระเงิน <Text strong>#{paymentInfo?.ID ?? paymentInfo?.id}</Text>
+                  หมายเลขการชำระเงิน{" "}
+                  <Text strong>#{paymentInfo?.ID ?? paymentInfo?.id}</Text>
                 </div>
               ) : null}
             </>
           }
           extra={
             <Space direction="vertical" style={{ width: "100%" }}>
-              {hasProof(paymentInfo) ? (
+              {hasPaymentProofInPayload(paymentInfo) ? (
                 <Button
                   block
                   type="primary"
                   onClick={() =>
                     window.open(
                       String(
-                        paymentInfo?.proof_of_payment || paymentInfo?.ProofOfPayment
+                        paymentInfo?.proof_of_payment ||
+                          paymentInfo?.ProofOfPayment ||
+                          paymentInfo?.payment?.proof_of_payment
                       ),
                       "_blank"
                     )
@@ -384,8 +429,9 @@ const MyJobPage: React.FC = () => {
                   ดูหลักฐานการชำระเงิน
                 </Button>
               ) : null}
-
-              <Button block onClick={() => setPaidModalOpen(false)}>ปิด</Button>
+              <Button block onClick={() => setPaidModalOpen(false)}>
+                ปิด
+              </Button>
             </Space>
           }
         />

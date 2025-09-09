@@ -19,7 +19,7 @@ interface User {
 const mockUsers: User[] = [
   { id: 'u001', name: 'จอมมาร', email: 'johndoe@example.com', avatar: '', registrationDate: '2025-08-20', status: 'active', jobPosts: 5 },
   { id: 'u002', name: 'สมหญิง ยืนงง', email: 'jane.doe@example.com', avatar: '', registrationDate: '2025-08-21', status: 'active', jobPosts: 2 },
-  { id: 'u003', name: 'พนิดา โ.', email: 'panida@example.com', avatar: '', registrationDate: '2025-08-22', status: 'banned', jobPosts: 10 },
+  { id: 'u003', name: 'พนิดา', email: 'panida@example.com', avatar: '', registrationDate: '2025-08-22', status: 'banned', jobPosts: 10 },
 ];
 
 const UserManagementPage: React.FC = () => {

@@ -59,7 +59,6 @@ func main() {
 		api.GET("/jobcategories/:id", controller.GetJobCategoryByID)
 		api.GET("/reviews/scores", controller.ListRatingScores)
 		api.GET("/payments/statuses", controller.ListPaymentStatuses)
-		api.GET("/payments/methods", controller.ListPaymentMethods)
 		
 		// api.GET("/banks", controller.ListBanks)
 		// api.GET("/genders", controller.ListGenders)
@@ -143,20 +142,24 @@ func main() {
 
 		// --- myjob ---
         auth.GET("/my-jobs/accepted", controller.GetEmployerPostsWithAcceptedApplications)
+		auth.GET("/my-jobs/:id", controller.GetMyJobpostByID)
 
 		// --- Reviews ---
-		auth.POST("/reviews/:id", controller.CreateReview)
-		auth.GET("/reviews", controller.FindRatingsByJobPostID)
+		auth.GET("/reviews/job/:jobId", controller.FindRatingsByJobPostID)
+		auth.POST("/reviews", controller.CreateReview)
 
 		// --- Payments ---
 		auth.POST("/payments", controller.CreatePayment)
 		auth.GET("/payments", controller.ListPayments)
-		auth.GET("/payments/:id", controller.GetPaymentByID)
-		auth.GET("/payment_reports", controller.ListPaymentReports)
+		auth.GET("/payment-reports/me", controller.ListMyPaymentReports)
+		auth.GET("/payment-reports/employer/:id", controller.ListPaymentReportsByEmployerID)
+		auth.POST("/payment-reports/upload", controller.UploadPaymentReport)
 		auth.GET("/orders", controller.ListOrders)
 		auth.GET("/discounts", controller.ListDiscounts)
-		auth.GET("/billable_items", controller.ListBillableItems)
-		auth.GET("/billable_items/:id", controller.GetBillableItemByID)
+		auth.POST("/billable_items", controller.CreateOrUpdateBillableItem)
+		auth.GET("/paymentmethods", controller.ListPaymentMethods)
+		auth.GET("/payments/billable/:billableId", controller.GetLatestPaymentByBillable)
+		auth.POST("/payments/:id/evidence", controller.UploadEvidence)
 	}
 
 	// -------------------- 🛡️ Admin Routes --------------------
@@ -168,6 +171,7 @@ func main() {
 		admin.POST("/faqs", controller.CreateFAQ)
 		admin.PUT("/faqs/:id", controller.UpdateFAQ)
 		admin.DELETE("/faqs/:id", controller.DeleteFAQ)
+		admin.GET("/finance/summary", controller.FinanceSummary)	
 	}
 
 	// -------------------- 📂 Static & Files --------------------
