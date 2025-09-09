@@ -331,7 +331,7 @@ export const jobPostAPI = {
   },
 };
 
-// Student Post APIs
+// Student Post APIs (รวมจาก studentPostService.ts)
 export const studentPostAPI = {
     getStudentPosts: () => get("/student-posts", false),
     getStudentPostById: (id: number) => get(`/student-posts/${id}`, false),

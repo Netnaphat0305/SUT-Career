@@ -897,6 +897,7 @@
 // src/pages/StudentFeed/StudentFeedPage.tsx
 // src/pages/StudentFeed/StudentFeedPage.tsx
 // src/pages/StudentFeed/StudentFeedPage.tsx
+// src/pages/StudentFeed/StudentFeedPage.tsx
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
@@ -934,10 +935,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { 
-  getStudentPosts as getStudentProfilePosts,
-  deleteStudentPost 
-} from "../../services/studentPostService";
+import { studentPostAPI } from "../../services/https/index"; // 1. เปลี่ยน import มาที่นี่
 import CreateStudentPostModal from "../../components/CreateStudentPostModal";
 import EditStudentPostModal from "../../components/EditStudentPostModal";
 
@@ -1023,7 +1021,8 @@ const StudentFeedPage: React.FC = () => {
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getStudentProfilePosts();
+      // 2. เรียกใช้ฟังก์ชันผ่าน studentPostAPI
+      const response = await studentPostAPI.getStudentPosts();
       const postsData = response?.data?.data || response?.data || [];
       if (Array.isArray(postsData)) {
         setPosts(postsData);
@@ -1117,7 +1116,8 @@ const StudentFeedPage: React.FC = () => {
 
   const handleDeletePost = async (postId: number) => {
     try {
-      await deleteStudentPost(postId);
+      // 3. เรียกใช้ฟังก์ชันผ่าน studentPostAPI
+      await studentPostAPI.deleteStudentPost(postId);
       message.success("ลบโพสต์สำเร็จ!");
       fetchPosts();
     } catch (error) {

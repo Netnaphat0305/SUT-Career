@@ -317,7 +317,7 @@ import './ProfilePage.css';
 // ✨ 1. เปลี่ยนการ import มาใช้ APIกลาง
 import { profileAPI, studentAPI } from '../../services/https/index';
 import type { ProfileResponse, StudentProfilePost } from '../../types';
-import StudentPostForm from '../StudentPost/StudentPostForm';
+//import StudentPostForm from '../StudentPost/StudentPostForm';
 
 const { Title, Text } = Typography;
 
