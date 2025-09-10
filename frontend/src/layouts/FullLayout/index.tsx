@@ -10,14 +10,12 @@ import {
   Space,
   Dropdown,
 } from "antd";
-import { DownOutlined, UserOutlined } from "@ant-design/icons";
+import { DownOutlined, UserOutlined, LogoutOutlined, ProfileOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import logoImage from '../../assets/logo.svg';
 import NotificationBell from '../../components/NotificationBell';
-//แก้ไขโดยพรศิริ: START
-import { useAuth } from "../../context/AuthContext"; // 1. ดึง Hook สำหรับข้อมูลผู้ใช้มา
-//แก้ไขโดยพรศิริ: END
-
+// Import useAuth to get user and logout function
+import { useAuth } from "../../context/AuthContext"; 
 
 const { Header, Content, Footer } = Layout;
 
@@ -42,7 +40,6 @@ const navItems: MenuItem[] = [
   createMenuItem("interview","Interview Table"),
   createMenuItem("students","Students List"),
   createMenuItem("report","Report"),
-  // 👇 3. แก้ไขชื่อเมนูตรงนี้
   createMenuItem("feed", "Feed"),
   createMenuItem("Interview-Schedule","Interview Schedule")
 ];
@@ -55,9 +52,32 @@ const FullLayout: React.FC = () => {
   const currentPageKey = location.pathname.split("/")[1] || "home";
 
   const context = useOutletContext();
-  //แก้ไขโดยพรศิริ: START
-  const { user } = useAuth(); // 2. เรียกใช้ Hook เพื่อเอาข้อมูล user ออกมา
-  //แก้ไขโดยพรศิริ: END
+  // Get user and logout function from AuthContext
+  const { user, logout } = useAuth();
+
+  // Dynamically create menu items based on user role
+  const menuItems: MenuProps['items'] = [];
+
+  if (user) {
+    // Check if user is a student (case-insensitive check)
+    const userRole = user.role.toLowerCase();
+    if (userRole === 'student' || userRole === 'stu') {
+        menuItems.push({
+            key: 'profile',
+            label: <Link to="/profile">ดูโปรไฟล์</Link>,
+            icon: <ProfileOutlined />,
+        });
+    }
+
+    // Add logout option for all logged-in users
+    menuItems.push({
+        key: 'logout',
+        label: 'ออกจากระบบ',
+        icon: <LogoutOutlined />,
+        onClick: logout, // Call logout function on click
+        danger: true,
+    });
+  }
 
   return (
     <Layout style={{ minHeight: "auto" }}>
@@ -133,26 +153,34 @@ const FullLayout: React.FC = () => {
                 </Space>
               </Button>
             </Dropdown>
-            {/*แก้ไขโดยพรศิริ: START*/}
-            <Link to="/profile">
-               <Button
-                type="text"
-                icon={<UserOutlined />}
-                style={{
-                  fontSize: "16px",
-                  border: "1px solid #d9d9d9",
-                  borderRadius: "6px",
-                  color: "#0088FF",
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '4px 15px'
-                }}
-              >
-                {/* 3. นำ username มาแสดงผลตรงนี้ และใส่ข้อความสำรองไว้ */}
-                {user ? user.username : "Profile"}
-              </Button>
-            </Link>
-             {/*แก้ไขโดยพรศิริ: END*/}
+            
+            {/* Conditional rendering for user profile/login */}
+            {user ? (
+                 <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+                    <Button
+                        type="text"
+                        style={{
+                            fontSize: "16px",
+                            border: "1px solid #d9d9d9",
+                            borderRadius: "6px",
+                            color: "#0088FF",
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '4px 15px'
+                        }}
+                    >
+                        <Space>
+                            <UserOutlined />
+                            {user.username}
+                            <DownOutlined />
+                        </Space>
+                    </Button>
+                </Dropdown>
+            ) : (
+                <Link to="/login">
+                    <Button type="primary">เข้าสู่ระบบ</Button>
+                </Link>
+            )}
           </Space>
         </Flex>
       </Header>
@@ -167,4 +195,3 @@ const FullLayout: React.FC = () => {
 };
 
 export default FullLayout;
-
