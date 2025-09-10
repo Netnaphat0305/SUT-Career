@@ -34,7 +34,7 @@ import {
   CommentOutlined,
 } from '@ant-design/icons';
 import type { FAQ, RequestTicket, TicketAttachment } from '../../interfaces/helpcenter';
-import { qnaAPI } from '../../services/https/index';
+import { qnaAPI } from '../../services/https';
 import './HelpCenterPage.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -123,34 +123,6 @@ const HelpCenterPage: React.FC = () => {
   useEffect(() => {
     fetchFaqs();
   }, []);
-
-  // ✨ START: เพิ่ม useEffect สำหรับ Polling ฝั่งผู้ใช้งาน
-  useEffect(() => {
-    // ทำงานเมื่อ Modal เปิด และมี Ticket ที่เลือกไว้
-    if (isModalVisible && selectedTicket) {
-      const intervalId = setInterval(async () => {
-        console.log(`Polling for user updates on ticket #${selectedTicket.ID}...`);
-        try {
-          const response = await qnaAPI.getTicketById(String(selectedTicket.ID));
-          const updatedTicketData = response?.data?.data || response?.data;
-          
-          if (updatedTicketData) {
-            // อัปเดต state เพื่อให้ข้อมูลใน Modal เป็นข้อมูลล่าสุด
-            setSelectedTicket(updatedTicketData);
-          }
-        } catch (error) {
-          console.error("Polling for user ticket updates failed:", error);
-        }
-      }, 5000); // ดึงข้อมูลใหม่ทุก 5 วินาที
-
-      // Cleanup: หยุดการดึงข้อมูลเมื่อ Modal ปิด
-      return () => {
-        console.log(`Stopping user polling for ticket #${selectedTicket.ID}.`);
-        clearInterval(intervalId);
-      };
-    }
-  }, [isModalVisible, selectedTicket]);
-  // ✨ END: เพิ่ม useEffect สำหรับ Polling
 
   const filteredFaqs = useMemo(() => {
     if (!searchTerm) {
@@ -261,7 +233,6 @@ const HelpCenterPage: React.FC = () => {
         setReplyFileList([]);
         setReplyAttachments([]);
 
-        // ดึงข้อมูลล่าสุดมาแสดงทันที
         const updatedTicketResponse = await qnaAPI.getTicketById(String(selectedTicket.ID));
         if (updatedTicketResponse && updatedTicketResponse.data) {
           const updatedTicketData = updatedTicketResponse?.data?.data || updatedTicketResponse?.data || null;
@@ -462,7 +433,7 @@ const HelpCenterPage: React.FC = () => {
           <FileSearchOutlined style={{ fontSize: '48px', color: '#ccc', marginBottom: '16px' }} />
           <Title level={4} type="secondary">คุณยังไม่มีคำร้องที่เคยส่ง</Title>
           <Paragraph type="secondary">เมื่อคุณส่งคำร้องขอความช่วยเหลือ จะแสดงรายการที่นี่</Paragraph>
-          <Button type="primary" icon={<SendOutlined />} onClick={() => navigate('/help/ask')} style={{ borderRadius: '8px', height: '44px', fontSize: '15px', fontWeight: '500' }}>
+          <Button type="primary" icon={<SendOutlined />} onClick={() => navigate('/help/request')} style={{ borderRadius: '8px', height: '44px', fontSize: '15px', fontWeight: '500' }}>
             ส่งคำร้องแรกของคุณ
           </Button>
         </div>
@@ -515,73 +486,89 @@ const HelpCenterPage: React.FC = () => {
         </Card>
       </div>
 
-      <Modal title="รายละเอียดคำร้อง" open={isModalVisible} onCancel={handleCancelModal} footer={null} width={700} centered>
+      <Modal
+        title={`รายละเอียดคำร้อง #${selectedTicket?.ID}`}
+        open={isModalVisible}
+        onCancel={handleCancelModal}
+        footer={null}
+        width={800}
+        centered
+        destroyOnClose
+        bodyStyle={{ height: '75vh', display: 'flex', flexDirection: 'column', padding: 0 }}
+      >
         {loadingModal || !selectedTicket ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}><Spin size="large" /></div>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <Spin size="large" />
+          </div>
         ) : (
-          <>
-            {selectedTicket.status === 'Awaiting Confirmation' && (
-              <Alert
-                message="คำร้องนี้รอการยืนยันจากคุณ"
-                description={<Space><Button size="small" onClick={() => handleUpdateStatus('Resolved')}>ปิดคำร้อง</Button><Button size="small" onClick={() => handleUpdateStatus('In Progress')}>ยังต้องการความช่วยเหลือ</Button></Space>}
-                type="info"
-                style={{ marginBottom: '16px' }}
-              />
-            )}
-            <Descriptions bordered size="small" style={{ marginBottom: '16px' }}>
-              <Descriptions.Item label="หัวข้อ" span={3}><Text strong>{selectedTicket.subject}</Text></Descriptions.Item>
-              <Descriptions.Item label="ผู้ส่ง">{selectedTicket.user?.username || 'N/A'}</Descriptions.Item>
-              <Descriptions.Item label="สถานะ"><Tag color={getStatusColor(selectedTicket.status)}>{getStatusText(selectedTicket.status)}</Tag></Descriptions.Item>
-              <Descriptions.Item label="วันที่ส่ง">{formatTime(selectedTicket.CreatedAt)}</Descriptions.Item>
-            </Descriptions>
-            <Title level={5}>ข้อความเริ่มต้น</Title>
-            <Card size="small" style={{ marginBottom: '16px', backgroundColor: '#fafafa' }}>
-              <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                <Text strong>{selectedTicket.user?.username || 'Unknown'}</Text>
-                <Text type="secondary" style={{ fontSize: '12px' }}>{formatTime(selectedTicket.CreatedAt)}</Text>
-                <Text>{selectedTicket.initial_message}</Text>
-                <AttachmentDisplay attachments={selectedTicket.attachments} />
-              </Space>
-            </Card>
-            {selectedTicket.replies && selectedTicket.replies.length > 0 && (
-              <>
-                <Divider />
-                <Title level={5}>ประวัติการสนทนา</Title>
-                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                  {(selectedTicket.replies || []).map((reply, index) => (
-                    <Card key={index} size="small" style={{ marginBottom: '8px', background: reply.is_staff_reply ? '#e6f7ff' : '#fff' }}>
-                      <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                        <Space>
-                          <Text strong>{reply.author?.username || 'Unknown'}</Text>
-                          {reply.is_staff_reply && <Tag color="blue" >เจ้าหน้าที่</Tag>}
-                          <Text type="secondary" style={{ fontSize: '12px', marginLeft: 'auto' }}>{formatTime(reply.CreatedAt)}</Text>
-                        </Space>
-                        <Text>{reply.message}</Text>
-                        <AttachmentDisplay attachments={reply.attachments} />
-                      </Space>
-                    </Card>
-                  ))}
-                </div>
-              </>
-            )}
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Modal Header */}
+            <div style={{ padding: '24px', flexShrink: 0, borderBottom: '1px solid #f0f0f0' }}>
+              {selectedTicket.status === 'Awaiting Confirmation' && (
+                <Alert
+                  message="คำร้องนี้รอการยืนยันจากคุณ"
+                  description={
+                    <Space>
+                      <Button size="small" onClick={() => handleUpdateStatus('Resolved')}>ยืนยันการแก้ไข (ปิดคำร้อง)</Button>
+                      <Button size="small" onClick={() => handleUpdateStatus('In Progress')}>ยังต้องการความช่วยเหลือ</Button>
+                    </Space>
+                  }
+                  type="info"
+                  style={{ marginBottom: '16px' }}
+                />
+              )}
+              <Descriptions bordered size="small" column={2}>
+                <Descriptions.Item label="หัวข้อ" span={2}><Text strong>{selectedTicket.subject}</Text></Descriptions.Item>
+                <Descriptions.Item label="ผู้ส่ง">{selectedTicket.user?.username || 'N/A'}</Descriptions.Item>
+                <Descriptions.Item label="สถานะ"><Tag color={getStatusColor(selectedTicket.status)}>{getStatusText(selectedTicket.status)}</Tag></Descriptions.Item>
+                <Descriptions.Item label="วันที่ส่ง" span={2}>{formatTime(selectedTicket.CreatedAt)}</Descriptions.Item>
+              </Descriptions>
+            </div>
+
+            {/* Conversation History (Scrollable) */}
+            <div style={{ flexGrow: 1, overflowY: 'auto', padding: '16px 24px', backgroundColor: '#f5f5f5' }}>
+              <Card size="small" style={{ marginBottom: '12px' }}>
+                <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                  <Text strong>{selectedTicket.user?.username || 'Unknown'}</Text>
+                  <Text type="secondary" style={{ fontSize: '12px' }}>{formatTime(selectedTicket.CreatedAt)}</Text>
+                  <Text style={{ whiteSpace: 'pre-wrap' }}>{selectedTicket.initial_message}</Text>
+                  <AttachmentDisplay attachments={selectedTicket.attachments} />
+                </Space>
+              </Card>
+
+              {(selectedTicket.replies || []).map((reply, index) => (
+                <Card key={index} size="small" style={{ marginBottom: '12px', background: reply.is_staff_reply ? '#e6f7ff' : '#fff' }}>
+                  <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                    <Space>
+                      <Text strong>{reply.author?.username || 'Unknown'}</Text>
+                      {reply.is_staff_reply && <Tag color="blue" >เจ้าหน้าที่</Tag>}
+                      <Text type="secondary" style={{ fontSize: '12px', marginLeft: 'auto' }}>{formatTime(reply.CreatedAt)}</Text>
+                    </Space>
+                    <Text style={{ whiteSpace: 'pre-wrap' }}>{reply.message}</Text>
+                    <AttachmentDisplay attachments={reply.attachments} />
+                  </Space>
+                </Card>
+              ))}
+            </div>
+
+            {/* Reply Section */}
             {(selectedTicket.status === 'Open' || selectedTicket.status === 'In Progress') ? (
-              <>
-                <Divider />
-                <Title level={5}>ตอบกลับ</Title>
-                <TextArea rows={3} value={replyMessage} onChange={(e) => setReplyMessage(e.target.value)} placeholder="พิมพ์ข้อความตอบกลับของคุณ..." style={{ marginBottom: '12px' }} />
-                
-                <Upload {...replyUploadProps} >
-                  <Button icon={<UploadOutlined />}>แนบไฟล์</Button>
-                </Upload>
-                
-                <div style={{ textAlign: 'right', marginTop: '12px' }}>
+              <div style={{ padding: '16px 24px', flexShrink: 0, borderTop: '1px solid #f0f0f0', background: '#fff' }}>
+                <Title level={5} style={{ marginTop: 0, marginBottom: 8 }}>ตอบกลับ</Title>
+                <TextArea rows={2} value={replyMessage} onChange={(e) => setReplyMessage(e.target.value)} placeholder="พิมพ์ข้อความตอบกลับของคุณ..." style={{ marginBottom: '12px' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Upload {...replyUploadProps} >
+                    <Button icon={<UploadOutlined />}>แนบไฟล์</Button>
+                  </Upload>
                   <Button type="primary" icon={<SendOutlined />} onClick={handleSendReply} disabled={!replyMessage.trim() && replyAttachments.length === 0}>ส่งข้อความ</Button>
                 </div>
-              </>
+              </div>
             ) : (
-              <Alert message={`คำร้องนี้ได้ ${getStatusText(selectedTicket.status)} แล้ว`} type="info" style={{ marginTop: '16px' }} />
+              <div style={{ padding: '16px 24px', flexShrink: 0, borderTop: '1px solid #f0f0f0' }}>
+                <Alert message={`คำร้องนี้ได้ ${getStatusText(selectedTicket.status)} แล้ว`} type="info" showIcon />
+              </div>
             )}
-          </>
+          </div>
         )}
       </Modal>
     </>
@@ -589,3 +576,4 @@ const HelpCenterPage: React.FC = () => {
 };
 
 export default HelpCenterPage;
+

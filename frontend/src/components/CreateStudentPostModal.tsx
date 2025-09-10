@@ -349,6 +349,7 @@
 // export default CreateStudentPostModal;
 // src/components/CreateStudentPostModal.tsx
 // src/components/CreateStudentPostModal.tsx
+// src/components/CreateStudentPostModal.tsx
 import React, { useState, useEffect } from 'react';
 import {
   Modal, Form, Input, Select, Button, message, Row, Col, Typography, Upload,
@@ -495,15 +496,20 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
 
   return (
     <Modal
-      title={<Title level={3} style={{ textAlign: 'center' }}>📝 สร้างโพสต์หางานใหม่</Title>}
+      title={<Title level={3} style={{ textAlign: 'center' }}>  สร้างโพสต์หางานใหม่</Title>}
       open={visible}
       onCancel={handleCancel}
       footer={null}
       width={800}
       centered
-      destroyOnHidden={true}
+      destroyOnClose={true}
     >
-      <Form form={form} layout="vertical" onFinish={handleSubmit}>
+      <Form 
+        form={form} 
+        layout="vertical" 
+        onFinish={handleSubmit}
+        style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: '16px' }}
+      >
         <Row gutter={16}>
           <Col span={24}><Form.Item label="หัวข้อโพสต์" name="title" rules={[{ required: true, message: 'กรุณาใส่หัวข้อโพสต์' }]}><Input prefix={<BulbOutlined />} placeholder="เช่น มองหางานพาร์ทไทม์ร้านกาแฟ" /></Form.Item></Col>
         </Row>

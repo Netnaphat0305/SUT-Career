@@ -337,7 +337,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Select, Button, message, Row, Col, Typography, Upload } from 'antd';
 import { BulbOutlined, ClockCircleOutlined, EnvironmentOutlined, DollarOutlined, TagOutlined, LinkOutlined, UploadOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
-import { studentPostAPI, skillAPI, employmentTypeAPI, UPLOAD_URL } from '../services/https/index';
+import { studentPostAPI, skillAPI, employmentTypeAPI, UPLOAD_URL } from '../services/https/index.tsx';
 import type { Skill } from '../interfaces/skill';
 import type { EmploymentType } from '../interfaces/employment_type';
 import type { EditStudentPostModalProps, StudentPostAttachment } from "../interfaces/studentpost";
@@ -481,7 +481,12 @@ const EditStudentPostModal: React.FC<EditStudentPostModalProps> = ({ visible, on
       centered
       destroyOnClose={true}
     >
-      <Form form={form} layout="vertical" onFinish={handleSubmit}>
+      <Form 
+        form={form} 
+        layout="vertical" 
+        onFinish={handleSubmit}
+        style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: '16px' }}
+      >
         <Row gutter={16}>
           <Col span={24}><Form.Item label="หัวข้อโพสต์" name="title" rules={[{ required: true, message: 'กรุณาใส่หัวข้อโพสต์' }]}><Input prefix={<BulbOutlined />} /></Form.Item></Col>
         </Row>
