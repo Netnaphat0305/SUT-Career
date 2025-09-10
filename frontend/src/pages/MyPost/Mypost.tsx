@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Card, Button, Empty, Spin, message, Tag } from "antd";
+import { Button, Empty, Spin, message, Tag } from "antd";
+import {
+  ClockCircleOutlined,
+  DollarCircleOutlined,
+  EnvironmentOutlined,
+  LockOutlined,
+  UnlockOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  TeamOutlined,
+} from "@ant-design/icons";
 import { jobPostAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
 import "./Mypost.css";
@@ -7,6 +17,7 @@ import lahui from "../../assets/lahui.svg";
 import { useNavigate } from "react-router-dom";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
+import PageHeader from "../../components/PageHeader";
 
 const MyPost: React.FC = () => {
   const [posts, setPosts] = useState<Jobpost[]>([]);
@@ -53,13 +64,22 @@ const MyPost: React.FC = () => {
   const handleToggleStatus = async (id: number, currentStatus: string) => {
     try {
       const newStatus = currentStatus === "Open" ? "Close" : "Open";
+
+      // เรียก API เพื่ออัปเดตสถานะ
       await jobPostAPI.update(id, { status: newStatus });
+
+      // อัปเดต state ทันที ไม่ต้อง fetch ใหม่ทั้งหน้า
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.ID === id ? { ...post, status: newStatus } : post
+        )
+      );
+
       message.success(
         newStatus === "Open"
           ? "เปิดโพสต์งานเรียบร้อยแล้ว"
           : "ปิดโพสต์งานเรียบร้อยแล้ว"
       );
-      fetchMyPosts();
     } catch (err) {
       message.error("ไม่สามารถเปลี่ยนสถานะโพสต์ได้");
     }
@@ -75,86 +95,145 @@ const MyPost: React.FC = () => {
 
   return (
     <div className="mypost-container">
-      <h2 className="mypost-header">โพสต์ของฉัน</h2>
+      <PageHeader title="โพสต์ของฉัน" />
 
       {posts.length === 0 ? (
         <Empty description="ยังไม่มีโพสต์งาน" />
       ) : (
-        posts.map((post) => (
-          <Card key={post.ID} className="mypost-card">
-            <div className="mypost-content">
-              <div className="mypost-info">
+        posts.map((post) => {
+          const deadlineText = post.deadline
+            ? new Date(post.deadline).toLocaleDateString("th-TH", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            : "จนกว่าจะปิดรับสมัคร";
+
+          return (
+            <div key={post.ID} className="mypost-card">
+              {/* ฝั่งซ้าย */}
+              <div className="mypost-left">
                 <h3 className="mypost-title">
                   {post.title}{" "}
-                  <Tag color={post.status === "Open" ? "green" : "red"}>
+                  <Tag
+                    className={
+                      post.status === "Open" ? "tag-open" : "tag-close"
+                    }
+                  >
                     {post.status === "Open" ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
                   </Tag>
                 </h3>
                 <p className="mypost-company">
                   {post.Employer?.company_name || "ไม่ระบุบริษัท"}
                 </p>
-                <div className="mypost-detail">
-                  <span>
-                    📅 Deadline:{" "}
-                    {post.deadline
-                      ? new Date(post.deadline).toLocaleDateString("th-TH", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
-                      : "จนกว่าจะปิดรับสมัคร"}
-                  </span>
-                  <span>💰 เงินเดือน: {post.salary.toLocaleString()} บาท</span>
-                  <span>📍 {post.locationjob}</span>
+
+                <div className="mypost-details">
+                  <div className="mypost-detail">
+                    <ClockCircleOutlined className="mypost-icon" />
+                    <div>
+                      <span>ระยะเวลาการรับสมัคร</span>
+                      <strong>{deadlineText}</strong>
+                    </div>
+                  </div>
+                  <div className="mypost-detail">
+                    <DollarCircleOutlined className="mypost-icon" />
+                    <div>
+                      <span>ค่าตอบแทน</span>
+                      <strong>{post.salary.toLocaleString()} บาท</strong>
+                    </div>
+                  </div>
+                  <div className="mypost-detail">
+                    <EnvironmentOutlined className="mypost-icon" />
+                    <div>
+                      <span>สถานที่</span>
+                      <strong>{post.locationjob}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ปุ่มจัดการโพสต์ */}
+                <div className="mypost-actions">
+                  {/* เปิด / ปิดโพสต์ */}
+                  <Button
+                    icon={
+                      post.status === "Open" ? (
+                        <LockOutlined />
+                      ) : (
+                        <UnlockOutlined />
+                      )
+                    }
+                    size="middle"
+                    className="btn-outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleStatus(post.ID, post.status);
+                    }}
+                  >
+                    {post.status === "Open" ? "ปิดโพสต์" : "เปิดโพสต์"}
+                  </Button>
+
+                  {/* แก้ไข */}
+                  <Button
+                    icon={<EditOutlined />}
+                    size="middle"
+                    className="btn-outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/jobpost/edit/${post.ID}`);
+                    }}
+                  >
+                    แก้ไข
+                  </Button>
+
+                  {/* ลบ */}
+                  <Button
+                    icon={<DeleteOutlined />}
+                    size="middle"
+                    className="btn-delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(post.ID);
+                    }}
+                  >
+                    ลบโพสต์
+                  </Button>
+
+                  {/* ดูผู้สมัคร */}
+                  <Button
+                    icon={<TeamOutlined />}
+                    size="middle"
+                    className="btn-manageapp"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/job-ManageApplicants/${post.ID}`);
+                    }}
+                  >
+                    ดูผู้สมัคร
+                  </Button>
                 </div>
               </div>
 
-              <div className="mypost-logo">
-                <img
-                  src={post.image_url || lahui}
-                  alt={post.title || "default-logo"}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = lahui;
-                  }}
-                />
+              {/* ฝั่งขวา */}
+              <div className="mypost-right">
+                {post.image_url ? (
+                  <img
+                    src={post.image_url}
+                    alt={post.title}
+                    className="mypost-image"
+                  />
+                ) : (
+                  <div className="mypost-image-fallback">
+                    <img
+                      src={lahui}
+                      alt="Default Logo"
+                      className="mypost-image"
+                    />
+                  </div>
+                )}
               </div>
             </div>
-
-            <div className="mypost-actions">
-              <Button
-                size="small"
-                onClick={() => handleToggleStatus(post.ID, post.status)}
-                type={post.status === "Open" ? "default" : "primary"}
-              >
-                {post.status === "Open" ? "ปิดโพสต์" : "เปิดโพสต์"}
-              </Button>
-
-              <Button
-                size="small"
-                type="default"
-                onClick={() => navigate(`/jobpost/edit/${post.ID}`)}
-              >
-                แก้ไข
-              </Button>
-
-              <Button
-                danger
-                size="small"
-                onClick={() => handleDelete(post.ID)}
-              >
-                ลบโพสต์
-              </Button>
-
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => navigate(`/job-ManageApplicants/${post.ID}`)}
-              >
-                ดูรายชื่อผู้สมัครงาน
-              </Button>
-            </div>
-          </Card>
-        ))
+          );
+        })
       )}
     </div>
   );

@@ -331,3 +331,4 @@ const JobPost: React.FC = () => {
 };
 
 export default JobPost;
+
