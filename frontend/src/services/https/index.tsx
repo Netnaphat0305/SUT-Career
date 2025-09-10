@@ -175,3 +175,13 @@ export const reportAPI = {
   update: (id: number, data: Partial<any>) => Update(`/api/reports/${id}`, data),
   delete: (id: number) => Delete(`/api/reports/${id}`),
 };
+
+export const worklogAPI = {
+  create: (data: any) => Post("/worklogs", data),
+  getAll: () => Get("/worklogs"),
+  getById: (id: number) => Get(`/worklogs/${id}`),
+  getByUserId: (userId: number) => Get(`/worklogs/user/${userId}`),
+  update: (id: number, data: Partial<any>) => Update(`/worklogs/${id}`, data),
+  delete: (id: number) => Delete(`/worklogs/${id}`),
+  
+};

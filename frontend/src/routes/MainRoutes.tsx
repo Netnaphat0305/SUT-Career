@@ -17,7 +17,7 @@ import ApplyJob from "../pages/ApplyJob/ApplyJob";
 import Interview from '../pages/Interview/Interview';
 import Chat from '../pages/Chat/Chat';
 import StudentListPage from "../pages/worklog/StudentListPage";
-import Reportpage from '../pages/Reportpage/report';
+import Reportpage from '../pages/Reportpage/reportpage/report';
 import JobsPage from '../pages/myjob';
 import PaymentReportPage from '../pages/paymentreport';
 import ProfilePageV1 from '../pages/profile';

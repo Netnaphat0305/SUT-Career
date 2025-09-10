@@ -4,16 +4,18 @@ import React, { useState } from "react";
 
 
 const worklog = () => {
-  const [student, setStudent] = useState("");
   const [date, setDate] = useState("");
   const [hours, setHours] = useState("");
-  const [workType, setWorkType] = useState("");
-  const [workDetails, setWorkDetails] = useState("");
+  const [Description, setDescription] = useState("");
+  const [student, setStudent] = useState("");
+  const [Jobpost, setJobpost] = useState("");
+  
+  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log({ student, date, hours, workType, workDetails });
+   
+    console.log({ student, date, hours, Jobpost,Description });
   };
 
   return (
@@ -38,8 +40,8 @@ const worklog = () => {
               <div className="form-group">
                 <label>งานของฉัน</label>
                 <select
-                  value={workType}
-                  onChange={(e) => setWorkType(e.target.value)}
+                  value={Jobpost}
+                  onChange={(e) => setJobpost(e.target.value)}
                   onInvalidCapture={(e) => e.currentTarget.setCustomValidity('กรุณาเลือกงานง')}
                   required
                 >
@@ -104,8 +106,8 @@ const worklog = () => {
               <div className="form-group full-width">
                 <label>รายละเอียดงาน *</label>
                 <textarea
-                  value={workDetails}
-                  onChange={(e) => setWorkDetails(e.target.value)}
+                  value={Description}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder="อธิบายรายละเอียดงานที่นักเรียนปฏิบัติ"
                   maxLength={500}
                   minLength={10}
