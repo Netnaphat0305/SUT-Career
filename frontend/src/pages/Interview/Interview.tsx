@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Button, 
   Card, 
@@ -7,6 +7,7 @@ import {
   Row,
   Col,
   Modal,
+  message
 } from 'antd';
 import { 
   LeftOutlined, 
@@ -18,14 +19,41 @@ import {
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/th';
+
 const { Title, Text } = Typography;
 
-interface TimeSlot {
-  time: string;
-  available: boolean;
+// สร้าง Interface ให้สอดคล้องกับโครงสร้างจาก Database
+interface InterviewSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+  status: "available" | "booked" | "unavailable";
 }
 
 type DateStatus = 'available' | 'busy' | 'selected' | 'default';
+
+// --- Mock API Functions for Database Interaction ---
+// ฟังก์ชันจำลองเพื่อดึงช่วงเวลาที่ว่างจาก Database
+const fetchAvailableTimeSlots = async (): Promise<Record<string, InterviewSlot[]>> => {
+  // สมมติว่านี่คือข้อมูลช่วงเวลาที่ผู้ว่าจ้างกำหนดไว้
+  return Promise.resolve({
+    "2024-12-08": [
+      { id: "slot-a", startTime: "09:00", endTime: "10:00", status: "available" },
+      { id: "slot-b", startTime: "10:00", endTime: "11:00", status: "available" },
+      { id: "slot-c", startTime: "11:00", endTime: "12:00", status: "available" },
+    ],
+    "2024-12-09": [
+      { id: "slot-d", startTime: "13:00", endTime: "14:00", status: "available" },
+      { id: "slot-e", startTime: "14:00", endTime: "15:00", status: "available" },
+    ],
+  });
+};
+
+// ฟังก์ชันจำลองเพื่อบันทึกการนัดหมายลง Database
+const bookTimeSlot = async (slotId: string, date: string, studentId: string) => {
+  console.log(`Student ${studentId} is booking slot ${slotId} on ${date}`);
+  return Promise.resolve({ success: true });
+};
 
 const Interview: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
@@ -34,47 +62,54 @@ const Interview: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
 
-  const timeSlots: TimeSlot[] = [
-    { time: '09:00', available: true },
-    { time: '10:00', available: true },
-    { time: '11:00', available: true },
-    { time: '13:00', available: false },
-    { time: '14:00', available: true },
-    { time: '15:00', available: false },
-    { time: '16:00', available: true },
-    { time: '17:00', available: true },
-  ];
+  // โหลดข้อมูลช่วงเวลาที่ว่างจาก "ฐานข้อมูล"
+  const [availableSlots, setAvailableSlots] = useState<Record<string, InterviewSlot[]>>({});
+  useEffect(() => {
+    const loadAvailableSlots = async () => {
+      const slots = await fetchAvailableTimeSlots();
+      setAvailableSlots(slots);
+    };
+    loadAvailableSlots();
+  }, []);
 
-  // Mock data for calendar status - simulating employer specified availability
   const getDateStatus = (date: Dayjs): DateStatus => {
-    const day = date.date();
+    const dateKey = date.format("YYYY-MM-DD");
     const isCurrentMonth = date.month() === currentMonth.month();
   
     if (!isCurrentMonth) return 'default';
-  
     if (selectedDate && date.isSame(selectedDate, 'day')) return 'selected';
   
-    // Simulated employer availability (busy dates)
-    if ([27, 30].includes(day)) return 'busy';
+    const daySlots = availableSlots[dateKey];
+    if (daySlots && daySlots.length > 0) {
+      return 'available';
+    }
   
-    // Simulated employer availability (available dates)
-    if ([1, 2, 5, 8, 9, 12, 15, 16, 19, 22, 23].includes(day)) return 'available';
-  
-    return 'default'; // Regular dates (not available for booking)
+    return 'default';
   };
-
+  
   const handleDateClick = (date: Dayjs) => {
     const status = getDateStatus(date);
     if (status === 'available' || status === 'selected') {
       setSelectedDate(date);
-      setSelectedTimeSlot(null); // Reset time slot when date changes
+      setSelectedTimeSlot(null);
     }
-    // Don't allow clicking on busy or default dates
   };
 
-  const handleTimeSlotClick = (time: string, available: boolean) => {
-    if (available) {
-      setSelectedTimeSlot(selectedTimeSlot === time ? null : time);
+  const handleTimeSlotClick = (slotId: string) => {
+    setSelectedTimeSlot(selectedTimeSlot === slotId ? null : slotId);
+  };
+  
+  const handleScheduleInterview = async () => {
+    if (!selectedDate || !selectedTimeSlot) return;
+    try {
+      await bookTimeSlot(selectedTimeSlot, selectedDate.format("YYYY-MM-DD"), "student-id-123");
+      setShowConfirmModal(false);
+      setShowSuccessModal(true);
+      // Optional: Refresh data after booking
+      const updatedSlots = await fetchAvailableTimeSlots();
+      setAvailableSlots(updatedSlots);
+    } catch (error) {
+      message.error("Failed to book the interview slot.");
     }
   };
 
@@ -142,6 +177,12 @@ const Interview: React.FC = () => {
   };
 
   const isScheduleButtonEnabled = selectedDate && selectedTimeSlot;
+
+  const getCurrentDateSlots = () => {
+    if (!selectedDate) return [];
+    const dateKey = selectedDate.format("YYYY-MM-DD");
+    return availableSlots[dateKey] || [];
+  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
@@ -298,9 +339,9 @@ const Interview: React.FC = () => {
                   style={{ backgroundColor: '#e6f4ff' }}
                 >
                   <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    {timeSlots.map((slot, index) => (
+                    {getCurrentDateSlots().map((slot) => (
                       <div
-                        key={index}
+                        key={slot.id}
                         style={{
                           display: 'flex',
                           justifyContent: 'space-between',
@@ -310,19 +351,19 @@ const Interview: React.FC = () => {
                           fontWeight: 'bold'
                         }}
                       >
-                        <Text strong>{slot.time}</Text>
+                        <Text strong>{slot.startTime} - {slot.endTime}</Text>
                         <div
                           style={{
                             width: '60px',
                             height: '20px',
-                            backgroundColor: slot.available 
-                              ? (selectedTimeSlot === slot.time ? '#0050b3' : '#1890ff')
+                            backgroundColor: slot.status === "available"
+                              ? (selectedTimeSlot === slot.id ? '#0050b3' : '#1890ff')
                               : '#d9d9d9',
                             borderRadius: '10px',
-                            cursor: slot.available ? 'pointer' : 'not-allowed',
-                            border: selectedTimeSlot === slot.time ? '2px solid #003a8c' : 'none'
+                            cursor: slot.status === "available" ? 'pointer' : 'not-allowed',
+                            border: selectedTimeSlot === slot.id ? '2px solid #003a8c' : 'none'
                           }}
-                          onClick={() => handleTimeSlotClick(slot.time, slot.available)}
+                          onClick={() => handleTimeSlotClick(slot.id)}
                         />
                       </div>
                     ))}
@@ -386,7 +427,7 @@ const Interview: React.FC = () => {
           />
           <Title level={4} style={{ marginBottom: '8px' }}>นัดสัมภาษณ์</Title>
           <Text style={{ fontSize: '16px', display: 'block', marginBottom: '4px' }}>
-            {selectedDate?.format('dddd')} ที่ {selectedDate?.date()} {selectedDate?.format('MMMM')} {selectedDate?.year()} เวลา {selectedTimeSlot}
+            {selectedDate?.format('dddd')} ที่ {selectedDate?.date()} {selectedDate?.format('MMMM')} {selectedDate?.year()} เวลา {getCurrentDateSlots().find(s => s.id === selectedTimeSlot)?.startTime}
           </Text>
           <Text style={{ color: '#ff4d4f', fontSize: '14px', display: 'block', marginBottom: '24px' }}>
             ไม่สามารถยกเลิกในภายหลังได้ !
@@ -412,10 +453,7 @@ const Interview: React.FC = () => {
                 width: '100px',
                 backgroundColor: '#1890ff'
               }}
-              onClick={() => {
-                setShowConfirmModal(false);
-                setShowSuccessModal(true);
-              }}
+              onClick={handleScheduleInterview}
             >
               ยืนยัน
             </Button>
