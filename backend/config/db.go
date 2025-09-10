@@ -132,11 +132,14 @@ func SeedDatabase() {
 	}
 
 	// Payment Method
-	paymentMethod := entity.PaymentMethods{
-		Model:      gorm.Model{ID: 1},
-		Methodname: "คิวอาร์โค้ด พร้อมเพย์",
+	paymentMethods := []entity.PaymentMethods{
+		{Model: gorm.Model{ID: 1}, Methodname: "คิวอาร์โค้ด พร้อมเพย์"},
+		{Model: gorm.Model{ID: 2}, Methodname: "โอนผ่านบัญชีธนาคาร"},
 	}
-	db.FirstOrCreate(&paymentMethod, paymentMethod.ID)
+
+	for _, pm := range paymentMethods {
+		db.FirstOrCreate(&pm, pm.ID)
+	}
 
 	// Banks
 	banks := []entity.Banks{

@@ -32,18 +32,6 @@ export const getHttpMessage = (e: any) => {
   return d?.error || e?.message || "";
 };
 
-export const pickCompanyName = (obj: any): string => {
-  const e = obj?.employer ?? obj?.Employer ?? obj ?? {};
-  const fullName = [e?.first_name, e?.last_name].filter(Boolean).join(" ").trim();
-  return (
-    e?.company_name ??
-    e?.CompanyName ??
-    e?.name ??
-    e?.Name ??
-    (fullName || "")
-  );
-};
-
 export const pickFullName = (e: any): string | null => {
   if (!e) return null;
   const direct = e.full_name ?? e.fullname ?? e.contact_name ?? e.ContactName ?? null;

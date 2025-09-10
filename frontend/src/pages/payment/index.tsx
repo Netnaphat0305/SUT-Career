@@ -94,12 +94,12 @@ const PaymentPage: React.FC = () => {
 
   /* ----- load: job + ensure/create billable item ----- */
   useEffect(() => {
-    if (!billableId || alreadyPaid) return; // มีแล้วไม่ต้องเช็คซ้ำ
+    if (!billableId || alreadyPaid) return;
     let alive = true;
 
     (async () => {
       try {
-        const resp = await paymentAPI.getLatestByBillable(billableId); // service ควรตั้ง silent404 ไว้
+        const resp = await paymentAPI.getLatestByBillable(billableId);
         if (!alive || !resp?.data?.data) {
           setAlreadyPaid(false);
           return;
@@ -110,7 +110,6 @@ const PaymentPage: React.FC = () => {
         ).toLowerCase();
         setAlreadyPaid(st === "paid" || st === "success");
       } catch {
-        // 404 = ยังไม่เคยจ่าย → ไม่ต้องขึ้น error
         setAlreadyPaid(false);
       }
     })();
@@ -192,13 +191,11 @@ const PaymentPage: React.FC = () => {
         const list = asData<any[]>(res) ?? [];
         const mapped: Discount[] = list.map((d: any) => ({
           ID: Number(d?.ID ?? d?.id),
-          discount_name: String(d?.discount_name ?? d?.name ?? "-"),
-          discount_value: Number(d?.discount_value ?? d?.value ?? 0),
-          discount_type: String(
-            d?.discount_type ?? d?.type ?? ""
-          ).toLowerCase(),
-          valid_from: d?.validfrom ?? d?.valid_from ?? d?.start_date ?? null,
-          valid_until: d?.validuntil ?? d?.valid_until ?? d?.end_date ?? null,
+          discount_name: String(d?.discount_name ?? "-"),
+          discount_value: Number(d?.discount_value ?? 0),
+          discount_type: String(d?.discount_type ?? "").toLowerCase(),
+          valid_from: d?.valid_from ?? null,
+          valid_until: d?.valid_until ?? null,
         }));
         if (!cancelled) setCoupons(mapped);
 
@@ -227,7 +224,6 @@ const PaymentPage: React.FC = () => {
     };
   }, []);
 
-  /* ----- รับค่าจาก state ที่ส่งมาจากหน้าเดิม (ถ้ามี) ----- */
   useEffect(() => {
     const st = (location.state || {}) as any;
     if (st?.amount && Number.isFinite(Number(st.amount))) {
@@ -238,7 +234,6 @@ const PaymentPage: React.FC = () => {
     }
   }, [location.state]);
 
-  /* ---------- Derived view ---------- */
   const salaryType = detectSalaryType(job);
   const grossAmount = Number(manualGross ?? (gross || 0));
   const selectedCoupon = useMemo(
@@ -430,8 +425,10 @@ const PaymentPage: React.FC = () => {
         />
 
         {/* ช่องทางการชำระเงิน */}
-        <PaymentMethodSelector method={method} setMethod={setMethod} />
-
+        <PaymentMethodSelector
+          method={method}
+          setMethod={setMethod}
+        />
         {/* สรุปยอด */}
         <Card style={{ borderRadius: 12, marginBottom: 16 }}>
           <Title level={5} style={{ textAlign: "left", margin: 0 }}>

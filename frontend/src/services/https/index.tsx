@@ -6,7 +6,7 @@ import type { Employer } from "../../interfaces/employer";
 import type { Student } from "../../interfaces/student";
 import type {
   CreateReviewPayload,
-  FindReviewRequest,
+  Review,
 } from "../../interfaces/review";
 import type { Discount } from "../../interfaces/discount";
 import type { Ratingscore } from "../../interfaces/ratingscore";
@@ -289,8 +289,8 @@ export const discountAPI = {
 };
 
 export const paymentReportAPI = {
-  getMine: () => Get("/api/payment-reports/me"),
-  getByEmployerId: (id: number) => Get(`/api/payment-reports/employer/${id}`),
+  getMine: () => Get("/api/payment-reports/me", true),
+  getByEmployerId: (id: number) => Get(`/api/payment-reports/employer/${id}`, true),
   upload: (form: FormData) =>
     axios.post(buildUrl("/api/payment-reports/upload"), form, {
       headers: {
@@ -307,8 +307,9 @@ export const adminFinanceAPI = {
 
 export const reviewAPI = {
   create: (data: CreateReviewPayload) => Post("/api/reviews", data),
-  find: (data: FindReviewRequest) => Post("/api/reviews/find", data),
   getForJob: (jobId: number) => Get(`/api/reviews/job/${jobId}`),
+  getById: (id: string): Promise<{ data: Review }> =>
+    Get(`/api/reviews/view/${id}`),
 };
 
 export const ratingScoreAPI = {

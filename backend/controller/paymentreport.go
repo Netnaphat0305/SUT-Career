@@ -16,14 +16,14 @@ import (
 )
 
 // GET /payment-reports
+// NOTE: ปรับแก้ Preload ให้ดึงข้อมูล Jobpost และ Employer มาด้วยสำหรับหน้า Admin
 func ListPaymentReports(c *gin.Context) {
 	var paymentreports []entity.PaymentReports
 	if err := config.DB().
-		Preload("Payment").
-		Preload("Payment.BillableItem").
-		Preload("Payment.BillableItem.Jobpost").
-		Preload("Payment.PaymentMethod").
-		Preload("Payment.Status").
+		Preload("Payments.BillableItem.Jobpost.Employer.User").
+		Preload("Payments.PaymentMethod").
+		Preload("Payments.Status").
+		Order("payment_reports.create_date DESC").
 		Find(&paymentreports).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -32,21 +32,20 @@ func ListPaymentReports(c *gin.Context) {
 }
 
 // GET /payment-reports/employer/:id
+// NOTE: ปรับ Query ให้มีประสิทธิภาพและสอดคล้องกับฟังก์ชันอื่น
 func ListPaymentReportsByEmployerID(c *gin.Context) {
 	var reports []entity.PaymentReports
 	employerID := c.Param("id")
 
 	if err := config.DB().
-		Model(&entity.PaymentReports{}).
-		Joins("JOIN payments p ON p.payment_report_id = payment_reports.id").
-		Joins("JOIN billable_items bi ON bi.id = p.billable_item_id").
+		Joins("JOIN payments ON payments.payment_report_id = payment_reports.id").
+		Joins("JOIN billable_items bi ON bi.id = payments.billable_item_id").
 		Joins("JOIN jobposts j ON j.id = bi.jobpost_id").
 		Where("j.employer_id = ?", employerID).
-		Preload("Payment").
-		Preload("Payment.BillableItem").
-		Preload("Payment.BillableItem.Jobpost").
-		Preload("Payment.PaymentMethod").
-		Preload("Payment.Status").
+		Preload("Payments.BillableItem.Jobpost").
+		Preload("Payments.PaymentMethod").
+		Preload("Payments.Status").
+		Order("payment_reports.create_date DESC").
 		Find(&reports).Error; err != nil {
 
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -57,103 +56,55 @@ func ListPaymentReportsByEmployerID(c *gin.Context) {
 
 // GET /payment-reports/me
 func ListMyPaymentReports(c *gin.Context) {
-	userID := c.GetUint("userID")
-	role := strings.ToLower(c.GetString("role"))
-	if role != "employer" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "only employer can view their reports"})
+	employerIDValue, exists := c.Get("employerID")
+	if !exists {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied: Employer ID not found in context"})
+		return
+	}
+	employerID, ok := employerIDValue.(uint)
+	if !ok || employerID == 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid Employer ID"})
 		return
 	}
 
-	var employer entity.Employer
-	if err := config.DB().Where("user_id = ?", userID).First(&employer).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "employer profile not found"})
-		return
-	}
-
-	var pays []entity.Payments
+	var reportIDs []uint
 	if err := config.DB().
-		Where("payments.payment_report_id IS NOT NULL").
-		Joins("JOIN billable_items bi ON bi.id = payments.billable_item_id").
-		Joins("JOIN jobposts j ON j.id = bi.jobpost_id").
-		Where("j.employer_id = ?", employer.ID).
-		Order("payments.created_at ASC, payments.id ASC").
-		Preload("BillableItem").
-		Preload("BillableItem.Jobpost").
-		Preload("PaymentMethod").
-		Preload("Status").
-		Find(&pays).Error; err != nil {
-		fmt.Println("ListMyPaymentReports: load payments error:", err)
+		Table("payment_reports").
+		Select("payment_reports.id").
+		Joins("JOIN payments ON payments.payment_report_id = payment_reports.id").
+		Joins("JOIN billable_items ON billable_items.id = payments.billable_item_id").
+		Joins("JOIN jobposts ON jobposts.id = billable_items.jobpost_id").
+		Where("jobposts.employer_id = ?", employerID).
+		Group("payment_reports.id").
+		Pluck("payment_reports.id", &reportIDs).Error; err != nil {
+		fmt.Println("ListMyPaymentReports: subquery error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to find report IDs"})
+		return
+	}
+
+	if len(reportIDs) == 0 {
+		c.JSON(http.StatusOK, gin.H{"data": []entity.PaymentReports{}})
+		return
+	}
+
+	var reports []entity.PaymentReports
+	if err := config.DB().
+		// --- แก้ไขบรรทัดนี้: เพิ่ม .Employer ต่อท้าย Jobpost ---
+		Preload("Payment.BillableItem.Jobpost.Employer").
+		Preload("Payment.PaymentMethod").
+		Preload("Payment.Status").
+		Order("create_date DESC").
+		Find(&reports, reportIDs).Error; err != nil {
+		fmt.Println("ListMyPaymentReports: main query error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch reports failed"})
 		return
 	}
 
-	if len(pays) == 0 {
-		c.JSON(http.StatusOK, gin.H{"data": []any{}})
-		return
-	}
-
-	ids := make([]uint, 0, len(pays))
-	for _, p := range pays {
-		if p.PaymentReportID != nil && *p.PaymentReportID > 0 {
-			ids = append(ids, *p.PaymentReportID)
-		}
-	}
-
-	var reps []entity.PaymentReports
-	if err := config.DB().Where("id IN ?", ids).Find(&reps).Error; err != nil {
-		fmt.Println("ListMyPaymentReports: load reports error:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch reports failed"})
-		return
-	}
-	repByID := make(map[uint]entity.PaymentReports, len(reps))
-	for _, r := range reps {
-		repByID[r.ID] = r
-	}
-
-	type Row struct {
-		ID         uint             `json:"id"`
-		Reportname string           `json:"reportname"`
-		Filepath   string           `json:"filepath"`
-		CreateDate time.Time        `json:"create_date"`
-		Payment    *entity.Payments `json:"payment,omitempty"`
-		Methodname string           `json:"methodname,omitempty"`
-		StatusName string           `json:"status_name,omitempty"`
-	}
-
-	out := make([]Row, 0, len(pays))
-	for i := range pays {
-		p := pays[i]
-		rid := uint(0)
-		if p.PaymentReportID != nil {
-			rid = *p.PaymentReportID
-		}
-		rep := repByID[rid]
-
-		out = append(out, Row{
-			ID:         rep.ID,
-			Reportname: rep.Reportname,
-			Filepath:   rep.Filepath,
-			CreateDate: rep.CreateDate,
-			Payment:    &p,
-			Methodname: func() string {
-				if p.PaymentMethod != nil && p.PaymentMethod.Methodname != "" {
-					return p.PaymentMethod.Methodname
-				}
-				return ""
-			}(),
-			StatusName: func() string {
-				if p.Status != nil {
-					return p.Status.StatusName
-				}
-				return ""
-			}(),
-		})
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": out})
+	c.JSON(http.StatusOK, gin.H{"data": reports})
 }
 
-// payment-reports/upload
+// POST /payment-reports/upload
+// NOTE: โค้ดส่วนนี้ดีอยู่แล้ว ไม่มีการเปลี่ยนแปลง
 func UploadPaymentReport(c *gin.Context) {
 	// 1) รับไฟล์
 	f, err := c.FormFile("file")
@@ -187,6 +138,8 @@ func UploadPaymentReport(c *gin.Context) {
 	if baseName == "" {
 		baseName = "Payment Receipt"
 	}
+	
+	baseName = fmt.Sprintf("%s#%d", baseName, ts)
 	filename := fmt.Sprintf("receipt_%d_%d.pdf", pid, ts)
 	diskPath := filepath.Join(dir, filename)
 
@@ -215,10 +168,12 @@ func UploadPaymentReport(c *gin.Context) {
 
 	// 7) ลิงก์กับ payment (ถ้ามี)
 	if pid > 0 {
-		_ = config.DB().Model(&entity.Payments{}).
+		if err := config.DB().Model(&entity.Payments{}).
 			Where("id = ?", pid).
-			Update("payment_report_id", report.ID).
-			Error
+			Update("payment_report_id", report.ID).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to link payment report", "detail": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": report})

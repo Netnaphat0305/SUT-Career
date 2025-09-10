@@ -2,7 +2,7 @@ import type { Jobpost } from "./jobpost"
 import type { Ratingscore } from "./ratingscore";
 
 export interface Review {
-    id: number;
+    ID: number;
     jobpost_id: number;
     jobpost?: Jobpost;
     ratingscore_id: number;

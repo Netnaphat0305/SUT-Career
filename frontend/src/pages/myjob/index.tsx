@@ -64,13 +64,10 @@ export const statusColor = (row: any) => {
 
 const asData = <T,>(r: any): T => (r?.data?.data ?? r?.data ?? r) as T;
 const toJobId = (r: any) =>
-  Number(r.jobpost_id ?? r.JobpostID ?? r.id ?? r.ID ?? 0);
+  Number(r.jobpost_id ?? r.ID ?? 0);
 export const hasPaymentProofInPayload = (row: any): boolean =>
   Boolean(
-    row?.proof_of_payment ??
-      row?.ProofOfPayment ??
-      row?.payment?.proof_of_payment ??
-      row?.Payment?.ProofOfPayment
+    row?.proof_of_payment ?? row?.payment?.proof_of_payment
   );
 
 const pick = <T,>(...vals: T[]) =>
@@ -155,6 +152,16 @@ const MyJobPage: React.FC = () => {
       setCheckingId(null);
     }
   };
+
+  const handleViewReview = () => {
+  if (reviewInfo?.ID) {
+    // ปิด Modal ที่แสดงอยู่
+    setreviewedModalOpen(false);
+    navigate(`/reviews/view/${reviewInfo.ID}`);
+  } else {
+    message.error("ไม่พบรหัสรีวิว");
+  }
+};
 
   // ตรวจการชำระ
   const handlePayClick = async (jobId: number) => {
@@ -379,6 +386,11 @@ const MyJobPage: React.FC = () => {
           }
           extra={
             <Space direction="vertical" style={{ width: "100%" }}>
+              {reviewInfo?.ID && (
+                <Button block type="primary" onClick={handleViewReview}>
+                  ดูรีวิว
+                </Button>
+              )}
               <Button block onClick={() => setreviewedModalOpen(false)}>
                 ปิด
               </Button>

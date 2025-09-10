@@ -57,19 +57,17 @@ func ListPaymentStatuses(c *gin.Context) {
 
 // GET /api/paymentsmethods
 func ListPaymentMethods(c *gin.Context) {
-	var rows []struct {
-		ID         uint   `json:"id"`
-		MethodName string `json:"methodname"`
-	}
-	if err := config.DB().Table("payment_methods").
-		Select("id, methodname").
-		Order("id asc").
-		Scan(&rows).Error; err != nil {
+    var rows []entity.PaymentMethods
+    
+    if err := config.DB().Table("payment_methods").
+        Select("id, methodname").
+        Order("id asc").
+        Scan(&rows).Error; err != nil {
 
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"data": rows})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, rows)
 }
 
 type createPaymentReq struct {

@@ -61,7 +61,6 @@ const CouponSelector: React.FC<Props> = ({
         </Button>
       </Flex>
 
-      {/* Collapsed preview (เหมือนช่องทางการชำระเงิน) */}
       {!expanded ? (
         <Card style={{ borderRadius: 10 }} bodyStyle={{ padding: 12 }}>
           <Flex align="left" gap={12} justify="space-between">

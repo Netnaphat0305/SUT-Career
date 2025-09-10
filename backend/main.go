@@ -59,7 +59,6 @@ func main() {
 		api.GET("/jobcategories/:id", controller.GetJobCategoryByID)
 		api.GET("/reviews/scores", controller.ListRatingScores)
 		api.GET("/payments/statuses", controller.ListPaymentStatuses)
-		
 		// api.GET("/banks", controller.ListBanks)
 		// api.GET("/genders", controller.ListGenders)
 		
@@ -147,19 +146,22 @@ func main() {
 		// --- Reviews ---
 		auth.GET("/reviews/job/:jobId", controller.FindRatingsByJobPostID)
 		auth.POST("/reviews", controller.CreateReview)
+		auth.GET("/reviews/view/:id", controller.GetReviewByID)
 
 		// --- Payments ---
 		auth.POST("/payments", controller.CreatePayment)
 		auth.GET("/payments", controller.ListPayments)
-		auth.GET("/payment-reports/me", controller.ListMyPaymentReports)
-		auth.GET("/payment-reports/employer/:id", controller.ListPaymentReportsByEmployerID)
-		auth.POST("/payment-reports/upload", controller.UploadPaymentReport)
 		auth.GET("/orders", controller.ListOrders)
 		auth.GET("/discounts", controller.ListDiscounts)
 		auth.POST("/billable_items", controller.CreateOrUpdateBillableItem)
 		auth.GET("/paymentmethods", controller.ListPaymentMethods)
 		auth.GET("/payments/billable/:billableId", controller.GetLatestPaymentByBillable)
 		auth.POST("/payments/:id/evidence", controller.UploadEvidence)
+
+		// --- Payment Reports ---
+		auth.GET("/payment-reports/me", controller.ListMyPaymentReports)
+		auth.GET("/payment-reports/employer/:id", controller.ListPaymentReportsByEmployerID)
+		auth.POST("/payment-reports/upload", controller.UploadPaymentReport)
 	}
 
 	// -------------------- 🛡️ Admin Routes --------------------

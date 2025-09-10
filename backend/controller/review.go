@@ -4,8 +4,10 @@ package controller
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -170,4 +172,38 @@ func CreateReview(c *gin.Context) {
 	}
 	_ = db.Preload("Ratingscore").First(&review, review.ID).Error
 	c.JSON(http.StatusCreated, gin.H{"data": review})
+}
+
+func GetReviewByID(c *gin.Context) {
+	idStr := c.Param("id")
+
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Review ID format"})
+		return
+	}
+
+	var review entity.Reviews
+
+	result := config.DB().
+		Preload("Ratingscore").
+		Preload("Jobpost").
+		First(&review, id)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Review not found"})
+			return
+		}
+
+		// ⭐️ แก้ไขบรรทัดนี้เพื่อดู Error จริง ๆ
+		log.Printf("Database error: %v\n", result.Error) // แสดง Error ใน Terminal
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Could not fetch review data",
+			"details": result.Error.Error(), // ส่ง Error จริงกลับไปให้ Front-end ดูด้วย
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": review})
 }

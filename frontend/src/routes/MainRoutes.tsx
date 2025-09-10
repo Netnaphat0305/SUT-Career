@@ -33,6 +33,7 @@ import WorklogPage from "../pages/worklog/worklog";
 import ManageApplicants from "../pages/ManageApplicants/ManageApplicants"; // เพิ่ม import นี้
 import MyApplications from "../pages/MyApplications/MyApplications"; // เพิ่ม import นี้
 import QRPaymentPage from "../pages/payment/qrpaymentpage";
+import ViewReviewPage from "../pages/review/reviewhistory";
 
 
 
@@ -113,6 +114,7 @@ const MainRoutes: React.FC = () => {
             <Route path="/payment/:jobId" element={<PaymentPage />} />
             <Route path="/qr-payment/:paymentId" element={<QRPaymentPage />} />
             <Route path="/review/:jobId" element={<ReviewPage />} />
+            <Route path="/reviews/view/:id" element={<ViewReviewPage/>}/>
             <Route path="/Interview-Schedule" element={<InterviewScheduling/>} />
             <Route path="/profile-v1" element={<ProfilePageV1 />} />
             <Route path="/review-page" element={<ReviewPage />} />
