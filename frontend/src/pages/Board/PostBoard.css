@@ -35,9 +35,10 @@
 }
 
 .job-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s;
+  border-color: #3b82f6; /* เส้นขอบสีฟ้าเมื่อ hover */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
+
 
 /* ---------------- ข้อมูลฝั่งซ้าย ---------------- */
 .job-left {

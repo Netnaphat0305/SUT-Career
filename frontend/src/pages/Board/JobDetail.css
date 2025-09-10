@@ -1,352 +1,324 @@
-/* 🌐 โครงร่างรวม Layout */
+/* ======= Container ======= */
 .post-layout-container {
-  display: flex;                 /* ตั้งเป็น flex container เพื่อจัดวางลูกภายใน */
-  flex-wrap: wrap;              /* ให้ลูกภายในขึ้นบรรทัดใหม่ได้ถ้าพื้นที่ไม่พอ */
-  width: 100vw;                 /* กว้างเต็มหน้าจอแนวนอน */
-  max-width: 100%;              /* ไม่เกิน 100% ของ container แม่ */
-  margin: 0;                   /* ลบ margin รอบ ๆ */
-  padding: 20px;               /* เว้นช่องว่างภายใน 20px รอบ ๆ */
-  box-sizing: border-box;      /* รวม padding และ border ในการคำนวณขนาด */
-  height: calc(100vh - 64px);  /* ความสูงเต็มหน้าจอลบ 64px (เช่น navbar) */
-  gap: 20px;                   /* ช่องว่างระหว่างลูก flex 20px */
-  background-color: #f8f8f8;   /* สีพื้นหลังเทาอ่อน */
-  padding-top: 10px;
-  margin-top: 0px;            /* เว้นช่องว่างด้านบน 64px */
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 64px);
+  font-family: "Kanit", "Sarabun", sans-serif;
 }
 
-html, body {
-  height: 100%;                /* ความสูงเต็มหน้าจอ */
-  width: 100%;                 /* ความกว้างเต็มหน้าจอ */
-  margin: 0;                   /* ลบ margin รอบ ๆ */
-  padding: 0;                  /* ลบ padding รอบ ๆ */
-  box-sizing: border-box;      /* รวม padding, border ในการคำนวณขนาด */
-}
-
-/* 🔹 Sidebar รายการโพสต์ */
+/* ======= Sidebar ======= */
 .post-list-sidebar {
-  flex: 1 1 320px;             /* ขยายได้, หดได้, เริ่มต้น 320px */
-  max-width: 400px;            /* กว้างสุดไม่เกิน 400px */
-  background: white;           /* พื้นหลังขาว */
-  border: 1px solid #d1d6d9;  /* เส้นขอบสีเทาอ่อน */
-  border-radius: 10px;         /* มุมโค้งมน 10px */
-  padding: 10px;               /* ช่องว่างภายใน 10px */
-  box-sizing: border-box;      /* รวม padding, border */
-  max-height: calc(100vh - 100px); /* สูงสุดไม่เกินหน้าจอลบ 100px */
-  overflow-y: auto;            /* เลื่อน scrollbar แนวตั้งถ้าข้อมูลล้น */
-  height: 100%;                /* ความสูงเต็ม parent */
-  z-index: 0;
+  flex: 1 1 400px;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  overflow-y: auto;
+  max-height: calc(100vh - 100px);
+  border: 1px solid #e5e7eb;
 }
 
-/* 🔹 กล่องแต่ละโพสต์ใน Sidebar */
+/* ======= Card ======= */
 .post-preview {
-  display: flex;               /* ตั้งเป็น flex container */
-  align-items: center;         /* จัดกึ่งกลางแนวตั้ง */
-  justify-content: space-between; /* ดันลูกชิดซ้าย-ขวาสุด */
-  gap: 10px;                   /* ช่องว่างระหว่างลูก flex 10px */
-  margin-bottom: 10px;         /* เว้นระยะห่างด้านล่าง 10px */
-  border: 1px solid #ddd;      /* เส้นขอบสีเทาอ่อน */
-  border-radius: 6px;          /* มุมโค้งมน 6px */
-  cursor: pointer;             /* เปลี่ยนเคอร์เซอร์เป็นมือเมื่อชี้ */
-  height: 150px;               /* ความสูงตายตัว 150px */
-  width: 100%;                /* ความกว้างเต็ม container แม่ */
-  background-color: #f5f5f5;  /* พื้นหลังเทาอ่อน */
-  box-sizing: border-box;      /* รวม padding, border */
-  padding: 10px;               /* ช่องว่างภายใน 10px */
-  overflow: hidden;            /* ซ่อนส่วนเกิน */
-  position: relative;          /* ตั้งตำแหน่งสัมพัทธ์ */
+  position: relative;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
 }
 
-/* 🔹 กล่องข้อความฝั่งซ้าย */
-.post-text {
-  flex: 1 1 auto;              /* ยืดหยุ่นตามเนื้อหาและพื้นที่ว่าง */
-  max-width: 60%;              /* กว้างสุด 60% ของ parent */
-  display: flex;               /* ตั้งเป็น flex container */
-  flex-direction: column;      /* เรียงลูกในแนวตั้ง */
-  justify-content: center;     /* จัดกึ่งกลางแนวตั้ง */
-  align-items: flex-start;     /* ชิดซ้ายแนวนอน */
-  height: 100%;                /* ความสูงเต็ม container แม่ */
-  font-family: "Kanit", "Sarabun", sans-serif; /* ฟอนต์ */
-  padding-right: 10px;         /* ช่องว่างขวา 10px */
-  z-index: 1;                  /* อยู่เหนือ element อื่น */
-  box-sizing: border-box;      /* รวม padding, border */
+/* Hover: แค่เพิ่มเงาเบา ๆ */
+.post-preview:hover {
+  /* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); */
+  transition: box-shadow 0.2s;
+  border-color: #0088FF; /* เส้นขอบสีฟ้าเมื่อ hover */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* 🔹 ชื่อโพสต์ */
-.post-text h4 {
-  margin: 0;                  /* ลบ margin รอบ ๆ */
-  font-size: 1.5rem;          /* ขนาดตัวอักษร 1.5 เท่าของ root */
-  font-weight: bold;          /* ตัวหนา */
-  color: #2d2d2d;             /* สีเข้ม */
-  padding-left: 10px;         /* เว้นช่องว่างซ้าย 10px */
-}
-
-/* 🔹 ชื่อร้านค้าใต้ชื่อโพสต์ */
-.post-subtitle {
-  margin: 0;                  /* ลบ margin รอบ ๆ */
-  font-size: 0.9rem;          /* ขนาดฟอนต์เล็กลง */
-  color: #666;                /* สีเทากลาง */
-  padding-left: 10px;         /* ช่องว่างซ้ายเท่ากับชื่อโพสต์ */
-  font-weight: 300;           /* ตัวบาง */
-}
-
-/* 🔹 รายละเอียดเพิ่มเติม */
-.post-meta {
-  margin: 0;                  /* ลบ margin */
-  font-size: 0.85rem;         /* ฟอนต์เล็กลง */
-  color: #999;                /* สีเทาอ่อน */
-  padding-left: 10px;         /* ช่องว่างซ้าย */
-}
-
-/* 🔹 ไอคอนระยะเวลา เงินเดือน สถานที่ */
-.post-meta-icons {
-  margin-top: 6px;            /* เว้นระยะห่างด้านบน */
-  font-size: 0.75rem;         /* ขนาดฟอนต์เล็กมาก */
-  color: #2d2d2d;             /* สีเข้ม */
-  display: flex;              /* flex container */
-  flex-wrap: nowrap;          /* ห้ามขึ้นบรรทัดใหม่ */
-  gap: 10px;                  /* ช่องว่างระหว่างไอคอน */
-  align-items: center;        /* จัดกึ่งกลางแนวตั้ง */
-  line-height: 1.2;           /* ความสูงบรรทัดน้อย */
-  overflow: hidden;           /* ซ่อนส่วนเกิน */
-  text-overflow: ellipsis;    /* ตัดข้อความแล้วแสดง ... */
-  white-space: nowrap;        /* ไม่ขึ้นบรรทัดใหม่ */
-  padding-left: 5px;          /* ช่องว่างซ้ายเล็กน้อย */
-}
-
-/* 🔹 รูปภาพฝั่งขวา */
-.post-image-wrapper {
-  flex-shrink: 0;             /* ห้ามย่อขนาด */
-  display: flex;              /* flex container */
-  justify-content: center;    /* กึ่งกลางแนวนอน */
-  align-items: center;        /* กึ่งกลางแนวตั้ง */
-  width: 150px;               /* กว้าง 150px ตายตัว */
-  height: 130px;              /* สูง 130px */
-  margin-left: auto;          /* ดันไปชิดขวาสุด */
-  margin-right: 0;            /* ไม่มี margin ขวา */
-  padding: 0;                 /* ไม่มี padding */
-  overflow: hidden;           /* ซ่อนส่วนเกิน */
-  box-sizing: border-box;     /* รวม padding, border */
-}
-
-/* รูปภาพใน wrapper */
-.post-image-wrapper img {
-  position: relative;         /* ตำแหน่งสัมพัทธ์ */
-  width: 50px;     /* ลดจาก 100% */
-  height: 50px;    /* กำหนดสูงตายตัว */
-  max-width: 150px;           /* ไม่เกิน 150px */
-  max-height: 130px;          /* ไม่เกิน 130px สูงสุด */
-  height: auto;               /* สูงอัตโนมัติ ตามสัดส่วน */
-  object-fit: cover;          /* ครอบภาพให้เต็ม ไม่บิดสัดส่วน */
-  border-radius: 6px;         /* มุมโค้งมน 6px */
-  display: block;             /* แก้ช่องว่างใต้ภาพ */
-  margin: 0;                  /* ไม่มี margin */
-  box-sizing: border-box;     /* รวม padding, border */
-  z-index: 10000;             /* อยู่ชั้นบนสุด */
-  margin-right: 0px;          /* ไม่มี margin ขวา */
-}
-
-/* 🔹 สถานะโพสต์ที่ถูกเลือก */
+/* การ์ดที่ถูกเลือก */
 .post-preview.selected {
-  border-color: #1976d3;      /* ขอบสีฟ้าเข้ม */
-  background-color: #bbdefb;  /* พื้นหลังสีฟ้าจาง */
+  background-color: #f9fbff;
+  border-color: #e5e7eb;
 }
 
-/* 🔸 ตารางข้อมูล */
-.post-meta-table {
-  display: table;             /* ทำเหมือนตาราง HTML */
-  width: 100%;                /* กว้างเต็ม */
-  border-collapse: collapse;  /* รวมเส้นขอบไม่ซ้อน */
-  margin-top: 12px;           /* เว้นช่องว่างด้านบน */
-  font-family: "Kanit", "Sarabun", sans-serif; /* ฟอนต์ */
-  font-size: 0.85rem;         /* ขนาดฟอนต์เล็ก */
-  color: #2d2d2d;             /* สีข้อความเข้ม */
+/* แถบสีน้ำเงินทางซ้ายเมื่อเลือก */
+.post-preview.selected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  background: linear-gradient(180deg, #1976d3, #64b5f6);
+  border-radius: 4px;
 }
 
-/* แถวตาราง */
-.meta-row {
-  display: table-row;         /* แถวของตาราง */
+.post-card-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-/* แถวหัวข้อ */
-.meta-row.header {
-  font-weight: 600;           /* ตัวหนา */
-  color: #1976d3;             /* สีฟ้าเข้ม */
-  border-bottom: 2px solid #1976d3; /* เส้นขอบล่างหนา */
+/* ======= Text ======= */
+.post-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  align-items: flex-start;
+  text-align: left;
 }
 
-/* แถวข้อมูล */
-.meta-row.data {
-  font-weight: 400;           /* น้ำหนักปกติ */
+.post-text h4 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #2d2d2d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  white-space: normal;
 }
 
-/* เซลล์ในแต่ละแถว */
-.meta-row > div {
-  display: table-cell;        /* เซลล์ของตาราง */
-  padding: 4px 12px;          /* ช่องว่างภายในเซลล์ */
-  vertical-align: middle;     /* จัดกลางแนวตั้ง */
-  text-align: left;           /* ชิดซ้าย */
-  border-bottom: 1px solid #ddd; /* เส้นขอบล่างบาง */
+.post-subtitle {
+  margin: 2px 0 8px;
+  font-size: 0.85rem;
+  color: #2d2d2d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  white-space: normal; /* ให้ขึ้นบรรทัดใหม่ได้ */
+  word-break: break-word;
 }
 
-/* กำหนดความกว้างเซลล์แต่ละคอลัมน์ */
-.meta-row > div:nth-child(1) {
-  width: 40%;
-}
-.meta-row > div:nth-child(2) {
-  width: 30%;
-}
-.meta-row > div:nth-child(3) {
-  width: 30%;
+/* ======= Meta Info ======= */
+.post-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #666;
 }
 
-/* --------------------------------------------------------- */
-/* --------------------------------------------------------- */
-
-/* 🔸 ฝั่งขวา: รายละเอียดโพสต์ที่ถูกเลือก */
-.post-full-detail {
-  flex: 3 1 600px;             /* ยืดหยุ่น 3 เท่า, หดได้, เริ่มต้น 600px */
-  background: white;           /* พื้นหลังขาว */
-  border-radius: 10px;         /* มุมโค้งมน 10px */
-  padding: 20px;               /* ช่องว่างภายใน 20px */
-  overflow-y: auto;            /* เลื่อน scrollbar แนวตั้งถ้าข้อมูลล้น */
-  box-sizing: border-box;      /* รวม padding, border */
-  min-height: 300px;           /* ความสูงขั้นต่ำ 300px */
-  border: 1px solid #d1d6d9;  /* เส้นขอบสีเทาอ่อน */
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* 🔸 รูปภาพรายละเอียด */
+/* ======= Logo ======= */
+.post-image-wrapper {
+  flex-shrink: 0;
+  width: 55px;
+  height: 55px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .post-image-detail {
-  width: 50px;         /* ความกว้างเล็กลง */
-  height: 50px;        /* ความสูงเล็กลง */
-  object-fit: cover;   /* ครอบรูปให้พอดี */
-  border-radius: 10px; /* มุมโค้งมน */
+  width: 55px;
+  height: 55px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+/* ========================================================================================================== */
+/* ======= Right Detail ======= */
+/* กล่องหลัก */
+.post-full-detail {
+  flex: 3;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Header ===== */
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+/* ===== Header Highlight ===== */
+.job-header-highlight {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+/* background: linear-gradient(180deg, #e3f2fd 0%, #ffffff 100%); */
+
+  padding: 20px 24px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #0088FF;
 }
 
 
-/* ปรับรูปภาพใน .post-full-detail */
-.post-full-detail .post-image {
-  margin-top: -8px;           /* ขยับขึ้นนิดหน่อย */
-  margin-bottom: 12px;        /* เว้นช่องว่างด้านล่าง */
+/* ซ้าย: โลโก้ + ข้อมูลตำแหน่ง */
+.job-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .post-detail-image {
-  width: 100%;                /* กว้างเต็ม */
-  max-width: 120px;           /* ไม่เกิน 120px */
-  border-radius: 10px;        /* มุมโค้งมน */
-  object-fit: cover;          /* ครอบภาพเต็ม */
-  margin-top: -20px;          /* ขยับขึ้นมากกว่าปกติ */
-  padding-left: 20px;         /* ช่องว่างซ้าย */
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  /* border: 1px solid #e2e8f0; */
 }
 
-/* หัวข้อและรายละเอียดแยกเป็นกล่อง */
-.wrap-title.detail {
-  width: 100%;                /* กว้างเต็ม */
-  height: auto;               /* สูงอัตโนมัติ */
-}
-
-/* แถวรูปกับข้อความ subtitle */
-.image-subtitle-row {
-  display: flex;              /* flex container */
-  align-items: center;        /* กึ่งกลางแนวตั้ง */
-  gap: 5px;                   /* ช่องว่าง 5px */
-  margin-top: 8px;            /* เว้นช่องว่างบน */
-  padding-left: 0px;          /* ไม่มีช่องว่างซ้าย */
-}
-
-.post-subtitle-detail {
-  font-size: 1rem;            /* ขนาดฟอนต์ปกติ */
-  color: #2D2D2D;             /* สีเข้ม */
-  font-weight: 300;           /* ตัวบาง */
-  line-height: 1.4;           /* ความสูงบรรทัด */
-  margin: 0;                  /* ไม่มี margin */
-  margin-top: -15px;          /* ลดช่องว่างด้านบนด้วย margin ลบ */
-  font-family: "Kanit", "Sarabun", sans-serif; /* ฟอนต์ */
-}
-
-.box-with-top-bottom-border {
-  border-top: 1px solid #D1D6D9;    /* เส้นขอบบน */
-  border-bottom: 1px solid #D1D6D9; /* เส้นขอบล่าง */
-  padding: 10px;                    /* ช่องว่างภายใน */
-  background-color: #fff;           /* พื้นหลังขาว */
-  width: 100%;                     /* กว้างเต็ม */
-  height: 80px;                    /* ความสูง 80px */
-  margin: auto;                   /* จัดกึ่งกลาง */
-}
-
-/* แถวหัวข้อกับปุ่ม */
-.wrap-title-detail {
-  display: flex;                   /* flex container */
-  justify-content: flex-start;    /* ชิดซ้าย */
-  align-items: center;            /* กึ่งกลางแนวตั้ง */
-  gap: 40px;                      /* ช่องว่างระหว่าง item 40px */
-  padding-right: 20px;            /* ช่องว่างขวา */
-}
-
-/* ปุ่ม */
-.btn-Job-Application {
-  margin-left: 300px;             /* เลื่อนปุ่มไปทางขวา */
-  background-color: #0088FF;      /* สีฟ้า */
-  color: white;                   /* ตัวหนังสือสีขาว */
-  padding: 10px 24px;             /* ช่องว่างในปุ่ม */
-  font-size: 1rem;                /* ขนาดตัวหนังสือ */
-  border-radius: 6px;             /* มุมปุ่มโค้งมน */
-  min-width: 150px;               /* กว้างขั้นต่ำ 150px */
-  max-width: 100%;                /* กว้างสูงสุด 100% */
-  height: auto;                  /* สูงอัตโนมัติ */
-  box-sizing: border-box;         /* รวม padding, border */
-  border: none;                  /* ไม่มีเส้นขอบ */
-  cursor: pointer;               /* เคอร์เซอร์ pointer */
-  transition: background-color 0.3s ease; /* เอฟเฟกต์เปลี่ยนสี */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* เงาปุ่ม */
+.job-title-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .title-detail {
-  font-size: 40px;
-  font-family: "Kanit", "Sarabun", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1e293b;
+}
+
+.company-name {
+  font-size: 1rem;
+  color: #475569;
+  margin-top: 4px;
+}
+
+/* ปุ่มสมัครงาน
+.btn-Job-Application {
+  font-size: 1rem;
+  padding: 8px 20px;
+  border-radius: 8px;
+  background-color: #1976d3;
+  box-shadow: 0 2px 8px rgba(25, 118, 211, 0.25);
+} */
+
+.btn-Job-Application {
+  background-color: #0088ff; /* พื้นหลังขาว */
+  color: #fff; /* สีตัวอักษรเทาเข้ม */
+  border: 1px solid #fff; /* เส้นขอบเทาอ่อน */
+  border-radius: 8px;
+  padding: 6px 16px;
   font-weight: 500;
-  padding-top: 20px;
-  padding-left: 30px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: none;
 }
 
-/* --------------------------------------------------------- */
-/* สำหรับมือถือ หน้าจอเล็ก */
-@media (max-width: 768px) {
-  .post-text {
-    max-width: 100%;             /* ขยายเต็มความกว้าง */
-    padding-left: 10px;          /* ช่องว่างซ้าย */
-  }
-  .post-meta-icons {
-    margin-left: 10px;           /* ช่องว่างซ้าย */
-    flex-wrap: wrap;             /* ให้ขึ้นบรรทัดใหม่ได้ */
-  }
-  .wrap-title-detail {
-    gap: 20px;                  /* ลดช่องว่าง */
-    flex-wrap: wrap;            /* เลื่อนบรรทัดได้ */
-  }
-  .btn-Job-Application {
-    min-width: 100px;           /* กว้างขั้นต่ำเล็กลง */
-    padding: 8px 16px;          /* ช่องว่างในปุ่มน้อยลง */
-    font-size: 0.9rem;          /* ตัวหนังสือเล็กลง */
-  }
+/* Active Effect */
+.btn-Job-Application:active {
+  background-color: #f3f4f6; /* เทาอ่อนลงอีกตอนกด */
+  transform: scale(0.98);
 }
 
-/* สำหรับ iPad ขนาดกลาง */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .post-text {
-    max-width: 60%;             /* ตามเดิม */
-    padding-left: 10px;         /* ช่องว่างซ้าย */
-  }
-  .post-meta-icons {
-    margin-left: 10px;          /* ช่องว่างซ้าย */
-    flex-wrap: nowrap;          /* ไม่ให้ขึ้นบรรทัดใหม่ */
-  }
-  .wrap-title-detail {
-    gap: 40px;                 /* ตามเดิม */
-    flex-wrap: nowrap;         /* ไม่ให้ขึ้นบรรทัดใหม่ */
-  }
-  .btn-Job-Application {
-    min-width: 150px;          /* ตามเดิม */
-    padding: 10px 24px;        /* ตามเดิม */
-    font-size: 1rem;           /* ตามเดิม */
-  }
+/* ===== Meta Info ===== */
+.job-meta-detail {
+  display: flex;
+  justify-content: center; 
+  align-items: center; 
+  gap: 40px; 
+  margin: 16px 0 20px;
+  font-size: 0.95rem;
+  color: #475569;
+  text-align: center; 
+  width: 100%; 
+  white-space: normal;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* เส้นแบ่ง */
+.divider {
+  margin: 16px 0;
+  border: none;
+  border-top: 1px solid #D1D6D9;
+}
+
+/* ====== ส่วนกล่องลักษณะการจ้างงาน + เวลาเริ่มเลิกงาน ====== */
+.job-overview {
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  /* background: linear-gradient(90deg, #e3f2fd 0%, #ffffff 100%); */
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid #D1D6D9;
+  margin-bottom: 24px;
+  
+}
+
+.job-type,
+.job-time {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.job-type h3,
+.job-time h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.job-type ul {
+  padding-left: 18px;
+  margin: 0;
+  font-size: 0.95rem;
+  color: #334155;
+  list-style-type: disc;
+}
+
+.job-time p {
+  font-size: 0.95rem;
+  color: #334155;
+  margin: 0;
+}
+
+/* ====== รายละเอียดงาน ====== */
+.job-description {
+  padding: 16px 20px;
+  background-color: #ffffff;
+  border-left: 4px solid #1976d3;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.job-description h3 {
+  margin-bottom: 8px;
+  font-size: 24px;
+  font-weight: 500;
+  color: #2d2d2d;
+}
+
+.job-description p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #334155;
+  line-height: 1.8;
+  text-align: left;
+  white-space: pre-line;
 }

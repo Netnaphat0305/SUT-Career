@@ -13,6 +13,7 @@ import {
 import { jobPostAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
 
+
 const PostLayout: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const role = user.role;
@@ -32,60 +33,59 @@ const PostLayout: React.FC = () => {
 
   useEffect(() => {
     const fetchPost = async () => {
-  try {
-    setLoading(true);
-    const res = await jobPostAPI.getAll();
-    const data = res.data?.data || res.data || res;
+      try {
+        setLoading(true);
+        const res = await jobPostAPI.getAll();
+        const data = res.data?.data || res.data || res;
 
-    if (!data || data.length === 0) {
-      messageApi.warning("ยังไม่มีประกาศงาน");
-      setPosts([]);
-      return;
-    }
+        if (!data || data.length === 0) {
+          messageApi.warning("ยังไม่มีประกาศงาน");
+          setPosts([]);
+          return;
+        }
 
-    // กรองเฉพาะโพสต์เปิดอยู่ (ทุก role)
-    const visiblePosts = data.filter((p: Jobpost) => p.status === "Open");
+        // กรองเฉพาะโพสต์เปิดอยู่ (ทุก role)
+        const visiblePosts = data.filter((p: Jobpost) => p.status === "Open");
 
-    const sortedData = visiblePosts.sort(
-      (a: Jobpost, b: Jobpost) =>
-        new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
-    );
+        const sortedData = visiblePosts.sort(
+          (a: Jobpost, b: Jobpost) =>
+            new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
+        );
 
-    setPosts(sortedData);
+        setPosts(sortedData);
 
-    const statePost = (location.state as { post?: Jobpost })?.post;
-    if (statePost) {
-      // ถ้าโพสต์ปิด เด้งกลับไปหน้า PostBoard
-      if (statePost.status === "Close") {
-        messageApi.warning("โพสต์นี้ถูกปิดรับสมัครแล้ว");
-        navigate("/Job/PostBoard");
-        return;
+        const statePost = (location.state as { post?: Jobpost })?.post;
+        if (statePost) {
+          // ถ้าโพสต์ปิด เด้งกลับไปหน้า PostBoard
+          if (statePost.status === "Close") {
+            messageApi.warning("โพสต์นี้ถูกปิดรับสมัครแล้ว");
+            navigate("/Job/PostBoard");
+            return;
+          }
+          setSelectedPost(statePost);
+          return;
+        }
+
+        if (id) {
+          const found = sortedData.find((p: Jobpost) => p.ID === Number(id));
+          if (!found) {
+            // ถ้าโพสต์ปิด เด้งกลับไปหน้า PostBoard
+            messageApi.warning("โพสต์นี้ถูกปิดรับสมัครแล้ว");
+            navigate("/Job/PostBoard");
+            return;
+          }
+          setSelectedPost(found);
+          return;
+        }
+
+        setSelectedPost(sortedData[0]);
+      } catch (err) {
+        console.error("Error fetching job post:", err);
+        messageApi.error("โหลดโพสต์งานไม่สำเร็จ");
+      } finally {
+        setLoading(false);
       }
-      setSelectedPost(statePost);
-      return;
-    }
-
-    if (id) {
-      const found = sortedData.find((p: Jobpost) => p.ID === Number(id));
-      if (!found) {
-        // ถ้าโพสต์ปิด เด้งกลับไปหน้า PostBoard
-        messageApi.warning("โพสต์นี้ถูกปิดรับสมัครแล้ว");
-        navigate("/Job/PostBoard");
-        return;
-      }
-      setSelectedPost(found);
-      return;
-    }
-
-    setSelectedPost(sortedData[0]);
-  } catch (err) {
-    console.error("Error fetching job post:", err);
-    messageApi.error("โหลดโพสต์งานไม่สำเร็จ");
-  } finally {
-    setLoading(false);
-  }
-};
-
+    };
 
     fetchPost();
   }, [id, location.state, role]);
@@ -128,44 +128,41 @@ const PostLayout: React.FC = () => {
                 );
               }}
             >
-              <div className="post-text">
-                <h4>
-                  {post.title}{" "}
-                  <Tag
-                    color={post.status === "Open" ? "green" : "red"}
-                    style={{ marginLeft: 8 }}
-                  >
-                    {post.status === "Open" ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
-                  </Tag>
-                </h4>
-                <p className="post-subtitle">
-                  {post.Employer?.company_name || "ไม่ระบุบริษัท"}
-                </p>
-                <div className="post-meta-icons">
-                  <div className="meta-item">
-                    <ClockCircleOutlined />
-                    <span>
-                      {post.deadline
-                        ? new Date(post.deadline).toLocaleDateString("th-TH")
-                        : "จนกว่าจะปิดรับสมัคร"}
-                    </span>
-                  </div>
-                  <div className="meta-item">
-                    <DollarCircleOutlined />
-                    <span>{post.salary.toLocaleString()} บาท</span>
-                  </div>
-                  <div className="meta-item">
-                    <EnvironmentOutlined />
-                    <span>{post.locationjob}</span>
+              <div className="post-card-content">
+                {/* ข้อความประกาศ */}
+                <div className="post-text">
+                  <h4>{post.title}</h4>
+                  <p className="post-subtitle">
+                    {post.Employer?.company_name || "ไม่ระบุบริษัท"}
+                  </p>
+                  <div className="post-meta">
+                    <div className="meta-item">
+                      <ClockCircleOutlined />
+                      <span>
+                        {post.deadline
+                          ? new Date(post.deadline).toLocaleDateString("th-TH")
+                          : "วันนี้ - จนกว่าจะปิดรับสมัคร"}
+                      </span>
+                    </div>
+                    <div className="meta-item">
+                      <DollarCircleOutlined />
+                      <span>{post.salary.toLocaleString()} บาท</span>
+                    </div>
+                    <div className="meta-item">
+                      <EnvironmentOutlined />
+                      <span>{post.locationjob}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="post-image-wrapper">
-                <img
-                  className="post-image-detail"
-                  src={post.image_url || lahui}
-                  alt={post.title}
-                />
+
+                {/* โลโก้ */}
+                <div className="post-image-wrapper">
+                  <img
+                    className="post-image-detail"
+                    src={post.image_url || lahui}
+                    alt={post.title}
+                  />
+                </div>
               </div>
             </div>
           ))}
@@ -175,64 +172,108 @@ const PostLayout: React.FC = () => {
         <div className="post-full-detail">
           {selectedPost && (
             <>
-              <div className="wrap-title-detail">
-                <div>
-                  <h2 className="title-detail">
-                    {selectedPost.title}{" "}
-                    <Tag
-                      color={selectedPost.status === "Open" ? "green" : "red"}
-                      style={{ marginLeft: 10 }}
-                    >
-                      {selectedPost.status === "Open"
-                        ? "เปิดรับสมัคร"
-                        : "ปิดรับสมัคร"}
-                    </Tag>
-                  </h2>
-                  <div className="image-subtitle-row">
-                    <img
-                      src={selectedPost.image_url || lahui}
-                      className="post-detail-image"
-                      alt={selectedPost.title}
-                    />
-                    <p className="post-subtitle-detail">
+              {/* โลโก้ + ชื่อบริษัท + ปุ่มสมัคร */}
+              <div className="job-header-highlight">
+                <div className="job-header-left">
+                  <img
+                    src={selectedPost.image_url || lahui}
+                    alt={selectedPost.title}
+                    className="post-detail-image"
+                  />
+                  <div className="job-title-info">
+                    <h2 className="title-detail">{selectedPost.title}</h2>
+                    <p className="company-name">
                       {selectedPost.Employer?.company_name || "ไม่ระบุบริษัท"}
                     </p>
                   </div>
                 </div>
 
-                {/* ปุ่มยื่นสมัครงาน */}
-                {role === "student" ? (
-                  selectedPost.status === "Open" ? (
+                {/* ปุ่มสมัครงาน */}
+                <div className="job-header-right">
+                  {role === "student" ? (
+                    selectedPost.status === "Open" ? (
+                      <Button
+                        className="btn-Job-Application"
+                        type="primary"
+                        onClick={() =>
+                          navigate("/Job/ApplyJob", {
+                            state: { post: selectedPost },
+                          })
+                        }
+                      >
+                        ยื่นสมัครงาน
+                      </Button>
+                    ) : (
+                      <Button
+                        className="btn-Job-Application"
+                        type="primary"
+                        disabled
+                      >
+                        ปิดรับสมัครแล้ว
+                      </Button>
+                    )
+                  ) : role === "employer" ? null : (
                     <Button
-                      className="btn-Job-Application"
+                      className="btn-Job-Application "
                       type="primary"
                       onClick={() =>
-                        navigate("/Job/ApplyJob", {
-                          state: { post: selectedPost },
-                        })
+                        messageApi.warning("กรุณาเข้าสู่ระบบก่อนสมัครงาน")
                       }
                     >
                       ยื่นสมัครงาน
                     </Button>
-                  ) : (
-                    <Button className="btn-Job-Application" type="primary" disabled>
-                      ปิดรับสมัครแล้ว
-                    </Button>
-                  )
-                ) : role === "employer" ? null : (
-                  <Button
-                    className="btn-Job-Application"
-                    type="primary"
-                    onClick={() =>
-                      messageApi.warning("กรุณาเข้าสู่ระบบก่อนสมัครงาน")
-                    }
-                  >
-                    ยื่นสมัครงาน
-                  </Button>
-                )}
+                  )}
+                </div>
               </div>
-              <div className="box-with-top-bottom-border">
-                {selectedPost.description || "ไม่มีรายละเอียดเพิ่มเติม"}
+              <hr className="divider" />
+              {/* Meta Info */}
+              <div className="job-meta-detail">
+                <div className="meta-item">
+                  <ClockCircleOutlined />
+                  <span>
+                    {selectedPost.deadline
+                      ? new Date(selectedPost.deadline).toLocaleDateString(
+                          "th-TH"
+                        )
+                      : "วันนี้ - จนกว่าจะปิดรับสมัคร"}
+                  </span>
+                </div>
+                <div className="meta-item">
+                  <DollarCircleOutlined />
+                  <span>{selectedPost.salary.toLocaleString()} /เดือน</span>
+                </div>
+                <div className="meta-item">
+                  <EnvironmentOutlined />
+                  <span>{selectedPost.locationjob}</span>
+                </div>
+              </div>
+
+              <hr className="divider" />
+
+              {/* ลักษณะการจ้างงาน + เวลาทำงาน */}
+              {/* ลักษณะการจ้างงาน + เวลาเริ่มเลิกงาน */}
+              <div className="job-overview">
+                <div className="job-type">
+                  <h3>ลักษณะการจ้างงาน</h3>
+                  <p>
+                    {selectedPost.EmploymentType?.employment_type_name ||
+                      "ไม่ระบุ"}
+                  </p>
+                </div>
+
+                <div className="job-time">
+                  <h3>เวลาเริ่ม - เลิกงาน</h3>
+                  <p>
+                    {/* {selectedPost.start_time || "ไม่ระบุ"} -{" "}
+                    {selectedPost.end_time || "ไม่ระบุ"} */}
+                  </p>
+                </div>
+              </div>
+
+              {/* รายละเอียดงาน */}
+              <div className="job-description">
+                <h3>รายละเอียดงาน</h3>
+                <p>{selectedPost.description || "ไม่มีรายละเอียดเพิ่มเติม"}</p>
               </div>
             </>
           )}
