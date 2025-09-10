@@ -289,6 +289,7 @@ export const studentAPI = {
   signup: (data: Student) => post("/students", data, false),
   getAll: () => get("/students"),
   getById: (id: number) => get(`/students/${id}`),
+  getByUserId: (userId: number) => get(`/students/user/${userId}`),
   update: (id: number, data: Partial<Student>) =>
     put(`/students/${id}`, data),
   delete: (id: number) => del(`/students/${id}`),
@@ -335,6 +336,7 @@ export const jobPostAPI = {
 export const studentPostAPI = {
     getStudentPosts: () => get("/student-posts", false),
     getStudentPostById: (id: number) => get(`/student-posts/${id}`, false),
+    getPostsByStudentId: (studentId: number) => get(`/student-posts/student/${studentId}`, false),
     createStudentPost: (postData: any) => post("/student-posts", postData),
     updateStudentPost: (postId: number, postData: any) => put(`/student-posts/${postId}`, postData),
     deleteStudentPost: (postId: number) => del(`/student-posts/${postId}`),
@@ -371,6 +373,7 @@ export const qnaAPI = {
 // Profile API
 export const profileAPI = {
     getMyProfile: () => get("/profile"),
+    getProfileById: (studentId: string) => get(`/profile/${studentId}`),
 };
 
 // Job Application APIs

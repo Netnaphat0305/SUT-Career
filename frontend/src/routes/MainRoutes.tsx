@@ -23,7 +23,8 @@ import FaqDetailPage from "../pages/HelpCenter/FaqDetailPage";
 import MyPost from '../pages/MyPost/Mypost'
 import WorklogPage from "../pages/worklog/worklog";
 import StudentFeedPage from "../pages/StudentFeed/StudentFeedPage";
-import ProfilePageV2 from '../pages/ProfilePage2/ProfilePage';
+import ProfilePage2 from '../pages/profile2/ProfilePage2.tsx';
+import StudentProfileEditPage from '../pages/ProfileEditPage/ProfileEditPage.tsx'; // Import the new edit page
 
 
 const MainRoutes: React.FC = () => {
@@ -47,7 +48,7 @@ const MainRoutes: React.FC = () => {
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/review" element={<ReviewPage />} />
             <Route path="/Interview-Schedule" element={<InterviewScheduling/>} />
-            <Route path="/profile-v1" element={<ProfilePageV1 />} />
+            <Route path="/profile/:StudentID" element={<ProfilePageV1 />} />
             <Route path="/review-page" element={<ReviewPage />} />
             <Route path="/worklog" element={<WorklogPage />} />
           
@@ -56,8 +57,10 @@ const MainRoutes: React.FC = () => {
             <Route path="/feed" element={<StudentFeedPage />} />
             
             {/* --- Profile & Help Center Routes --- */}
-            <Route path="/profile/:userId" element={<ProfilePageV2 />} />
-            <Route path="/profile" element={<ProfilePageV2 />} />
+            <Route path="/profile/:userId" element={<ProfilePage2 />} />
+            <Route path="/profile" element={<ProfilePage2 />} />
+            <Route path="/profile/edit" element={<StudentProfileEditPage />} /> {/* Add route for editing profile */}
+            
             <Route path="/help" element={<HelpCenterPage />} />
             <Route path="/help/ask" element={<CreateRequestPage />} />
             <Route path="/help/faq/:id" element={<FaqDetailPage />} />
@@ -68,4 +71,3 @@ const MainRoutes: React.FC = () => {
 };
 
 export default MainRoutes;
-

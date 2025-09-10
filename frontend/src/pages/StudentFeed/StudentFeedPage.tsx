@@ -898,6 +898,8 @@
 // src/pages/StudentFeed/StudentFeedPage.tsx
 // src/pages/StudentFeed/StudentFeedPage.tsx
 // src/pages/StudentFeed/StudentFeedPage.tsx
+// src/pages/StudentFeed/StudentFeedPage.tsx
+// src/pages/StudentFeed/StudentFeedPage.tsx
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
@@ -914,11 +916,9 @@ import {
   Empty,
   Pagination,
   Popconfirm,
-  Dropdown,
-  Divider,
   Image,
+  Divider,
 } from "antd";
-import type { MenuProps } from 'antd';
 import {
   UserOutlined,
   EyeOutlined,
@@ -927,7 +927,6 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  MoreOutlined,
   SearchOutlined,
   AppstoreOutlined,
   PaperClipOutlined,
@@ -935,7 +934,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { studentPostAPI } from "../../services/https/index"; // 1. เปลี่ยน import มาที่นี่
+import { studentPostAPI } from "../../services/https/index";
 import CreateStudentPostModal from "../../components/CreateStudentPostModal";
 import EditStudentPostModal from "../../components/EditStudentPostModal";
 
@@ -952,7 +951,7 @@ const AttachmentDisplay: React.FC<{ attachments?: StudentPostAttachment[] }> = (
   
     return (
       <div style={{ marginTop: '16px' }}>
-        <Text strong>🎨 ผลงานแนบ:</Text>
+        <Text strong>ผลงานแนบ:</Text>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #f0f0f0' }}>
             <Image.PreviewGroup>
             {attachments.map((att, index) => (
@@ -1021,7 +1020,6 @@ const StudentFeedPage: React.FC = () => {
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
-      // 2. เรียกใช้ฟังก์ชันผ่าน studentPostAPI
       const response = await studentPostAPI.getStudentPosts();
       const postsData = response?.data?.data || response?.data || [];
       if (Array.isArray(postsData)) {
@@ -1116,7 +1114,6 @@ const StudentFeedPage: React.FC = () => {
 
   const handleDeletePost = async (postId: number) => {
     try {
-      // 3. เรียกใช้ฟังก์ชันผ่าน studentPostAPI
       await studentPostAPI.deleteStudentPost(postId);
       message.success("ลบโพสต์สำเร็จ!");
       fetchPosts();
@@ -1164,7 +1161,7 @@ const StudentFeedPage: React.FC = () => {
           value={searchTerm}
           onSearch={handleSearch}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ maxWidth: "600px", margin: "0 auto" }}
+          style={{ maxWidth: "500px", margin: "0 auto" }}
           placeholder="ค้นหาโดยชื่อ, ทักษะ, ประเภทงาน..."
         />
       </div>
@@ -1203,26 +1200,13 @@ const StudentFeedPage: React.FC = () => {
               const studentName = post.student ? `${post.student.first_name} ${post.student.last_name}`.trim() : "ไม่ระบุชื่อ";
               const skillsArray = getSkillsAsArray(post.skills);
               const isOwn = isOwnPost(post);
-              const moreOptionsItems: MenuProps['items'] = [
-                { key: 'edit', icon: <EditOutlined />, label: 'แก้ไขโพสต์', onClick: () => handleEditPost(post) },
-                {
-                  key: 'delete', icon: <DeleteOutlined />, danger: true,
-                  label: <Popconfirm
-                    title="แน่ใจว่าจะลบโพสต์นี้?"
-                    onConfirm={() => handleDeletePost(post.ID)}
-                    okText="ลบ" cancelText="ยกเลิก"
-                  >
-                    ลบโพสต์
-                  </Popconfirm>
-                },
-              ];
 
               return (
                 <Col xs={24} sm={12} md={8} lg={6} key={post.ID}>
                   <Card
                     hoverable
                     style={{ borderRadius: "12px", overflow: "hidden", height: "100%", display: 'flex', flexDirection: 'column' }}
-                    bodyStyle={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+                    bodyStyle={{ flexGrow: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}
                     cover={
                       <div style={{ padding: "16px", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", textAlign: "center" }}>
                         <Avatar src={post.student?.profile_image_url} icon={<UserOutlined />} size={64} style={{ border: "3px solid white" }} />
@@ -1230,13 +1214,32 @@ const StudentFeedPage: React.FC = () => {
                         <Tag color="rgba(255,255,255,0.3)">{post.employment_type?.employment_type_name || 'ไม่ระบุ'}</Tag>
                       </div>
                     }
-                    actions={[
-                      <Button key="view" type="text" icon={<EyeOutlined />} onClick={() => showPostDetail(post)}>ดูรายละเอียด</Button>,
-                      <Button key="profile" type="text" icon={<UserOutlined />} onClick={() => goToProfile(post.student?.ID)}>ดูโปรไฟล์</Button>,
-                    ]}
+                    actions={
+                        isOwn ? [
+                            // Actions for own post are now at the top right, so we can have other default actions here if needed, or leave it empty
+                            <Button key="view" type="text" icon={<EyeOutlined />} onClick={() => showPostDetail(post)}>ดูรายละเอียด</Button>,
+                        ] : [
+                            <Button key="view" type="text" icon={<EyeOutlined />} onClick={() => showPostDetail(post)}>ดูรายละเอียด</Button>,
+                            <Button key="profile" type="text" icon={<UserOutlined />} onClick={() => goToProfile(post.student?.ID)}>ดูโปรไฟล์</Button>,
+                        ]
+                    }
                   >
-                    {isOwn && <Dropdown menu={{ items: moreOptionsItems }} trigger={['click']}><Button icon={<MoreOutlined />} shape="circle" style={{ position: "absolute", top: "8px", right: "8px", border: 'none' }} /></Dropdown>}
-                    <div style={{ flexGrow: 1 }}>
+                    {isOwn && (
+                        <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10, display: 'flex', gap: '8px' }}>
+                            <Button icon={<EditOutlined />} size="small" onClick={(e) => { e.stopPropagation(); handleEditPost(post); }} />
+                            <Popconfirm
+                                title="ลบโพสต์นี้?"
+                                description="คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?"
+                                onConfirm={(e) => { e?.stopPropagation(); handleDeletePost(post.ID); }}
+                                onCancel={(e) => e?.stopPropagation()}
+                                okText="ใช่, ลบ"
+                                cancelText="ยกเลิก"
+                            >
+                                <Button danger icon={<DeleteOutlined />} size="small" onClick={(e) => e.stopPropagation()} />
+                            </Popconfirm>
+                        </div>
+                    )}
+                    <div style={{ flexGrow: 1, paddingTop: isOwn ? '24px' : '0' }}>
                       <Card.Meta
                         title={<Text ellipsis>{post.title || "ไม่มีหัวข้อ"}</Text>}
                         description={<Paragraph ellipsis={{ rows: 2 }}>{post.introduction || "ไม่มีรายละเอียด"}</Paragraph>}
