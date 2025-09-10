@@ -1,186 +1,94 @@
-/* ========== ฟอนต์และสไตล์ของ label ทั่วไป ========== */
-.label {
+/* ====== Layout กลางหน้า ====== */
+.jobpost-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  background: #fff;     /* ✅ เปลี่ยนพื้นหลังเป็นสีขาว */
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+/* กล่องฟอร์ม */
+.jobpost-card {
+  background: #fff;     /* ✅ ขาวเหมือนกัน */
+  border-radius: 0;     /* ✅ ไม่ต้องมีมุมโค้งก็ได้ ถ้าอยากให้เป็น full white */
+  box-shadow: none;     /* ✅ ไม่ต้องมีเงา */
+  padding: 32px;
+  width: 100%;
+  max-width: 800px;
+}
+
+
+/* ====== ฟอนต์ Global ====== */
+* {
+  font-family: "Kanit", "Sarabun", Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.pageHeader {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1e3a5f;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+/* ====== Label ====== */
+.ant-form-item-label > label {
   font-size: 16px;
-  font-weight: 400;
-  font-family: "Kanit", "Sarabun", Arial, sans-serif;
-  color: #1f2937; /* สีเทาเข้ม อ่านง่าย */
-}
-
-/* ========== placeholder ของ ant-design input ========== */
-.ant-input::placeholder {
-  font-family: "Kanit", "Sarabun", Arial, sans-serif !important;
-  font-weight: 300 !important;
-  font-size: 15px !important;
-  color: #d1d6d9 !important; /* สีเทาอ่อน */
-  opacity: 1 !important;
-  
-}
-
-/* ========== input ปกติที่ถูก custom เอง (ไม่ใช่ ant-design) ========== */
-.custom-input {
-  font-size: 14px;
-  font-weight: 300;
-  font-family: "Kanit", "Sarabun", Arial, sans-serif;
-  color: #d1d6d9;
-  opacity: 1;
-  display: flex;                /* ใช้ flex */
-  justify-content: flex-start;  /* ให้เนื้อหาชิดซ้าย */
-  align-items: center;          /* จัด icon กับข้อความให้อยู่แนวเดียวกัน */
-  text-align: left;
-  
-}
-/* เจาะเฉพาะ Form.Item ที่เป็น upload */
-.upload-item .ant-form-item-control-input-content {
-  justify-content: flex-start !important;
-}
-
-
-
-/* ========== placeholder ของ textarea ที่ custom เอง ========== */
-.custom-textarea::placeholder {
-  font-size: 14px;
-  font-weight: 300;
-  font-family: "Kanit", "Sarabun", Arial, sans-serif;
-  color: #d1d6d9;
-  opacity: 1;
-}
-
-/* ========== คำอธิบายประกอบรายละเอียดงานใต้ field เช่น หมายเหตุ ========== */
-.custom-job-description-note {
-  font-weight: 300;
-  font-family: "Kanit", "Sarabun", Arial, sans-serif;
-  font-size: 15px;
+  font-weight: 500;
   color: #1f2937;
-  line-height: 1.6;
-  text-align: left; /* ✅ บังคับให้ข้อความชิดซ้าย */
 }
 
-/* ========== ฟอนต์ใน ant-design date picker input ========== */
-.ant-picker-input input {
-  font-weight: 300 !important;
-  font-family: "Kanit", "Sarabun", Arial, sans-serif !important;
+/* ====== Input / Select / Textarea ====== */
+.ant-input,
+.ant-select-selector,
+.ant-picker {
+  font-size: 15px;
+  border-radius: 6px;
 }
 
-/* ========== ข้อความ error ของ ant form item เช่น validate ไม่ผ่าน ========== */
-.ant-form-item-explain-error {
-  font-family: "Kanit", "Sarabun", Arial, sans-serif;
+.ant-input::placeholder,
+.ant-select-selection-placeholder,
+textarea::placeholder {
   font-weight: 300;
+  font-size: 14px;
+  color: #d1d6d9 !important;
+}
+
+/* ====== Error Message ====== */
+.ant-form-item-explain-error {
   font-size: 14px;
   color: red;
+  text-align: left;
 }
 
-/* ========== เว้นช่องด้านล่างของฟอร์ม เพื่อให้ปุ่ม submit ไม่ติดขอบ ========== */
-.form-container {
-  padding-bottom: 80px;
-}
-
-/* ========== ปุ่ม submit และการจัดตำแหน่ง (center) ========== */
+/* ====== Submit Button ====== */
 .submit-button-wrapper {
   display: flex;
   justify-content: center;
   margin-top: 24px;
-  margin-bottom: 64px;
+  margin-bottom: 40px;
 }
 
-/* ========== ขนาด padding ของปุ่ม submit ========== */
 .submit-button {
-  padding: 6px 32px !important;   /* บนล่าง 4px, ซ้ายขวา 16px */
-  min-width: auto !important;     /* เอา min-width ออก */
-  width: auto !important;         /* ให้ขนาดอัตโนมัติ ตามข้อความ */
-    font-family: "Kanit", "Sarabun", Arial, sans-serif;
-    font-weight: 400;
+  padding: 6px 32px !important;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 6px;
+  width: auto !important;
 }
 
-
-/* ========== container หลักของหน้า JobPost (เผื่อใช้จัด layout ภายใน) ========== */
-.JopPost-container {
-  box-sizing: border-box;
-  width: 100%;
-}
-
-/* แก้ปุ่ม Upload ให้ชิดซ้ายตรงกับ Label */
-.ant-form-item-control-input-content {
-  display: flex !important;
-  justify-content: flex-start !important;
-}
-
-.ant-form-item-control-input-content .ant-upload {
-  display: inline-block !important;
-  margin-left: 0 !important;
-}
-
-/* ฟอนต์ของ dropdown option */
-.ant-select-item-option-content {
-  font-size: 14px !important;
-  font-weight: 300 !important;
-  font-family: "Kanit", "Sarabun", Arial, sans-serif !important;
-}
-
-/* ฟอนต์ของค่าที่เลือกใน Select (รวม defaultValue) */
-.ant-select-single .ant-select-selector .ant-select-selection-item {
-  font-size: 14px !important;
-  font-weight: 300 !important;
-  font-family: "Kanit", "Sarabun", Arial, sans-serif !important;
-  color: #1f2937 !important;
-}
-
-/* ฟอนต์ของ placeholder เวลา Select ยังไม่ได้เลือก */
-.ant-select-single .ant-select-selector .ant-select-selection-placeholder {
-  font-size: 14px !important;
-  font-weight: 300 !important;
-  font-family: "Kanit", "Sarabun", Arial, sans-serif !important;
-  color: #d1d6d9 !important;
-}
-
-/* ข้อความ error ให้อยู่ชิด label */
-.ant-form-item-explain {
-  margin-left: 0 !important;
-}
-.ant-form-item-explain-error {
-  text-align: left !important;
-}
-
-
-/* ========== Responsive: หน้าจอเล็ก (มือถือ) ========== */
+/* ====== Responsive ====== */
 @media (max-width: 600px) {
-  .label {
+  .pageHeader {
+    font-size: 18px;
+  }
+  .ant-form-item-label > label {
     font-size: 14px;
   }
-
-  .custom-input,
-  .custom-textarea {
-    font-size: 13px;
-  }
-
-  .custom-submit {
-    font-size: 14px;
-    margin-top: 16px;
-  }
-
-  .submit-button-wrapper {
-    margin-top: 16px;
-    margin-bottom: 32px;
-  }
-
   .submit-button {
-    padding: 0.5rem 2rem;
     font-size: 14px;
-  }
-}
-
-
-/* ========== Responsive: หน้าจอขนาดกลาง (แท็บเล็ต) ========== */
-@media (min-width: 601px) and (max-width: 1024px) {
-  .label {
-    font-size: 15px;
-  }
-
-  .custom-input,
-  .custom-textarea {
-    font-size: 14px;
-  }
-
-  .submit-button {
-    padding: 0.5rem 3rem;
+    padding: 4px 20px !important;
   }
 }

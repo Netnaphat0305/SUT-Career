@@ -1,92 +1,289 @@
+/* ===== พื้นหลังหน้า ===== */
 .mypost-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  gap: 16px;
+  width: 100%;
+  max-width: 1180px; 
+  margin: 0 auto; 
+  background-color: #fff;
+  padding: 24px 16px 40px; 
+  box-sizing: border-box;
+  min-height: calc(100vh - 64px);
 }
 
-/* .mypost-title {
-  text-align: center;
-  font-size: 26px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 30px;
-  border-bottom: 3px solid #9c27b0;
-  display: inline-block;
-  padding-bottom: 5px;
+/* ===== การ์ดโพสต์ ===== */
+.mypost-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%; /* ให้เต็มพื้นที่ของ container */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.mypost-card:hover {
+  border-color: #3b82f6; /* เส้นขอบสีฟ้าเมื่อ hover */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== ฝั่งซ้าย ===== */
+.mypost-left {
+  flex: 1;
+  text-align: left;
+  padding-left: 28px;
+  position: relative;
+}
+
+.mypost-left::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #1976d3, #64b5f6);
+  opacity: 0.9;
+}
+
+/* ===== หัวข้อโพสต์ ===== */
+.mypost-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #2d2d2d;
+}
+
+.tag-open {
+  background: linear-gradient(135deg, #6ee7b7 0%, #34d399 50%, #10b981 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-weight: 400;
+  font-size: 13px;
+  position: relative;
+  top: -3px;
   font-family: "Kanit", "Sarabun", Arial, sans-serif;
-} */
-.mypost-title {
-  font-family: "Kanit", "Sarabun", Arial, sans-serif !important;
-  font-size: 16px;
-  font-weight: 500;
-  color: #222;
 }
 
-.mypost-title {
-  font-family: "Kanit", "Sarabun", Arial, sans-serif !important;
-  font-size: 30px !important;
-  color: red !important;
+.tag-close {
+  background: linear-gradient(135deg, #fca5a5 0%, #f87171 50%, #ef4444 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-weight: 400;
+  font-size: 13px;
+  position: relative;
+  top: -3px;
+  font-family: "Kanit", "Sarabun", Arial, sans-serif;
 }
 
-
-
-
-
-/* Card หลัก */
-.ant-card {
-  border-radius: 10px;
+/* ===== ชื่อบริษัท ===== */
+.mypost-company {
+  font-size: 18px;
+  font-weight: 400;
+  color: #2d2d2d;
   margin-bottom: 16px;
 }
 
-/* ลด padding body */
-.ant-card .ant-card-body {
-  padding: 8px 12px;
-}
-
-/* ลด action bar */
-.ant-card .ant-card-actions {
-  margin: 0;
-  padding: 4px 0;
-}
-
-/* ข้อมูล job */
-.job-info {
-  flex: 1;
-}
-
-.job-title {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.job-company {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 10px;
-}
-
-.job-meta {
+/* ===== รายละเอียดโพสต์ ===== */
+.mypost-details {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
-  font-size: 14px;
-  color: #444;
-  margin-bottom: 10px;
+  font-size: 16px;
+  color: #2d2d2d;
+  margin-top: 12px;
 }
 
-.job-actions {
+.mypost-detail {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  min-width: 150px;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 200px;
 }
 
-/* โลโก้ */
-.job-logo,
-.ant-card .ant-card-cover img {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
-  margin-top: 10px; /* ลดระยะ */
+.mypost-icon {
+  font-size: 22px;
+  color: #1976d3;
+  margin-top: 2px;
+}
+
+.mypost-detail span {
+  display: block;
+  color: #666;
+  font-size: 15px;
+  font-weight: 300;
+}
+
+.mypost-detail strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 400;
+  color: #2d2d2d;
+}
+
+/* ===== ปุ่มจัดการโพสต์ ===== */
+.mypost-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ===== ฝั่งขวา ===== */
+.mypost-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 40px;
+}
+
+.mypost-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border: 1px solid #e2e2e2;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 8px;
+}
+
+.mypost-image:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.mypost-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  border: 1px dashed #e2e2e2;
+}
+
+/* ===== Container ปุ่ม ===== */
+.mypost-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+  justify-content: center;
+  margin-left: 100px;
+}
+
+/* ===== ปุ่มพื้นฐานแบบ Outline ===== */
+.btn-outline {
+  background-color: #fff; /* พื้นหลังขาว */
+  color: #374151; /* สีตัวอักษรเทาเข้ม */
+  border: 1px solid #d1d5db; /* เส้นขอบเทาอ่อน */
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+/* Hover Effect */
+.btn-outline:hover {
+  background-color: #f9fafb; /* เทาอ่อนตอน hover */
+  border-color: #9ca3af; /* ขอบเข้มขึ้นเล็กน้อย */
+  color: #111827; /* สีตัวอักษรเข้มขึ้น */
+  transform: translateY(-1px);
+}
+
+/* Active Effect */
+.btn-outline:active {
+  background-color: #f3f4f6; /* เทาอ่อนลงอีกตอนกด */
+  transform: scale(0.98);
+}
+
+/* ===== ปุ่มลบ ===== */
+.btn-delete {
+  background-color: #fff !important;
+  color: #ef4444 !important;
+  border: 1px solid #ef4444 !important;
+  padding: 6px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+/* Hover ปุ่มลบ */
+.btn-delete:hover {
+  background-color: #fff !important;
+  color: #ef4444 !important;
+
+  transform: translateY(-1px);
+}
+
+/* Active Effect */
+.btn-delete:active {
+  background-color: #b91c1c !important;
+  transform: scale(0.98);
+}
+
+/* ===== ปุ่มจัดการผู้สมัคร ===== */
+.btn-manageapp {
+  background-color: #fff; /* พื้นหลังขาว */
+  color: #0088ff; /* สีตัวอักษรเทาเข้ม */
+  border: 1px solid #0088ff; /* เส้นขอบเทาอ่อน */
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+/* Hover ปุ่มจัดการผู้สมัคร */
+.btn-manageapp:hover {
+  background-color: #f9fafb; /* เทาอ่อนตอน hover */
+  border-color: #9ca3af; /* ขอบเข้มขึ้นเล็กน้อย */
+  color: #111827; /* สีตัวอักษรเข้มขึ้น */
+  transform: translateY(-1px);
+}
+
+/* Active Effect */
+.btn-manageapp:active {
+  background-color: #f3f4f6; /* เทาอ่อนลงอีกตอนกด */
+  transform: scale(0.98);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .mypost-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mypost-right img {
+    margin: 16px auto 0;
+    width: 120px;
+    height: 120px;
+  }
+
+  .mypost-details {
+    flex-direction: column;
+    gap: 12px;
+  }
 }

@@ -4,27 +4,25 @@ import (
 	"gorm.io/gorm"
 	"time"
 )
-
 type Payments struct {
-	gorm.Model
-	
-	Proof_of_Payment string          `json:"proof_of_payment"`
-	Amount           float64         `json:"amount"`
-	Datetime         time.Time       `json:"datetime"`
+    gorm.Model
 
+    Proof_of_Payment string    `json:"proof_of_payment" gorm:"column:proof_of_payment"`
+    Amount           float32   `json:"amount"`
+    Datetime         time.Time `json:"datetime"`
 
-	//FK
-	BillableItemID   uint            `json:"billable_item_id"`
-	BillableItem     *BillableItems  `gorm:"foreignKey: billable_item_id" json:"billable_item"`
+    BillableItemID   uint            `json:"billable_item_id"`
+    BillableItem     *BillableItems  `gorm:"foreignKey: BillableItemID;references:ID" json:"billable_item"`
 
-	PaymentMethodID  uint            `json:"payment_method_id"`
-	PaymentMethods   *PaymentMethods `gorm:"foreignKey: payment_method_id" json:"payment_method"`
+    PaymentMethodID  uint            `json:"payment_method_id"`
+    PaymentMethod    *PaymentMethods `gorm:"foreignKey: PaymentMethodID;references:ID" json:"payment_method"`
 
-	StatusID         uint            `json:"status_id"`
-	Status           *Statuses       `gorm:"foreignKey: status_id" json:"status"`
+    StatusID         uint       `json:"status_id"`
+    Status           *Statuses  `gorm:"foreignKey: StatusID;references:ID" json:"status"`
 
-	PaymentReportID  uint            `json:"payment_report_id"`
-	PaymentReport    *PaymentReports `gorm:"foreignKey: payment_report_id" json:"payment_report"`
+    PaymentReportID  *uint           `json:"payment_report_id"`
+    PaymentReport    *PaymentReports `gorm:"foreignKey: PaymentReportID;references:ID" json:"payment_report"`
 
-	// discount ?
+	DiscountID		 *uint		`json:"discount_id"`
+	Discount 		 *Discounts	`gorm:"foreignKey: DiscountID;references:ID" json:"discount"`
 }

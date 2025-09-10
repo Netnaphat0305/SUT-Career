@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/entity"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -43,9 +44,33 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", claims.UserID)
+		//  ดึง userID และ role จาก token
+		userID := claims.UserID
+		role := claims.Role
+
+		//  เก็บลง context
+		c.Set("userID", userID)
 		c.Set("username", claims.Username)
-		c.Set("role", claims.Role) // ส่ง Role ไปกับ context ด้วย
+		c.Set("role", role)
+
+		//  ถ้าเป็น employer → preload employerID ลง context
+		if role == entity.Emp {
+			var employer entity.Employer
+			if err := config.DB().
+				Where("user_id = ?", userID).
+				First(&employer).Error; err == nil {
+				c.Set("employerID", employer.ID)
+			}
+		}
+		//  ถ้าเป็น student → preload studentID ลง context
+		if role == entity.Stu {
+			var student entity.Student
+			if err := config.DB().
+				Where("user_id = ?", userID).
+				First(&student).Error; err == nil {
+				c.Set("studentID", student.ID)
+			}
+		}
 
 		c.Next()
 	}

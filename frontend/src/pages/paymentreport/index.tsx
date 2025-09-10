@@ -1,140 +1,255 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  List,
   Typography,
-  Flex,
-  Button,
   Tag,
+  Button,
+  Space,
+  message,
+  Input,
+  Tooltip,
+  Table,
+  Flex,
 } from "antd";
-import { DownloadOutlined } from "@ant-design/icons";
-
-import './paymentreport.css';
+import type { ColumnsType } from "antd/es/table";
+import { ReloadOutlined, FilePdfOutlined } from "@ant-design/icons";
+import { paymentReportAPI } from "../../services/https";
+import "./paymentreport.css";
 
 const { Title, Text } = Typography;
 
-interface PaymentRecord {
-  id: number;
-  title: string;
-  requester: string;
-  method: "QR Promptpay" | "Mobile Banking";
-  proofFile: string;
-  status: "completed" | "pending";
-  timestamp?: string;
-}
+type PaymentReportRow = {
+  id?: number;
+  reportname?: string;
+  filepath?: string;
+  create_date?: string;
+  payment?: {
+    id?: number;
+    datetime?: string;
+    status?: { status_name?: string };
+    payment_method?: { methodname?: string };
+    billable_item?: {
+      description?: string;
+      jobpost?: { id?: number; title?: string; employer?: { company_name?: string; address?: string } };
+    };
+    jobpost?: { id?: number; title?: string; employer?: { company_name?: string; address?: string } };
+  };
+  jobpost?: { id?: number; title?: string; employer?: { company_name?: string; address?: string } };
+};
 
-const initialData: PaymentRecord[] = [
-  {
-    id: 1,
-    title: "งานเขียนโปรแกรม ComPro II",
-    requester: "คุณพนิดา โ.",
-    method: "QR Promptpay",
-    proofFile: "IMG8528.png",
-    status: "pending",
-  },
-  {
-    id: 2,
-    title: "งานหาพนักงานพาร์ทไทม์",
-    requester: "คุณพนิดา โ.",
-    method: "QR Promptpay",
-    proofFile: "IMG3654.png",
-    status: "completed",
-    timestamp: "22 กรกฎาคม 2568 เวลา 18:26 น.",
-  },
-  {
-    id: 3,
-    title: "งานวาดรูปวอลเปเปอร์มือถือ",
-    requester: "คุณพนิดา โ.",
-    method: "Mobile Banking",
-    proofFile: "IMG26544.jpeg",
-    status: "completed",
-    timestamp: "7 กรกฎาคม 2568 เวลา 11:45 น.",
-  },
-];
+const asData = <T,>(r: any): T => (r?.data?.data ?? r?.data ?? r) as T;
+
+const formatThaiDateTime = (iso?: string) => {
+  if (!iso) return "-";
+  try {
+    const d = new Date(iso);
+    const date = d.toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+    const time = d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+    return `${date} เวลา ${time} น.`;
+  } catch {
+    return "-";
+  }
+};
+
+const getStatusTag = (name?: string) => {
+  if (!name) return <Tag>UNKNOWN</Tag>;
+  const n = String(name).toLowerCase();
+  const color =
+    n.includes("สำเร็จ") || n === "success"
+      ? "green"
+      : n.includes("ค้าง") || n.includes("pending")
+        ? "orange"
+        : n.includes("ล้มเหลว") || n.includes("fail")
+          ? "red"
+          : "default";
+  return <Tag color={color}>{name}</Tag>;
+};
 
 const PaymentReportPage: React.FC = () => {
-  const [data] = useState<PaymentRecord[]>(initialData);
+  useEffect(() => {
+    document.body.classList.add("kanit-font");
+    return () => document.body.classList.remove("kanit-font");
+  }, []);
+
+  const navigate = useNavigate();
+  const location = useLocation() as any;
+  const highlightIdFromNav = location?.state?.highlightId ?? null;
+  const flashMsg = location?.state?.flash ?? null;
+
+  const [rows, setRows] = useState<PaymentReportRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState<string>("");
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const resp = await paymentReportAPI.getMine();
+      const data = asData<any[]>(resp);
+      setRows(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (flashMsg) message.success(flashMsg, 3);
+    if (highlightIdFromNav != null) {
+      navigate(".", { replace: true, state: {} });
+    }
+  }, []);
+
+  const sortedRows = useMemo(() => {
+    const arr = [...rows];
+    arr.sort((a, b) => {
+      const ta = new Date(a.create_date || a.payment?.datetime || 0).getTime() || 0;
+      const tb = new Date(b.create_date || b.payment?.datetime || 0).getTime() || 0;
+      return ta - tb;
+    });
+    return arr;
+  }, [rows]);
+
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return sortedRows;
+    return sortedRows.filter((r) => {
+      const title =
+        r.payment?.billable_item?.jobpost?.title ??
+        r.payment?.jobpost?.title ??
+        r.jobpost?.title ??
+        r.reportname ??
+        "ไม่พบชื่อรายการ";
+      const sub = r.payment?.billable_item?.description ?? "";
+      const file = (r.filepath ?? "").split("/").pop() ?? "—";
+      return title.toLowerCase().includes(q) || sub.toLowerCase().includes(q) || file.toLowerCase().includes(q);
+    });
+  }, [sortedRows, search]);
+
+  const tableData = useMemo(() => {
+    return filteredRows.map((r, idx) => {
+      const reportId = r?.id ?? undefined;;
+
+      const title =
+        r.payment?.billable_item?.jobpost?.title ??
+        r.payment?.jobpost?.title ??
+        r.jobpost?.title ??
+        r.reportname ??
+        "ไม่พบชื่อรายการ";
+
+      const fileName = r.filepath ? r.filepath.split("/").pop() : "—";
+      const when = r.create_date || undefined;
+      const method =
+        r.payment?.payment_method?.methodname ??                 // เคสที่เป็นเอกพจน์
+        (r.payment as any)?.payment_methods?.methodname ??       // เคส snake_case
+        (r.payment as any)?.PaymentMethods?.methodname ??        // เคส PascalCase จาก Go
+        (r as any)?.payment_method_name ??                       // เผื่อ BE ส่งมาฟิลด์แยก
+        "-";
+      return {
+        key: r.id ?? `${idx}`,
+        id: reportId,
+        title,
+        method,
+        fileName,
+        whenOrStatus: <Text>{formatThaiDateTime(when)}</Text>,
+        fileHref: r.filepath ?? "",
+        highlight: highlightIdFromNav != null && String(highlightIdFromNav) === String(r.id),
+      };
+    });
+  }, [filteredRows, highlightIdFromNav]);
+
+  const columns: ColumnsType<(typeof tableData)[number]> = [
+    {
+      title: "รหัส",
+      dataIndex: "id",
+      width: "10%",
+      align: "left" as const,
+      render: (v) => (v ?? "—"),
+    },
+    {
+      title: "ชื่องาน",
+      dataIndex: "title",
+      width: "30%",
+      ellipsis: true,
+    },
+    {
+      title: "วิธีชำระ",
+      dataIndex: "method",
+      width: "20%",
+      align: "left" as const,
+    },
+    {
+      title: "วันที่และเวลา",
+      dataIndex: "whenOrStatus",
+      width: "20%",
+      align: "left" as const,
+    },
+    {
+      title: "ไฟล์รายงาน",
+      dataIndex: "action",
+      width: "20%",
+      align: "left" as const,
+      render: (_, record) => (
+        <Space>
+          <Button
+            size="small"
+            icon={<FilePdfOutlined />}
+            disabled={!record.fileHref}
+            onClick={() => window.open(record.fileHref, "_blank", "noopener,noreferrer")}
+          >เปิดรายงาน</Button>
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ background: '#fff', padding: 24, minHeight: '85vh' }}>
-      <Title level={2} style={{ textAlign: 'center', marginBottom: 24, color: "#1E3A5F" }}>
-        รายงานการชำระเงิน
-      </Title>
-      <List
-        itemLayout="horizontal"
-        dataSource={data}
-        renderItem={(item) => {
-          const record = item as PaymentRecord;
-          return (
-            <List.Item
-              style={{
-                backgroundColor: "#ffffff",
-                marginBottom: 16,
-                padding: "20px 24px",
-                borderRadius: 8,
-                border: '1px solid #f0f0f0'
-              }}
-            >
-              <Flex
-                justify="space-between"
-                align="center"
-                style={{ width: "100%" }}
-              >
-                <Flex vertical style={{ flex: 2.5 }}>
-                  <Text
-                    strong
-                    style={{ color: "#00529B", fontSize: "1.2rem" }}
-                  >
-                    {record.title}
-                  </Text>
-                  <Text
-                    type="secondary"
-                    style={{ color: "#00529B", fontSize: "0.9rem" }}
-                  >
-                    {record.requester}
-                  </Text>
-                </Flex>
-                <Text
-                  style={{ flex: 1.5, fontSize: "1.0rem", color: "#00529B" }}
-                >
-                  {record.method}
-                </Text>
-                <Text
-                  style={{ flex: 1.55, fontSize: "1.0rem", color: "#00529B" }}
-                >
-                  {record.proofFile}
-                </Text>
-                <Flex
-                  style={{ flex: 2, fontSize: "1.0rem", color: "#00529B" }}
-                >
-                  {record.status === "pending" ? (
-                    <Tag color="warning">รอตรวจสอบ</Tag>
-                  ) : (
-                    <Text
-                      type="secondary"
-                      style={{
-                        flex: 2,
-                        fontSize: "0.8rem",
-                        color: "#c7c9cA",
-                      }}
-                    >
-                      {record.timestamp}
-                    </Text>
-                  )}
-                </Flex>
-                <Button
-                  type="text"
-                  icon={
-                    <DownloadOutlined
-                      style={{ fontSize: 24, color: record.status === "pending" ? "#c7c9cA" : "#00529B" }}
-                    />
-                  }
-                  disabled={record.status === "pending"}
+    <div className="payment-report-page-container">
+      <div className="report-container">
+        <div className="table-card">
+          <div className="header-row">
+            <Flex justify="space-between" align="center">
+              <Title level={2} style={{ margin: 24, color: "#1E3A5F" }}>
+                รายงานการชำระเงิน
+              </Title>
+
+              <Space>
+                <Input.Search
+                  allowClear
+                  placeholder="ค้นหา (ชื่องาน / รายละเอียด / ชื่อไฟล์)"
+                  onSearch={setSearch}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{ width: 340 }}
                 />
-              </Flex>
-            </List.Item>
-          );
-        }}
-      />
+                <Tooltip title="รีโหลดรายการ">
+                  <Button icon={<ReloadOutlined />} onClick={fetchData}></Button>
+                </Tooltip>
+              </Space>
+            </Flex>
+          </div>
+
+          {/* ตารางหลัก */}
+          <Table
+            loading={loading}
+            columns={columns}
+            dataSource={tableData}
+            rowClassName={(r) => (r.highlight ? "row-highlight" : "")}
+            pagination={{
+              position: ["bottomRight"],
+              pageSize,
+              showSizeChanger: true,
+              pageSizeOptions: [5, 10, 20, 50],
+              onShowSizeChange: (_, size) => setPageSize(size),
+              showTotal: (total, range) => `${range[0]}–${range[1]} จาก ${total} รายการ`,
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 };

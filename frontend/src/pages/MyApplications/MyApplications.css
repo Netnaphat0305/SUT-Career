@@ -1,0 +1,46 @@
+.my-applications-container {
+  background: #fff;
+  padding: 24px;
+  min-height: 85vh;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.applications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.application-card {
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.application-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.application-details h3 {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.application-details p {
+  margin: 2px 0;
+  color: #555;
+}
+
+.application-logo img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}

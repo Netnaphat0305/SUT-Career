@@ -13,14 +13,17 @@ import (
 )
 // POST /login
 func Login(c *gin.Context) {
-	var user entity.User
-	var foundUser entity.User
+	var user entity.User // รับค่าที่ user ส่งมา (username, password)
+	var foundUser entity.User // เก็บค่าที่หาเจอจาก DB
 
+// รับ request body แล้ว map เข้ามาที่ struct user
+// ถ้ารูปแบบไม่ถูกต้อง เช่น ไม่มี field username จะ return 400 Bad Request
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+// ไป query ใน DB ว่ามี username นี้ไหม
+// ถ้าไม่เจอ  return 401 Unauthorized
 	if err := config.DB().Where("username = ?", user.Username).First(&foundUser).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
 		return
@@ -31,9 +34,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// ตั้งค่าให้ Token มีอายุ 1 ปี (8760 ชั่วโมง)
-	expirationTime := time.Now().Add(24 * 365 * time.Hour)
-	
+	// ตั้งค่าให้ Token มีอายุ 1 ปี (8760 ชั่วโมง) 1วันก็พอแล้ว 1ปีจะเอาเยอะไปไหน
+	expirationTime := time.Now().Add(24 * 1 * time.Hour)
 	claims := &middleware.Claims{
 		UserID:   foundUser.ID,
 		Username: foundUser.Username,

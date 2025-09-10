@@ -3,3 +3,9 @@ export interface User {
     password?: string;
     role: string;
 }
+
+export interface SignInCommon {
+    username: string;
+    password: string;
+    role: "student" | "employer" | "admin";
+}

@@ -1,87 +1,192 @@
-/* กรอบตรงยื่นสมัครงานกับdetail */
+/*โครงสร้างหลักของหน้า Apply Job */
 .apply-job-container {
-  padding: 30px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 64px;
+  margin-top: 0;
+  background-color: #fff; /* สีพื้นหลังเหมือนตัวอย่าง */
+  font-family: "Kanit", "Sarabun", sans-serif;
 }
-/* กรอบตรงสี่เหลี่ยมdetail */
+
+/* กล่องรายละเอียดประกาศงาน */
 .apply-job-content {
+  display: flex;
+  align-items: center;
   background: white;
-  padding: 30px;
-  border-radius: 12px;
-  border: 1px solid #D1D6D9;
-  max-width: 500px;
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid #e0e6ed;
+  max-width: 700px;
   width: 100%;
-  text-align: center;
-  height: auto;
-  position: relative;
-  margin-top: 30px;
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); */
+  margin-top: 16px;
+  margin-bottom: 32px;
 }
-/* img */
+
+/* โลโก้บริษัท / รูปงาน */
 .apply-job-image {
-  position: absolute;
-  top: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 150px;
-  height: auto;
-  margin: 0;
-  margin-top: 15px;
+  width: 120px;
+  height: 120px;
   border-radius: 12px;
-  z-index: 10;
+  object-fit: cover;
+  margin-right: 24px;
+  border: 1px solid #e0e6ed;
+  background-color: #fff;
 }
-/* กรอบข้อความ */
+
+/* ข้อความรายละเอียด */
 .apply-detail-container {
-  margin-top: 60px;  
-  text-align: center;
+  flex: 1;
 }
-/* ปรับข้อความทั่วไปใน apply-detail */
+
 .apply-detail h2,
 .apply-detail p {
-  font-family: "Kanit", "Sarabun", sans-serif; /* ฟอนต์ */
-    font-size: 14px;
-  margin-top: 1px;
-  margin-bottom: 1px;
-  line-height: 1;
-  color: #2D2D2D;
+  font-family: "Kanit", "Sarabun", sans-serif;
   margin: 4px 0;
+  line-height: 1.5;
+  color: #2d2d2d;
 }
-/* ลดขนาดตัวอักษร strong และเปลี่ยนสี */
+
+/* หัวข้อประกาศงาน */
+.post-title-AppJob {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* ข้อความเน้น */
 .apply-detail p strong {
   font-size: 14px;
-  color: #2D2D2D; 
-  font-weight: 600;
+  color: #2d2d2d;
+  font-weight: 500;
 }
 
-.post-title-AppJob {
-  font-size: 24px !important; /* หรือขนาดตามต้องการ เช่น 1.5rem, 30px */
-  font-weight: bold; /* เพิ่มถ้าต้องการให้หนา */
-  margin-top: 10px; /* ปรับตำแหน่งห่างจากรูป */
-  text-align: center; /* หรือ left/right ตามต้องการ */
+/*  กล่องฟอร์มสมัครงาน */
+.job-app-detail-wrapper {
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+  justify-content: center;
+}
+
+.apply-form {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  /* border: 1px solid #e0e6ed; */
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); */
+  width: 100%;
+  max-width: 800px; /* ✅ กำหนด max-width */
+  margin: 0 auto; /* ✅ จัดฟอร์มให้อยู่กลาง */
+}
+
+/* กริดจัด 2 คอลัมน์ */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 400px); /* ✅ ช่องละ 400px เท่ากัน */
+  gap: 24px;
+  justify-content: center; /* ✅ จัด grid ให้อยู่กลาง */
+  margin: 0 auto;
+}
+
+/* ปรับขนาด input และ select */
+.ant-input,
+.ant-select-selector,
+.ant-picker {
+  font-size: 16px;
+  height: 42px;
+  padding: 6px 12px;
+  border-radius: 8px !important;
+  border: 1px solid #d1d6d9;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin: 0 auto; /* ✅ จัด input ให้อยู่กลาง */
+}
+
+.ant-input:focus,
+.ant-select-selector:focus,
+.ant-picker-focused {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+}
+
+/* TextArea (เหตุผลการสมัคร) */
+.ant-input-textarea {
+  font-size: 16px;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* Upload Resume*/
+.ant-upload {
+  width: 100%;
+}
+
+.ant-upload .ant-btn {
+  font-size: 15px;
+  padding: 6px 16px;
+  height: 42px;
+  border-radius: 8px;
+}
+
+/* Alert*/
+.custom-job-description-note-AppJob {
+  margin-top: 24px;
+  margin-bottom: 24px;
+  background-color: #e6f4ff;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+}
+
+/*ปุ่มยืนยันสมัครงาน*/
+.submit-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.submit-wrapper button {
+  width: 220px;
+  height: 46px;
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  background: #1677ff;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
 }
 
 
-/* ✅ Responsive: สำหรับจอเล็ก (มือถือ) */
-@media (max-width: 480px) {
+.submit-wrapper button:hover {
+  background: #135fcc;
+}
+
+
+/*Responsive สำหรับมือถือ*/
+@media (max-width: 768px) {
   .apply-job-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     padding: 20px;
   }
 
   .apply-job-image {
-    width: 120px;
-    margin-top: -30px;
+    margin: 0 0 16px 0;
   }
 
-  .apply-job-content h2 {
-    font-size: 18px;
+  .form-grid {
+    grid-template-columns: 1fr; /* ✅ ให้เหลือ 1 คอลัมน์ */
+    gap: 16px;
   }
 
-  .apply-job-content p {
-    font-size: 14px;
-  }
-    .post-title-AppJob {
-    font-size: 20px;
+  .submit-wrapper button {
+    width: 100%;
   }
 }

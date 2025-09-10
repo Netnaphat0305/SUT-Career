@@ -1,0 +1,102 @@
+.page-container {
+  max-width: 1000px;
+  width: 100%;
+  margin: 25px auto;
+  padding: 20px;
+  border: 2px solid #d7d7d7;
+  border-radius: 12px;
+  background-color:#F7F9FA;
+  
+}
+  
+  
+  
+
+.student-list {
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  height: auto;
+  overflow-y: auto;
+}
+ ::-webkit-scrollbar{
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+  background-color: #ffffff; 
+  border-radius: 10px; 
+  
+}
+::-webkit-scrollbar-thumb {
+  background-color: #888; /* สีของ Scrollbar */
+  border-radius: 10px; /* ทำให้มุมโค้งมน */
+}
+.student-list-container::-webkit-scrollbar-thumb:hover {
+  background-color: #555; /* สีที่เปลี่ยนไปเมื่อ Hover */
+}
+
+.student-card {
+  display: flex;
+  height: 140px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.student-left {
+  display: flex;
+  align-items: center;
+}
+
+.student-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  color:#1976D3;
+  
+  /* background-color: #eee; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 100px;
+  margin-right: 16px;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.student-detail {
+  font-size: 12px;
+  color: gray;
+}
+
+.student-right{
+  display: flex;
+  flex-direction: column;
+}
+
+.kebab-icon{
+  font-size: 30px;
+  margin-left:75px;
+  margin-bottom: 10px;
+}
+.save-button {
+  background-color: #1976D3;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+
+

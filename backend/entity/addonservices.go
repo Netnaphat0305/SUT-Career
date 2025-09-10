@@ -1,12 +1,15 @@
 package entity
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"time"
+)
 
 type AddonServices struct {
 	gorm.Model
 	AddonServicesName string `json:"addon_service_name"`
 	Description       string `json:"description"`
-	Price             uint   `json:"price"`
-	ValidFrom        string `json:"valid_from"`
-	ValidUntil          string `json:"valid_until"`
+	Price             float32   `json:"price"`
+	ValidFrom         time.Time `json:"valid_from"`
+	ValidUntil        time.Time `json:"valid_until"`
 }

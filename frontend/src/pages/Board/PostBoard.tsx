@@ -1,83 +1,147 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Empty, Spin, message } from "antd";
 import PageHeader from "../../components/PageHeader";
 import "./PostBoard.css";
-import lahui from "../../assets/lahui.svg"; // รูป default
+import { jobPostAPI } from "../../services/https";
+import type { Jobpost } from "../../interfaces/jobpost";
+import { FileTextOutlined, DownloadOutlined } from "@ant-design/icons";
 
-interface Post {
-  id: number;
-  title: string;
-  salary: string;
-  location: string;
-  image: string;
-  timestamp?: number; // เวลาโพสต์
-}
+import {
+  ClockCircleOutlined,
+  DollarCircleOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 
 const PostBoard: React.FC = () => {
-  const navigate = useNavigate(); // ใช้เปลี่ยนหน้าไปยังหน้ารายละเอียดโพสต์เมื่อกด
-  const [posts, setPosts] = useState<Post[]>([]); // สร้าง state สำหรับเก็บโพสต์ทั้งหมด (เริ่มเป็น array ว่าง)
-  const [loading, setLoading] = useState(true); // สร้าง state สำหรับสถานะการโหลดข้อมูล (เริ่มต้นให้โหลด)
+  const navigate = useNavigate();
+  const [posts, setPosts] = useState<Jobpost[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ทำงานครั้งเดียวตอนเปิดหน้านี้
-    setTimeout(() => {
-      // จำลองการโหลดข้อมูลให้ช้าลง 1 วินาที (เหมือนรอจาก server)
-      const savedPosts = JSON.parse(localStorage.getItem("posts") || "[]");
-      // ดึงโพสต์ที่บันทึกไว้จาก localStorage ถ้าไม่มีให้เป็น array ว่าง
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const res = await jobPostAPI.getAll();
+        const result: Jobpost[] = res.data || res;
 
-      // เรียงโพสต์ใหม่ให้โพสต์ล่าสุดอยู่บนสุด
-      const sortedPosts = savedPosts.sort(
-        (a: Post, b: Post) => (b.timestamp || b.id) - (a.timestamp || a.id)
-      );
+        // กรองเฉพาะโพสต์ที่เปิดอยู่ (status = Open)
+        const filtered = result.filter((post) => post.status === "Open");
 
-      setPosts(sortedPosts); // เก็บโพสต์ที่เรียงแล้ว
-      setLoading(false); // เปลี่ยนสถานะว่าโหลดเสร็จแล้ว
-    }, 1000); // จำลองโหลด 1 วิ
+        const sorted = filtered.sort(
+          (a: Jobpost, b: Jobpost) =>
+            new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
+        );
+
+        setPosts(sorted);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+        message.error("โหลดโพสต์งานไม่สำเร็จ");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
   }, []);
 
   return (
     <div className="bg-gray">
-      {/* พื้นหลังของหน้า */}
-      <div className="container">
-        <PageHeader title="บอร์ดโพสต์งาน" />
-        <div className="job-list">
-          {loading ? (
-            // ถ้ายังโหลดอยู่ จะแสดงคำว่า "กำลังโหลด..."
-            <p style={{ textAlign: "center" }}>กำลังโหลด...</p>
-          ) : posts.length === 0 ? (
-            // ถ้าโหลดแล้วแต่ไม่มีโพสต์ จะแสดงว่า "ยังไม่มีโพสต์งาน"
-            <p style={{ textAlign: "center" }}>ยังไม่มีโพสต์งาน</p>
-          ) : (
-            // ถ้ามีโพสต์ จะแสดงรายการโพสต์
-            posts.map((post) => (
+      <PageHeader title="บอร์ดโพสต์งาน" />
+      <div className="job-list">
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "40px" }}>
+            <Spin size="large" />
+          </div>
+        ) : posts.length === 0 ? (
+          <Empty description="ยังไม่มีโพสต์งาน" />
+        ) : (
+          posts.map((post) => {
+            const deadlineText = post.deadline
+              ? new Date(post.deadline).toLocaleDateString("th-TH", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })
+              : "จนกว่าจะปิดรับสมัคร";
+
+            return (
               <div
-                key={post.id}
+                key={post.ID}
                 className="job-card"
-                onClick={() => navigate(`/Job/post-detail/${post.id}`)}
-                // กดที่โพสต์แล้วไปหน้ารายละเอียดของโพสต์นั้น
-                style={{ cursor: "pointer" }}
+                onClick={() => navigate(`/Job/post-detail/${post.ID}`)}
               >
-                <div className="job-info">
+                {/* ฝั่งซ้าย */}
+                <div className="job-left">
                   <h3 className="job-title">{post.title}</h3>
-                  <p className="company">ร้านอาหารหมาล่า LAHUI MALATANG</p>
-                  {/* ชื่อบริษัท (เขียนตายตัวไว้ตรงนี้) */}
-                  <div className="job-meta">
-                    <span>📅 วันนี้ - จนกว่าจะปิดรับสมัคร</span>
-                    <span>💰 เงินเดือน: {post.salary}</span>
-                    <span>📍 สถานที่: {post.location}</span>
+                  <p className="company">
+                    {post.Employer?.company_name || "ไม่ระบุบริษัท"}
+                  </p>
+
+                  <div className="job-details">
+                    <div className="job-detail">
+                      <ClockCircleOutlined className="job-icon" />
+                      <div>
+                        <span>ระยะเวลาการรับสมัคร</span>
+                        <strong>{deadlineText}</strong>
+                      </div>
+                    </div>
+                    <div className="job-detail">
+                      <DollarCircleOutlined className="job-icon" />
+                      <div>
+                        <span>ค่าตอบแทน</span>
+                        <strong>{post.salary.toLocaleString()} บาท</strong>
+                      </div>
+                    </div>
+                    <div className="job-detail">
+                      <EnvironmentOutlined className="job-icon" />
+                      <div>
+                        <span>สถานที่</span>
+                        <strong>{post.locationjob}</strong>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* ลิงก์ดาวน์โหลด Portfolio */}
+                  {post.portfolio_required &&
+                    post.portfolio_required !== "false" && (
+                      <a
+                        className="portfolio-link"
+                        href={`http://localhost:8080/download/${post.portfolio_required
+                          ?.split("/")
+                          .pop()}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <FileTextOutlined className="portfolio-icon" />
+                        ดาวน์โหลด Portfolio
+                      </a>
+                    )}
                 </div>
-                <div className="job-logo">
-                  <img
-                    src={post.image || lahui}
-                    // ถ้ามีรูปโพสต์ใช้รูปนั้น ถ้าไม่มีใช้รูป lahui
-                    alt={post.title || "default-logo"}
-                  />
+
+                {/* ฝั่งขวา */}
+                <div className="job-right">
+                  {post.image_url ? (
+                    <img
+                      src={post.image_url}
+                      alt={post.title}
+                      className="job-image"
+                    />
+                  ) : (
+                    <div className="job-image-fallback">
+                      <img
+                        src="/src/assets/profile.svg"
+                        alt="Default Logo"
+                        className="job-image"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

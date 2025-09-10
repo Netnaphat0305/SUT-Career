@@ -2,7 +2,7 @@ import type { User } from "./user"
 import type { Gender } from "./gender"
 
 export interface Employer {
-	id: number;
+	ID: number;
 	first_name: string;
 	last_name: string;
 	email: string;

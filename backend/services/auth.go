@@ -1,70 +1,52 @@
+// services/jwt.go
 package services
 
 import (
-	"errors"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-// JwtWrapper wraps the signing key and the issuer
 type JwtWrapper struct {
 	SecretKey       string
 	Issuer          string
-	ExpirationHours int64
+	ExpirationHours int
 }
 
-// JwtClaim adds email as a claim to the token
 type JwtClaim struct {
-	Username string
-	jwt.StandardClaims
+	UserID   uint   `json:"user_id"`
+	Role     string `json:"role"`
+	Username string `json:"username"`
+	jwt.RegisteredClaims
 }
 
-// Generate Token generates a jwt token
-func (j *JwtWrapper) GenerateToken(username string) (signedToken string, err error) {
+// สร้างโทเคนจาก userID, role, username
+func (j *JwtWrapper) GenerateToken(userID uint, role, username string) (string, error) {
 	claims := &JwtClaim{
+		UserID:   userID,
+		Role:     role,
 		Username: username,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(j.ExpirationHours)).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    j.Issuer,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(j.ExpirationHours) * time.Hour)),
 		},
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	signedToken, err = token.SignedString([]byte(j.SecretKey))
-	if err != nil {
-		return
-	}
-
-	return
+	return token.SignedString([]byte(j.SecretKey))
 }
 
-// Validate Token validates the jwt token
-func (j *JwtWrapper) ValidateToken(signedToken string) (claims *JwtClaim, err error) {
-	token, err := jwt.ParseWithClaims(
-		signedToken,
-		&JwtClaim{},
-		func(token *jwt.Token) (interface{}, error) {
-			return []byte(j.SecretKey), nil
-		},
-	)
-
+// ตรวจสอบโทเคนและดึง claims กลับมา
+func (j *JwtWrapper) ValidateToken(signedToken string) (*JwtClaim, error) {
+	token, err := jwt.ParseWithClaims(signedToken, &JwtClaim{}, func(token *jwt.Token) (any, error) {
+		return []byte(j.SecretKey), nil
+	})
 	if err != nil {
-		return
+		return nil, err
 	}
-
 	claims, ok := token.Claims.(*JwtClaim)
-	if !ok {
-		err = errors.New("Couldn't parse claims")
-		return
+	if !ok || !token.Valid {
+		return nil, jwt.ErrTokenInvalidClaims
 	}
-
-	if claims.ExpiresAt < time.Now().Local().Unix() {
-		err = errors.New("JWT is expired")
-		return
-	}
-
-	return
-
+	return claims, nil
 }

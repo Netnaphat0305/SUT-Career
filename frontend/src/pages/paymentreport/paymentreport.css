@@ -1,18 +1,110 @@
-@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap');
+/* ===== Payment Report List – rigid, no jumping ===== */
+html, body, #root, .ant-layout, .ant-layout-content {
+  background: #fff !important;
+}
 
+/* กันกรณี container ของเพจเอง */
 .payment-report-page-container {
-  font-family: 'Kanit', sans-serif !important;
+  background: #fff;
+  min-height: 100vh;
 }
 
-.payment-report-page-container .ant-typography,
-.payment-report-page-container .ant-table-thead > tr > th,
-.payment-report-page-container .ant-table-tbody > tr > td,
-.payment-report-page-container .ant-btn span,
-.payment-report-page-container .ant-picker-input input,
-.payment-report-page-container .ant-select-selector {
-  font-family: 'Kanit', sans-serif !important;
+.payment-report-page-container .report-container {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.payment-report-page-container .ant-spin-text {
-  font-family: 'Kanit', sans-serif !important;
+/* ระยะห่าง/พื้นหลังของแต่ละรายการตามที่คุณต้องการ */
+.payment-report-page-container .report-list-item {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #fff;
+  margin-bottom: 10px;
+  /* ล็อกความสูงให้คงที่ (กันรายการสูงไม่เท่ากัน) */
+  min-height: 76px;
+  display: block;
+}
+
+/* กริดหลัก: ล็อกคอลัมน์ให้กว้างเท่ากันทุกแถว */
+.payment-report-page-container .report-grid {
+  display: grid;
+  grid-template-columns: 1fr 140px 260px 170px 120px; /* Title | Method | File | Right | Actions */
+  column-gap: 16px;
+  align-items: center; /* แนวตั้งกึ่งกลางเหมือนกันทุกคอลัมน์ */
+  width: 100%;
+}
+
+/* ทุกรายการต้อง “ยอมตัดคำ” เพื่อไม่ดันคอลัมน์อื่น */
+.payment-report-page-container .rg-col {
+  min-width: 0;                /* สำคัญ! ให้ ellipsis ทำงานใน grid */
+  display: flex;
+  align-items: center;
+}
+
+/* คอลัมน์ชื่อรายการ (หัว + บรรทัดย่อย) */
+.payment-report-page-container .rg-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.payment-report-page-container .rg-title .rg-main,
+.payment-report-page-container .rg-title .rg-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;         /* บังคับหนึ่งบรรทัดไม่ให้สูงไม่เท่ากัน */
+}
+.payment-report-page-container .rg-title .rg-main {
+  font-weight: 600;
+  font-size: 16px;
+}
+.payment-report-page-container .rg-title .rg-sub {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* คอลัมน์ Method / File: ตัดคำเสมอไม่ให้ดันคอลัมน์ */
+.payment-report-page-container .rg-middle > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+/* คอลัมน์ขวา (สถานะ/วันที่) จัดชิดขวา + สูงเท่ากัน */
+.payment-report-page-container .rg-right {
+  justify-content: flex-end;
+}
+.payment-report-page-container .rg-right .ant-typography {
+  white-space: nowrap;
+}
+.payment-report-page-container .rg-right .ant-tag {
+  margin: 0;
+  height: 24px;
+  line-height: 22px; /* ให้แท็กสูงเท่ากันทุกอัน */
+}
+
+/* ปุ่มแอ็กชันให้กว้างเท่ากัน */
+.payment-report-page-container .rg-action {
+  justify-content: flex-end;
+}
+.payment-report-page-container .rg-download-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+/* สเกลเลย์เอาต์สำหรับจอแคบ */
+@media (max-width: 992px) {
+  .payment-report-page-container .report-grid {
+    grid-template-columns: 1fr 120px 200px 150px 100px;
+  }
+}
+@media (max-width: 768px) {
+  .payment-report-page-container .report-grid {
+    grid-template-columns: 1fr 110px 1fr 120px 92px;
+    column-gap: 12px;
+  }
+  .payment-report-page-container .report-list-item {
+    min-height: 72px;
+  }
 }

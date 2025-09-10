@@ -22,10 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-#backend
-go.mod
-go.sum
-
-main
-main.exe

@@ -5,7 +5,7 @@ const { Title, Paragraph } = Typography;
 
 const HomePage: React.FC = () => {
   return (
-    <div style={{ background: '#fff', padding: 24, minHeight: '85vh',borderRadius:"15px" }}>
+    <div style={{ background: '#fff', padding: 24, minHeight: '85vh' }}>
       <Title level={2} style={{ textAlign: 'center', marginBottom: 24 }}>
         ยินดีต้อนรับ
       </Title>

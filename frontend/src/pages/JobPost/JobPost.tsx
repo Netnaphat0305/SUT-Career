@@ -1,132 +1,329 @@
-import React, { useState } from "react";
-import { Form, Input, Button, Modal, Result } from "antd";
-import JobTypeSelector from "./JobTypeSelector";
-import Location from "./Location";
-import WorkTimeAndDeadline from "./WorkTimeAndDeadline";
-import JobPostingSection from "./JobPostingSection";
+import React, { useState, useEffect } from "react";
+import {
+  Form,
+  Input,
+  Button,
+  Modal,
+  Result,
+  message,
+  DatePicker,
+  Alert,
+  Select,
+  Radio,
+  Card,
+  Row,
+  Col,
+} from "antd";
+import { useAuth } from "../../context/AuthContext";
+import type { RadioChangeEvent } from "antd";
 import "./JobPost.css";
 import PageHeader from "../../components/PageHeader";
-import lahui from "../../assets/lahui.svg"; // ✅ default logo
+import {
+  jobPostAPI,
+  jobCategoryAPI,
+  salaryTypeAPI,
+  employmentTypeAPI,
+} from "../../services/https";
+import type { CreateJobpost } from "../../interfaces/jobpost";
+import defaultLogo from "../../assets/profile.svg";
+
+const { TextArea } = Input;
 
 const JobPost: React.FC = () => {
+  const { user } = useAuth();
   const [form] = Form.useForm();
   const [open, setOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
 
-  // เมื่อกด submit
-  const handleFinish = (values: any) => {
-    const oldPosts = JSON.parse(localStorage.getItem("posts") || "[]");
+  console.log(user);
 
-    const newPost = {
-      id: oldPosts.length + 1,
-      title: values.Name,
-      salary: values.Salary || "12,000 บาท/เดือน",
-      location: values.Location || "มทส. ประตู 4",
-      image: imagePreview || lahui,   // ✅ ถ้าไม่อัปโหลด ใช้ default logo
-    };
+  // state
+  const [categories, setCategories] = useState<
+    { id: number; category_name: string }[]
+  >([]);
+  const [salarytype, setSalaryTypes] = useState<
+    { id: number; salary_type_name: string }[]
+  >([]);
+  const [employmenttype, setEmploymentTypes] = useState<
+    { id: number; employment_type_name: string }[]
+  >([]);
 
-    localStorage.setItem("posts", JSON.stringify([...oldPosts, newPost]));
-    setOpen(true);
+  // โหลด categories
+  useEffect(() => {
+    jobCategoryAPI
+      .getAll()
+      .then((data) => {
+        const mapped = (data.data || data).map((cat: any) => ({
+          id: cat.ID,
+          category_name: cat.CategoryName || cat.category_name,
+        }));
+        setCategories(mapped);
+      })
+      .catch((err) => console.error("Error fetching categories:", err));
+  }, []);
+
+  // โหลด salary types
+  useEffect(() => {
+    salaryTypeAPI
+      .getAll()
+      .then((data) => {
+        const mapped = (data.data || data).map((s: any) => ({
+          id: s.ID,
+          salary_type_name: s.SalaryTypeName || s.salary_type_name,
+        }));
+        setSalaryTypes(mapped);
+      })
+      .catch((err) => console.error("Error fetching salary types:", err));
+  }, []);
+
+  // โหลด employment types
+  useEffect(() => {
+    employmentTypeAPI
+      .getAll()
+      .then((data) => {
+        const mapped = (data.data || data).map((emp: any) => ({
+          id: emp.ID,
+          employment_type_name:
+            emp.EmploymentTypeName || emp.employment_type_name,
+        }));
+
+        setEmploymentTypes(mapped);
+      })
+      .catch((err) => console.error("Error fetching employment types:", err));
+  }, []);
+
+  // ส่งฟอร์ม สร้าง payload ที่ตรงกับ interface CreateJobpost
+  const handleFinish = async (values: any) => {
+    try {
+      const payload: CreateJobpost = {
+        title: values.Name,
+        description: values.jobDetails,
+        salary: Number(values.compensation),
+        locationjob: values.locationjob,
+        deadline: values.applicationDeadline.toISOString(),
+        status: "Open", // ผู้ว่าจ้างกรอก
+        portfolio_required: "false", // ผู้ว่าจ้างกรอก
+        job_category_id: values.job_category_id,
+        employment_type_id: values.employmentTypeId,
+        salary_type_id: values.salaryTypeId,
+        employer_id: Number(user?.id), // จาก context
+        image_url: imagePreview || defaultLogo,
+      };
+      console.log("ส่งไป backend:", payload);
+      const res = await jobPostAPI.create(payload);
+      const jobpostId = res.data.ID || res.data.data?.ID;
+
+      // upload portfolio ถ้ามี สร้าง payload ที่ตรงกับ interface CreateJobpost
+      if (portfolioFile) {
+        await jobPostAPI.uploadPortfolio(jobpostId, portfolioFile);
+      }
+      //  ถ้าสำเร็จ เปิด Modal success
+      //  ถ้า error แสดงข้อความ error
+      setOpen(true);
+    } catch (error: any) {
+      console.error("Error:", error.response?.data || error.message);
+      message.error("บันทึกงานไม่สำเร็จ!");
+    }
   };
 
+  // reset modal
   const handleClose = () => {
     setOpen(false);
     setImagePreview(null);
-    // form.resetFields(); // ถ้าอยากล้างฟอร์มหลังโพสต์
+    setPortfolioFile(null);
+    form.resetFields();
   };
 
-  // เมื่อเลือกไฟล์รูป → แปลงเป็น base64
+  // เลือกรูป
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string); // ✅ base64 string
-      };
-      reader.readAsDataURL(file); // แปลงเป็น base64
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
     }
   };
 
-  return (
-
-    <div 
-      style={{
-        paddingTop: 50,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        background: "white"
-      }}
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        style={{ width: "100%", maxWidth: 800 }}
-        autoComplete="off"
-        onFinish={handleFinish}
-      >
-        <div className="JopPost-container">
-          <PageHeader title="รายละเอียดประกาศงาน" />
-        </div>
-
-        {/* ฟิลด์กรอก */}
+  // เงินเดือน
+  const SalaryInput: React.FC = () => (
+    <Row gutter={16}>
+      <Col span={12}>
         <Form.Item
-          label={<span className="label">ชื่องาน</span>}
-          name="Name"
-          rules={[{ required: true, message: "กรุณากรอกชื่องาน" }]}
+          label="เงินเดือน/ค่าตอบแทน"
+          name="compensation"
+          rules={[{ required: true, message: "กรุณากรอกเงินเดือน" }]}
         >
-          <Input placeholder="กรอกชื่องาน" size="large" />
+          <Input type="number" placeholder="กรอกค่าตอบแทน" />
         </Form.Item>
-
-        <JobTypeSelector />
-        <Location />
-        <WorkTimeAndDeadline />
-        <JobPostingSection />
-
-        {/* upload รูป */}
-        <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
-          <input type="file" accept="image/*" onChange={handleImageChange} />
-          {imagePreview && (
-            <img
-              src={imagePreview}
-              alt="preview"
-              style={{ marginTop: "10px", width: "120px", borderRadius: "8px" }}
-            />
-          )}
-        </Form.Item>
-
-        {/* ปุ่มยืนยัน */}
-        <div className="submit-button-wrapper">
-          <Button
-            type="primary"
-            size="large"
-            htmlType="submit"
-            className="submit-button"
+      </Col>
+      <Col span={12}>
+        <Form.Item
+          label="ประเภทการจ่ายเงิน"
+          name="salaryTypeId"
+          rules={[{ required: true, message: "กรุณาเลือกประเภทเงินเดือน" }]}
+        >
+          <Select
+            placeholder="เลือกประเภท"
+            onChange={(value) => console.log("เลือก", value)}
           >
-            ยืนยัน
-          </Button>
-        </div>
-      </Form>
+            {salarytype.map((s) => (
+              <Select.Option key={s.id} value={s.id}>
+                {s.salary_type_name}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Col>
+    </Row>
+  );
 
-      {/* Modal แสดงผลลัพธ์ */}
+  // ประเภทงาน
+  const EmploymentTypeSelector: React.FC = () => {
+    const [value, setValue] = useState<number | null>(null);
+
+    const onChange = (e: RadioChangeEvent) => {
+      setValue(e.target.value);
+    };
+
+    return (
+      <Form.Item
+        label="ประเภทงาน"
+        name="employmentTypeId"
+        rules={[{ required: true, message: "กรุณาเลือกประเภทงาน" }]}
+      >
+        <Radio.Group onChange={onChange} value={value}>
+          <div style={{ display: "grid", gap: 12 }}>
+            {employmenttype.map((emp) => (
+              <Card
+                key={emp.id}
+                onClick={() => onChange({ target: { value: emp.id } } as any)}
+                className={value === emp.id ? "custom-card-selected" : ""}
+              >
+                <Radio value={emp.id}>{emp.employment_type_name}</Radio>
+              </Card>
+            ))}
+          </div>
+        </Radio.Group>
+      </Form.Item>
+    );
+  };
+
+  // หมวดหมู่
+  const JobCategorySelector: React.FC = () => (
+    <Form.Item
+      name="job_category_id"
+      label="หมวดหมู่ของงาน"
+      rules={[{ required: true, message: "กรุณาเลือกหมวดหมู่" }]}
+    >
+      <Select placeholder="เลือกหมวดหมู่">
+        {categories.map((cat) => (
+          <Select.Option key={cat.id} value={cat.id}>
+            {cat.category_name}
+          </Select.Option>
+        ))}
+      </Select>
+    </Form.Item>
+  );
+
+  return (
+    <div className="jobpost-wrapper">
+      <div className="jobpost-card">
+        <Form
+          form={form}
+          layout="vertical"
+          autoComplete="off"
+          onFinish={handleFinish}
+        >
+          <PageHeader title="รายละเอียดประกาศงาน" />
+
+          <Form.Item
+            label="ชื่องาน"
+            name="Name"
+            rules={[{ required: true, message: "กรุณากรอกชื่องาน" }]}
+          >
+            <Input placeholder="กรอกชื่องาน" size="large" />
+          </Form.Item>
+
+          <JobCategorySelector />
+          <EmploymentTypeSelector />
+
+          <Form.Item
+            label="ที่ตั้ง"
+            name="locationjob"
+            rules={[{ required: true, message: "กรุณากรอก Location" }]}
+          >
+            <Input placeholder="กรอก Location" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="รายละเอียดงาน"
+            name="jobDetails"
+            rules={[{ required: true, message: "กรุณากรอกรายละเอียดงาน" }]}
+          >
+            <TextArea rows={4} placeholder="อธิบายรายละเอียดงาน" />
+          </Form.Item>
+
+          <SalaryInput />
+
+          <Form.Item
+            label="วันหมดเขตรับสมัคร"
+            name="applicationDeadline"
+            rules={[{ required: true, message: "กรุณาเลือกวันหมดเขตรับสมัคร" }]}
+          >
+            <DatePicker
+              size="large"
+              style={{ width: "100%" }}
+              format="YYYY-MM-DD"
+            />
+          </Form.Item>
+
+          <Form.Item label="แนบผลงาน (Portfolio)">
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,.jpg,.png"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) setPortfolioFile(file);
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
+            <input type="file" accept="image/*" onChange={handleImageChange} />
+          </Form.Item>
+
+          <Alert
+            message="สำหรับโพสต์จ้างงานเท่านั้น"
+            description="ห้ามใส่ข้อมูลติดต่อส่วนตัว หากฝ่าฝืนจะถูกลบประกาศ"
+            type="warning"
+            showIcon
+          />
+
+          <div className="submit-button-wrapper">
+            <Button
+              type="primary"
+              size="large"
+              htmlType="submit"
+              className="submit-button"
+            >
+              ยืนยัน
+            </Button>
+          </div>
+        </Form>
+      </div>
+
       <Modal
         open={open}
         onCancel={handleClose}
         footer={null}
         centered
         width={450}
-        className="success-modal"
       >
         <Result
           status="success"
           title="โพสต์งานเรียบร้อยแล้ว"
-          subTitle={
-            <>
-              นักศึกษาสามารถเห็นประกาศนี้ได้ทันที <br />
-              คุณสามารถติดตามสถานะผู้สมัครจากหน้ารายชื่อผู้สมัคร <br />
-              หรือแก้ไขข้อมูลได้ตลอดเวลา
-            </>
-          }
+          subTitle="นักศึกษาสามารถเห็นประกาศนี้ได้ทันที และคุณสามารถติดตามผู้สมัครได้ตลอดเวลา"
         />
       </Modal>
     </div>
@@ -134,3 +331,4 @@ const JobPost: React.FC = () => {
 };
 
 export default JobPost;
+

@@ -6,7 +6,6 @@ import (
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/entity"
 	"github.com/gin-gonic/gin"
-	
 )
 
 // POST /orders
@@ -24,15 +23,23 @@ func CreateOrder(c *gin.Context) {
 	c.JSON(http.StatusCreated, order)
 }
 
-// GET /orders/:id
-func GetOrderByID(c *gin.Context) {
+// GET /orders/jobpost/:jobId
+// ดึงข้อมูล Order จาก JobPost ID
+func GetOrderByJobPostID(c *gin.Context) {
 	var order entity.Orders
-	id := c.Param("id")
-	if err := config.DB().Preload("Employer").Preload("BillableItem").Preload("AddonServices").First(&order, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+	jobId := c.Param("jobId")
+
+	// ค้นหา Order ที่มี JobPostID ตรงกับที่ระบุ และโหลดข้อมูลที่เกี่ยวข้องมาด้วย
+	if err := config.DB().
+		Preload("Employer").
+		Preload("BillableItem").
+		Preload("Discount").
+		Where("job_post_id = ?", jobId).First(&order).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found for the specified job post"})
 		return
 	}
-	c.JSON(http.StatusOK, order)
+
+	c.JSON(http.StatusOK, gin.H{"data": order})
 }
 
 // GET /orders

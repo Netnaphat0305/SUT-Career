@@ -1,46 +1,31 @@
-import React, { useState } from 'react';
-import { Row, Col, Form, DatePicker, TimePicker } from 'antd';
-import type { Dayjs } from 'dayjs';
+import React from "react";
+import { Row, Col, Form, DatePicker, TimePicker } from "antd";
+import type { Dayjs } from "dayjs";
 
 const { RangePicker } = TimePicker;
 
 const WorkTimeAndDeadline: React.FC = () => {
-  const [workTime, setWorkTime] = useState<[Dayjs | null, Dayjs | null] | null>(null);
-  const [deadline, setDeadline] = useState<Dayjs | null>(null);
-
   return (
     <Row gutter={16}>
       <Col span={12}>
         <Form.Item
           label={<span className="label">เวลาเริ่ม-เลิกงาน (ถ้ามี)</span>}
           name="workTime"
-          rules={[{ required: false }]}
-            labelCol={{ span: 24 }}     // ✅ Label เต็มแถว
-  wrapperCol={{ span: 24 }}   // ✅ Input เต็มแถว
         >
-          <RangePicker
-            value={workTime}
-            onChange={(values) => setWorkTime(values)}
-            format="HH:mm"
-            size="large"
-            allowEmpty={[true, true]}
-               style={{ width: '100%' }}   // ✅ input ขยายเต็ม
-          />
+          <RangePicker format="HH:mm" size="large" style={{ width: "100%" }} />
         </Form.Item>
       </Col>
 
       <Col span={12}>
         <Form.Item
-          label={<span className="label">กำหนดการส่ง (ถ้ามี)</span>}
-          name="deadline"
+          label={<span className="label">วันหมดเขตรับสมัคร</span>}
+          name="applicationDeadline"
+          rules={[{ required: true, message: "กรุณาเลือกวันหมดเขตรับสมัคร" }]}
         >
           <DatePicker
-            style={{ width: '100%', fontSize: 14 }}
-            format="YYYY-MM-DD"
-            placeholder="เลือกวันที่"
-            value={deadline}
-            onChange={(date) => setDeadline(date)}
             size="large"
+            style={{ width: "100%" }}
+            format="YYYY-MM-DD" // ✅ บังคับ format ที่ต้องการ
           />
         </Form.Item>
       </Col>

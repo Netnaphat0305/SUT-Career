@@ -1,3 +1,4 @@
+// middleware/authorize.go
 package middleware
 
 import (
@@ -8,36 +9,41 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// validates token
 func Authorizes() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		clientToken := c.Request.Header.Get("Authorization")
-		if clientToken == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No Authorization header provided"})
+		auth := c.GetHeader("Authorization")
+		var token string
+
+		// 1) ลองจาก Authorization header
+		if strings.HasPrefix(strings.ToLower(auth), "bearer ") {
+			token = strings.TrimSpace(auth[7:])
+		}
+		// 2) ถ้ายังว่าง ลองจากคุกกี้
+		if token == "" {
+			if ck, err := c.Cookie("auth_token"); err == nil {
+				token = ck
+			}
+		}
+		if token == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
 			return
 		}
 
-		extractedToken := strings.Split(clientToken, "Bearer ")
-
-		if len(extractedToken) == 2 {
-			clientToken = strings.TrimSpace(extractedToken[1])
-		} else {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Incorrect Format of Authorization Token"})
-			return
-		}
-
-		jwtWrapper := services.JwtWrapper{
-			SecretKey: "SvNQpBN8y3qlVrsGAYYWoJJk56LtzFHx",
+		jwtw := services.JwtWrapper{
+			SecretKey: "your_secret_key", // ต้องตรงกับตอน Generate
 			Issuer:    "AuthService",
 		}
-
-		_, err := jwtWrapper.ValidateToken(clientToken)
+		claims, err := jwtw.ValidateToken(token)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
-
 		}
+
+		// set ให้ controller ใช้
+		c.Set("userID", claims.UserID)
+		c.Set("role", strings.ToLower(claims.Role))
+		c.Set("username", claims.Username)
+
 		c.Next()
 	}
-
 }

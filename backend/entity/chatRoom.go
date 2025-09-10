@@ -4,7 +4,9 @@ import "gorm.io/gorm"
 
 type ChatRoom struct{
 	gorm.Model
-	StatusRoom string `json:"Status_Room"`
+	Lastmessage string `json:"Last_Message"`
+	
+	StatusRoom string `gorm:"not null" json:"Status_Room"`
 	WhoBlock string `json:"Who_Block"`
 
 	StudentID uint

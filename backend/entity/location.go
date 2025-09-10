@@ -12,3 +12,4 @@ type Location struct {
 	Province      string `gorm:"type:varchar(100);not null" json:"province"`
 	ProvinceCode  int    `gorm:"not null" json:"province_code"`
 }
+//อาจจะไม่ได้ใช้ตารางนี้มองว่ามันไม่ละเอียดแล้วก็ดูไม่จำเป็น อาจจะลบออก

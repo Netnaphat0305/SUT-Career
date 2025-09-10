@@ -48,7 +48,7 @@ func RegisterAdmin(c *gin.Context) {
 
 	admin := entity.Admin{
 		Firstname: payload.FirstName,
-		Lasttname: payload.LastName,
+		Lastname: payload.LastName,
 		Email:     payload.Email,
 		Phone:     payload.Phone,
 		Password:  hashedPassword,

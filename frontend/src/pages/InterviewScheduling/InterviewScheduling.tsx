@@ -3,32 +3,27 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Button, Card, Typography, Space, Row, Col, Modal, TimePicker, Form, message } from "antd"
-import {
-  LeftOutlined,
-  RightOutlined,
-  CheckCircleOutlined,
-  CloseOutlined,
-} from "@ant-design/icons"
+import { LeftOutlined, RightOutlined, CheckCircleOutlined, CloseOutlined, DeleteOutlined } from "@ant-design/icons"
 import type { Dayjs } from "dayjs"
 import dayjs from "dayjs"
 import "dayjs/locale/th"
 
+// Import the regular CSS file
+import "./InterviewScheduling.css"
+
 const { Title, Text } = Typography
 const { RangePicker } = TimePicker
 
-// สร้าง Interface ให้สอดคล้องกับโครงสร้างจาก Database
 interface InterviewSlot {
-  id: string; // ใช้ ID ที่ไม่ซ้ำกันเหมือนมาจาก Database
-  startTime: string;
-  endTime: string;
-  status: "available" | "booked" | "unavailable";
-  intervieweeId?: string;
+  id: string
+  startTime: string
+  endTime: string
+  status: "available" | "booked" | "unavailable"
+  intervieweeId?: string
 }
 
 type DateStatus = "available" | "booked" | "selected" | "default"
 
-// --- Mock API Functions for Database Interaction ---
-// ฟังก์ชันจำลองเพื่อดึงข้อมูลจาก Database
 const fetchTimeSlots = async (): Promise<Record<string, InterviewSlot[]>> => {
   return Promise.resolve({
     "2024-12-08": [
@@ -37,16 +32,15 @@ const fetchTimeSlots = async (): Promise<Record<string, InterviewSlot[]>> => {
       { id: "slot3", startTime: "13:00", endTime: "14:00", status: "available" },
       { id: "slot4", startTime: "15:00", endTime: "16:00", status: "booked", intervieweeId: "std2" },
     ],
-  });
-};
+  })
+}
 
-// ฟังก์ชันจำลองเพื่อบันทึกข้อมูลลง Database
 const updateTimeSlots = async (newSlots: Record<string, InterviewSlot[]>) => {
-  console.log("Saving to database...", newSlots);
-  return Promise.resolve(newSlots);
-};
+  console.log("Saving to database...", newSlots)
+  return Promise.resolve(newSlots)
+}
 
-const EmployerSchedule: React.FC = () => {
+const InterviewScheduling: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null)
   const [currentMonth, setCurrentMonth] = useState<Dayjs>(dayjs("2024-12-01"))
   const [showAddTimeModal, setShowAddTimeModal] = useState<boolean>(false)
@@ -55,16 +49,15 @@ const EmployerSchedule: React.FC = () => {
   const [form] = Form.useForm()
   const [selectedTimeSlotForDeletion, setSelectedTimeSlotForDeletion] = useState<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
-  
-  // โหลดข้อมูลจาก "ฐานข้อมูล" เมื่อโหลดหน้าครั้งแรก
-  const [timeSlots, setTimeSlots] = useState<Record<string, InterviewSlot[]>>({});
+  const [timeSlots, setTimeSlots] = useState<Record<string, InterviewSlot[]>>({})
+
   useEffect(() => {
     const loadSlots = async () => {
-      const slots = await fetchTimeSlots();
-      setTimeSlots(slots);
-    };
-    loadSlots();
-  }, []);
+      const slots = await fetchTimeSlots()
+      setTimeSlots(slots)
+    }
+    loadSlots()
+  }, [])
 
   const getDateStatus = (date: Dayjs): DateStatus => {
     const dateKey = date.format("YYYY-MM-DD")
@@ -86,8 +79,7 @@ const EmployerSchedule: React.FC = () => {
   }
 
   const handleDateClick = (date: Dayjs) => {
-    const isCurrentMonth = date.month() === currentMonth.month()
-    if (isCurrentMonth) {
+    if (date.month() === currentMonth.month()) {
       setSelectedDate(date)
     }
   }
@@ -96,237 +88,99 @@ const EmployerSchedule: React.FC = () => {
     if (selectedDate && selectedTimeRange) {
       const dateKey = selectedDate.format("YYYY-MM-DD")
       const newSlot: InterviewSlot = {
-        id: `slot-${Date.now()}`, // สร้าง ID ใหม่ เหมือนมาจาก Database
+        id: `slot-${Date.now()}`,
         startTime: selectedTimeRange[0].format("HH:mm"),
         endTime: selectedTimeRange[1].format("HH:mm"),
         status: "available",
       }
+      const updatedSlots = { ...timeSlots, [dateKey]: [...(timeSlots[dateKey] || []), newSlot] }
 
-      const updatedSlots = {
-        ...timeSlots,
-        [dateKey]: [...(timeSlots[dateKey] || []), newSlot],
-      };
-      
       try {
-        await updateTimeSlots(updatedSlots); // บันทึกข้อมูล
-        setTimeSlots(updatedSlots);
-        setShowAddTimeModal(false);
-        setShowSuccessModal(true);
-        setSelectedTimeRange(null);
-        form.resetFields();
+        await updateTimeSlots(updatedSlots)
+        setTimeSlots(updatedSlots)
+        setShowAddTimeModal(false)
+        setShowSuccessModal(true)
+        setSelectedTimeRange(null)
+        form.resetFields()
       } catch (error) {
-        message.error("Failed to add time slot.");
+        message.error("Failed to add time slot.")
       }
     }
   }
 
   const handleDeleteTimeSlot = async () => {
     if (selectedDate && selectedTimeSlotForDeletion) {
-      const dateKey = selectedDate.format("YYYY-MM-DD");
-      const updatedSlotsForDay = timeSlots[dateKey]?.filter(
-        (slot) => slot.id !== selectedTimeSlotForDeletion
-      );
+      const dateKey = selectedDate.format("YYYY-MM-DD")
+      const updatedSlotsForDay = timeSlots[dateKey]?.filter((slot) => slot.id !== selectedTimeSlotForDeletion)
+      const updatedSlots = { ...timeSlots, [dateKey]: updatedSlotsForDay || [] }
 
-      const updatedSlots = {
-        ...timeSlots,
-        [dateKey]: updatedSlotsForDay || [],
-      };
-      
       try {
-        await updateTimeSlots(updatedSlots);
-        setTimeSlots(updatedSlots);
-        setShowDeleteModal(false);
-        setSelectedTimeSlotForDeletion(null);
-        message.success("ลบช่วงเวลาสำเร็จ");
+        await updateTimeSlots(updatedSlots)
+        setTimeSlots(updatedSlots)
+        setShowDeleteModal(false)
+        setSelectedTimeSlotForDeletion(null)
+        message.success("ลบช่วงเวลาสำเร็จ")
       } catch (error) {
-        message.error("Failed to delete time slot.");
+        message.error("Failed to delete time slot.")
       }
     }
   }
 
   const getCurrentDateSlots = () => {
     if (!selectedDate) return []
-    const dateKey = selectedDate.format("YYYY-MM-DD")
-    return timeSlots[dateKey] || []
+    return timeSlots[selectedDate.format("YYYY-MM-DD")] || []
   }
-  
-  // (ส่วน render HTML อื่นๆ ไม่มีการเปลี่ยนแปลง)
 
   const dateCellRender = (date: Dayjs) => {
-    const status = getDateStatus(date);
-    const isCurrentMonth = date.month() === currentMonth.month();
+    if (date.month() !== currentMonth.month()) return null
 
-    if (!isCurrentMonth) return null
-
-    let backgroundColor = ""
-    let color = ""
-    const cursor = "pointer"
-
-    switch (status) {
-      case "selected":
-        backgroundColor = "#a8e6a3"
-        color = "#2d5a2d"
-        break
-      case "available":
-        backgroundColor = "#d9d9d9"
-        color = "#8c8c8c"
-        break
-      case "booked":
-        backgroundColor = "#ff7875"
-        color = "#ffffff"
-        break
-      default:
-        backgroundColor = "transparent"
-        color = "#000000"
+    let statusClassName = ""
+    switch (getDateStatus(date)) {
+      case "selected": statusClassName = "date-cell-selected"; break
+      case "available": statusClassName = "date-cell-available"; break
+      case "booked": statusClassName = "date-cell-booked"; break
+      default: statusClassName = "date-cell-default";
     }
 
     return (
-      <div
-        style={{
-          backgroundColor,
-          color,
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: "bold",
-          fontSize: "16px",
-          cursor,
-        }}
-        onClick={() => handleDateClick(date)}
-      >
+      <div className={`date-cell ${statusClassName}`} onClick={() => handleDateClick(date)}>
         {date.date()}
       </div>
     )
   }
 
   const onMonthChange = (direction: "prev" | "next") => {
-    if (direction === "prev") {
-      setCurrentMonth(currentMonth.subtract(1, "month"))
-    } else {
-      setCurrentMonth(currentMonth.add(1, "month"))
-    }
+    setCurrentMonth(currentMonth[direction === "prev" ? "subtract" : "add"](1, "month"))
     setSelectedDate(null)
   }
 
   const handleTimeSlotClick = (slotId: string) => {
     setSelectedTimeSlotForDeletion(slotId === selectedTimeSlotForDeletion ? null : slotId)
   }
-  
+
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
-      <div style={{ padding: "24px" }}>
+    <div className="employer-schedule-container">
+      <div className="employer-schedule-main-content">
         <Row gutter={24}>
           <Col span={16}>
             <Card>
-              {/* Month Navigation */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: "24px",
-                }}
-              >
-                <Button
-                  type="text"
-                  icon={<LeftOutlined />}
-                  onClick={() => onMonthChange("prev")}
-                  style={{
-                    backgroundColor: "#2c5aa0",
-                    color: "white",
-                    borderRadius: "50%",
-                    width: "40px",
-                    height: "40px",
-                  }}
-                />
-                <div
-                  style={{
-                    backgroundColor: "#2c5aa0",
-                    color: "white",
-                    padding: "12px 48px",
-                    borderRadius: "24px",
-                    margin: "0 16px",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {currentMonth.format("MMMM YYYY")}
-                </div>
-                <Button
-                  type="text"
-                  icon={<RightOutlined />}
-                  onClick={() => onMonthChange("next")}
-                  style={{
-                    backgroundColor: "#2c5aa0",
-                    color: "white",
-                    borderRadius: "50%",
-                    width: "40px",
-                    height: "40px",
-                  }}
-                />
+              <div className="month-navigation">
+                <Button type="text" icon={<LeftOutlined />} onClick={() => onMonthChange("prev")} className="month-nav-button" />
+                <div className="month-display">{currentMonth.format("MMMM YYYY")}</div>
+                <Button type="text" icon={<RightOutlined />} onClick={() => onMonthChange("next")} className="month-nav-button" />
               </div>
 
-              {/* Calendar Header */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(7, 1fr)",
-                  backgroundColor: "#2c5aa0",
-                  color: "white",
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  fontSize: "16px",
-                }}
-              >
-                {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (
-                  <div key={day} style={{ padding: "16px" }}>
-                    {day}
-                  </div>
-                ))}
+              <div className="calendar-header">
+                {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (<div key={day} className="day-header">{day}</div>))}
               </div>
 
-              {/* Calendar Grid */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(7, 1fr)",
-                  border: "1px solid #d9d9d9",
-                }}
-              >
+              <div className="calendar-grid">
                 {Array.from({ length: 42 }, (_, index) => {
-                  const startOfMonth = currentMonth.startOf("month")
-                  const startOfWeek = startOfMonth.startOf("week")
-                  const currentDate = startOfWeek.add(index, "day")
+                  const currentDate = currentMonth.startOf("month").startOf("week").add(index, "day")
                   const isCurrentMonth = currentDate.month() === currentMonth.month()
-
                   return (
-                    <div
-                      key={index}
-                      style={{
-                        height: "80px",
-                        border: "1px solid #d9d9d9",
-                        position: "relative",
-                        backgroundColor: !isCurrentMonth ? "#f5f5f5" : "white",
-                      }}
-                    >
-                      {isCurrentMonth && dateCellRender(currentDate)}
-                      {!isCurrentMonth && (
-                        <div
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#bfbfbf",
-                            fontSize: "16px",
-                          }}
-                        >
-                          {currentDate.date()}
-                        </div>
-                      )}
+                    <div key={index} className={`date-cell-wrapper ${!isCurrentMonth ? "date-cell-wrapper-inactive" : ""}`}>
+                      {isCurrentMonth ? dateCellRender(currentDate) : <div className="inactive-date-number">{currentDate.date()}</div>}
                     </div>
                   )
                 })}
@@ -336,346 +190,109 @@ const EmployerSchedule: React.FC = () => {
 
           <Col span={8}>
             <Space direction="vertical" size="large" style={{ width: "100%" }}>
-              {/* Legend */}
               <Card size="small">
                 <Space direction="vertical" size="small">
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div
-                      style={{
-                        width: "16px",
-                        height: "16px",
-                        backgroundColor: "#a8e6a3",
-                        borderRadius: "50%",
-                      }}
-                    />
-                    <Text>วันที่เลือก</Text>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div
-                      style={{
-                        width: "16px",
-                        height: "16px",
-                        backgroundColor: "#ff7875",
-                        borderRadius: "50%",
-                      }}
-                    />
-                    <Text>นักศึกษาได้เลือกช่วงเวลาแล้ว</Text>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div
-                      style={{
-                        width: "16px",
-                        height: "16px",
-                        backgroundColor: "#d9d9d9",
-                        borderRadius: "50%",
-                      }}
-                    />
-                    <Text>ช่วงเวลาที่คุณได้ใส่แล้ว</Text>
-                  </div>
+                  <div className="legend-item"><div className="legend-dot legend-dot-selected" /><Text>วันที่เลือก</Text></div>
+                  <div className="legend-item"><div className="legend-dot legend-dot-booked" /><Text>นักศึกษาได้เลือกช่วงเวลาแล้ว</Text></div>
+                  <div className="legend-item"><div className="legend-dot legend-dot-available" /><Text>ช่วงเวลาที่คุณได้ใส่แล้ว</Text></div>
                 </Space>
               </Card>
 
-              {/* Time Slots - Only show when date is selected */}
               {selectedDate && (
-                <Card
-                  title={
-                    <Title level={4} style={{ margin: 0 }}>
-                      {selectedDate.date()} {selectedDate.format("ddd").toUpperCase()}
-                    </Title>
-                  }
-                  style={{ backgroundColor: "#e6f4ff" }}
-                >
+                <Card title={<Title level={4} style={{ margin: 0 }}>{selectedDate.date()} {selectedDate.format("ddd").toUpperCase()}</Title>} className="time-slots-card">
                   <Space direction="vertical" size="small" style={{ width: "100%" }}>
                     {getCurrentDateSlots().map((slot) => {
                       const isSelected = selectedTimeSlotForDeletion === slot.id
+                      let pillClassName = "time-slot-pill"
+                      // ตรรกะของ pillClassName ยังคงเหมือนเดิม เพื่อให้ pill ที่ถูกเลือกเปลี่ยนสีได้
+                      if (isSelected) pillClassName += " time-slot-pill-selected"
+                      else if (slot.status === "available") pillClassName += " time-slot-pill-available"
+                      else pillClassName += " time-slot-pill-booked"
 
                       return (
-                        <div
-                          key={slot.id}
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            padding: "8px 0",
-                            fontSize: "14px",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          <Text strong>
-                            {slot.startTime} - {slot.endTime}
-                          </Text>
-                          <div
-                            style={{
-                              width: "60px",
-                              height: "20px",
-                              backgroundColor: isSelected
-                                ? "#52c41a" // Green when selected
-                                : slot.status === "available"
-                                  ? "#d9d9d9" // Gray for available
-                                  : "#ff4d4f", // Red for booked
-                              borderRadius: "10px",
-                              cursor: "pointer",
-                              border: isSelected ? "2px solid #389e0d" : "none",
-                            }}
-                            onClick={() => handleTimeSlotClick(slot.id)}
-                          />
+                        <div key={slot.id} className="time-slot-item">
+                          <Text strong>{slot.startTime} - {slot.endTime}</Text>
+
+                          {/* เพิ่มส่วนนี้เข้ามา: จะแสดงไอคอนและ pill คู่กัน */}
+                          <div className="time-slot-actions">
+                            {/* เงื่อนไข: จะแสดงไอคอนถังขยะก็ต่อเมื่อ status ไม่ใช่ "booked" */}
+                            {slot.status !== "booked" && (
+                              <DeleteOutlined
+                                className="delete-icon" // เพิ่ม class ไว้สำหรับ styling
+                                onClick={() => handleTimeSlotClick(slot.id)} // ย้าย onClick มาไว้ที่นี่
+                              />
+                            )}
+
+                            {/* Pill จะทำหน้าที่แค่แสดงสถานะ ไม่มี onClick แล้ว */}
+                            <div className={pillClassName} />
+                          </div>
                         </div>
                       )
                     })}
-
-                    {getCurrentDateSlots().length === 0 && (
-                      <Text style={{ textAlign: "center", color: "#8c8c8c" }}>ยังไม่มีช่วงเวลาที่กำหนด</Text>
-                    )}
+                    {getCurrentDateSlots().length === 0 && <Text className="no-slots-text">ยังไม่มีช่วงเวลาที่กำหนด</Text>}
                   </Space>
                 </Card>
               )}
 
-              {/* Add Time Slot Button */}
-              <Button
-                type="primary"
-                size="large"
-                block
-                disabled={!selectedDate}
-                style={{
-                  backgroundColor: selectedDate ? "#1890ff" : "#d9d9d9",
-                  borderColor: selectedDate ? "#1890ff" : "#d9d9d9",
-                  color: selectedDate ? "white" : "#8c8c8c",
-                  borderRadius: "24px",
-                  height: "48px",
-                  fontSize: "16px",
-                  fontWeight: "bold",
-                  cursor: selectedDate ? "pointer" : "not-allowed",
-                }}
-                onClick={() => {
-                  if (selectedDate) {
-                    if (selectedTimeSlotForDeletion) {
-                      setShowDeleteModal(true)
-                    } else {
-                      setShowAddTimeModal(true)
-                    }
-                  }
-                }}
-              >
-                {selectedTimeSlotForDeletion ? "ลบช่วงเวลา" : "จัดการ"}
+              <Button type="primary" size="large" block disabled={!selectedDate} className="main-action-button" onClick={() => { if (selectedDate) { selectedTimeSlotForDeletion ? setShowDeleteModal(true) : setShowAddTimeModal(true) } }}>
+                {selectedTimeSlotForDeletion ? "ลบช่วงเวลา" : "เพิ่มช่วงเวลา"}
               </Button>
             </Space>
           </Col>
         </Row>
       </div>
 
-      {/* Add Time Slot Modal */}
-      <Modal
-        open={showAddTimeModal}
-        footer={null}
-        closable={false}
-        centered
-        width={500}
-        style={{ textAlign: "center" }}
-      >
-        <div style={{ padding: "20px" }}>
-          <div style={{ position: "absolute", top: "16px", right: "16px" }}>
-            <CloseOutlined
-              style={{ fontSize: "16px", color: "#8c8c8c", cursor: "pointer" }}
-              onClick={() => {
-                setShowAddTimeModal(false)
-                setSelectedTimeRange(null)
-                form.resetFields()
-              }}
-            />
-          </div>
-
-          <Title level={4} style={{ marginBottom: "16px" }}>
-            {selectedDate?.format("dddd")}ที่ {selectedDate?.date()} {selectedDate?.format("MMMM")}{" "}
-            {selectedDate?.year()} เวลา 11:00 น.
-          </Title>
-
-          <Text style={{ color: "#1890ff", display: "block", marginBottom: "8px" }}>
-            เป็นช่วงเวลาที่คุณสามารถเพิ่มการนัดสัมภาษณ์ได้
-          </Text>
-
-          <Text style={{ color: "#52c41a", display: "block", marginBottom: "8px" }}>คุณต้องการเพิ่มช่วงเวลา</Text>
-
-          <Text style={{ display: "block", marginBottom: "24px" }}>นัดสัมภาษณ์หรือไม่ ?</Text>
-
-          <Form form={form} style={{ marginBottom: "24px" }}>
-            <Form.Item name="timeRange" style={{ marginBottom: "16px" }}>
-              <RangePicker
-                format="HH:mm"
-                placeholder={["เวลาเริ่ม", "เวลาสิ้นสุด"]}
-                style={{ width: "100%" }}
-                onChange={(times) => setSelectedTimeRange(times as [Dayjs, Dayjs])}
-              />
-            </Form.Item>
-          </Form>
-
-          <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-            <Button
-              size="large"
-              style={{
-                borderRadius: "20px",
-                width: "100px",
-                border: "1px solid #1890ff",
-                color: "#1890ff",
-              }}
-              onClick={() => {
-                setShowAddTimeModal(false)
-                setSelectedTimeRange(null)
-                form.resetFields()
-              }}
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              type="primary"
-              size="large"
-              disabled={!selectedTimeRange}
-              style={{
-                borderRadius: "20px",
-                width: "100px",
-                backgroundColor: selectedTimeRange ? "#1890ff" : "#d9d9d9",
-              }}
-              onClick={handleAddTimeSlot}
-            >
-              ยืนยัน
-            </Button>
+      <Modal open={showAddTimeModal} footer={null} closable={false} centered width={500} styles={{ body: { padding: 0} }}>
+        <div className="modal-centered-content">
+          <div className="modal-inner-content">
+            <CloseOutlined className="modal-close-button" onClick={() => { setShowAddTimeModal(false); setSelectedTimeRange(null); form.resetFields() }} />
+            <Title level={3} className="modal-title">{selectedDate?.format("dddd D MMMM YYYY")}</Title>
+            <Form form={form} className="modal-form">
+              <Form.Item name="timeRange" className="modal-form-item">
+                <RangePicker format="HH:mm" placeholder={["เวลาเริ่ม", "เวลาสิ้นสุด"]} className="modal-time-picker" onChange={(times) => setSelectedTimeRange(times as [Dayjs, Dayjs])} />
+              </Form.Item>
+            </Form>
+            <div className="modal-action-buttons">
+              <Button size="large" className="modal-cancel-button" onClick={() => { setShowAddTimeModal(false); setSelectedTimeRange(null); form.resetFields() }}>ยกเลิก</Button>
+              <Button type="primary" size="large" disabled={!selectedTimeRange} className="modal-confirm-button" onClick={handleAddTimeSlot}>ยืนยัน</Button>
+            </div>
           </div>
         </div>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
-      <Modal open={showDeleteModal} footer={null} closable={false} centered width={500} style={{ textAlign: "center" }}>
-        <div style={{ padding: "20px" }}>
-          <div style={{ position: "absolute", top: "16px", right: "16px" }}>
-            <CloseOutlined
-              style={{ fontSize: "16px", color: "#8c8c8c", cursor: "pointer" }}
-              onClick={() => {
-                setShowDeleteModal(false)
-                setSelectedTimeSlotForDeletion(null)
-              }}
-            />
-          </div>
-
-          <Title level={4} style={{ marginBottom: "16px" }}>
-            {selectedDate?.format("dddd")}ที่ {selectedDate?.date()} {selectedDate?.format("MMMM")}{" "}
-            {selectedDate?.year()} เวลา 11:00 น.
-          </Title>
-
-          <Text style={{ color: "#1890ff", display: "block", marginBottom: "8px" }}>
-            เป็นช่วงเวลาที่คุณได้เพิ่มการนัดสัมภาษณ์ไว้แล้ว
-          </Text>
-
-          <Text style={{ color: "#ff4d4f", display: "block", marginBottom: "24px" }}>คุณต้องการลบช่วงเวลา</Text>
-
-          <Text style={{ display: "block", marginBottom: "24px" }}>นัดสัมภาษณ์หรือไม่ ?</Text>
-
-          <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-            <Button
-              size="large"
-              style={{
-                borderRadius: "20px",
-                width: "100px",
-                border: "1px solid #1890ff",
-                color: "#1890ff",
-              }}
-              onClick={() => {
-                setShowDeleteModal(false)
-                setSelectedTimeSlotForDeletion(null)
-              }}
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              type="primary"
-              size="large"
-              style={{
-                borderRadius: "20px",
-                width: "100px",
-                backgroundColor: "#1890ff",
-              }}
-              onClick={handleDeleteTimeSlot}
-            >
-              ยืนยัน
-            </Button>
+      <Modal open={showDeleteModal} footer={null} closable={false} centered width={500} styles={{ body: { padding: 0} }}>
+        <div className="modal-centered-content">
+          <div className="modal-inner-content">
+            <CloseOutlined className="modal-close-button" onClick={() => { setShowDeleteModal(false); setSelectedTimeSlotForDeletion(null) }} />
+            <Title level={4} className="modal-title">{selectedDate?.format("dddd ที่ D MMMM YYYY")}</Title>
+            <Text className="delete-modal-info-text">เป็นช่วงเวลาที่คุณได้เพิ่มการนัดสัมภาษณ์ไว้แล้ว</Text>
+            <Text className="delete-modal-warning-text">คุณต้องการลบช่วงเวลา</Text>
+            <Text className="delete-modal-question-text">นัดสัมภาษณ์หรือไม่ ?</Text>
+            <div className="modal-action-buttons">
+              <Button size="large" className="modal-cancel-button" onClick={() => { setShowDeleteModal(false); setSelectedTimeSlotForDeletion(null) }}>ยกเลิก</Button>
+              <Button type="primary" size="large" className="modal-confirm-button" onClick={handleDeleteTimeSlot}>ยืนยัน</Button>
+            </div>
           </div>
         </div>
       </Modal>
 
-      {/* Delete Success Modal */}
-      <Modal
-        open={showSuccessModal && selectedTimeSlotForDeletion !== null}
-        footer={null}
-        closable={false}
-        centered
-        width={400}
-        style={{ textAlign: "center" }}
-      >
-        <div style={{ padding: "40px 20px" }}>
-          <div style={{ position: "absolute", top: "16px", right: "16px" }}>
-            <CloseOutlined
-              style={{ fontSize: "16px", color: "#8c8c8c", cursor: "pointer" }}
-              onClick={() => {
-                setShowSuccessModal(false)
-                setSelectedTimeSlotForDeletion(null)
-              }}
-            />
+      <Modal open={showSuccessModal} footer={null} closable={false} centered width={400} styles={{ body: { padding: 0} }}>
+        <div className="modal-centered-content">
+          <div className="success-modal-inner-content">
+            <CloseOutlined className="modal-close-button" onClick={() => { setShowSuccessModal(false); setSelectedTimeSlotForDeletion(null) }} />
+            <CheckCircleOutlined className="success-modal-check-icon" />
+            <Title level={4} className="success-modal-title">
+              {selectedTimeSlotForDeletion ? "ลบช่วงเวลานัดสัมภาษณ์" : "เพิ่มช่วงเวลานัดสัมภาษณ์"}
+            </Title>
+            <Text className="success-modal-details-text">
+              {selectedDate?.format("ddddที่ D MMMM")} เวลา {/* เติมไรสักอย่าง */}
+            </Text>
+            <Text className="success-modal-status-text">สำเร็จ</Text>
           </div>
-          <CheckCircleOutlined
-            style={{
-              fontSize: "48px",
-              color: "#1890ff",
-              marginBottom: "16px",
-              border: "2px solid #1890ff",
-              borderRadius: "50%",
-              padding: "8px",
-            }}
-          />
-          <Title level={4} style={{ marginBottom: "8px" }}>
-            ลบช่วงเวลานัดสัมภาษณ์
-          </Title>
-          <Text style={{ display: "block", marginBottom: "8px" }}>
-            {selectedDate?.format("dddd")}ที่ {selectedDate?.date()} {selectedDate?.format("MMMM")} เวลา 11:00 น.
-          </Text>
-          <Text style={{ fontWeight: "bold" }}>สำเร็จ</Text>
-        </div>
-      </Modal>
-
-      {/* Success Modal */}
-      <Modal
-        open={showSuccessModal && !selectedTimeSlotForDeletion}
-        footer={null}
-        closable={false}
-        centered
-        width={400}
-        style={{ textAlign: "center" }}
-      >
-        <div style={{ padding: "40px 20px" }}>
-          <div style={{ position: "absolute", top: "16px", right: "16px" }}>
-            <CloseOutlined
-              style={{ fontSize: "16px", color: "#8c8c8c", cursor: "pointer" }}
-              onClick={() => setShowSuccessModal(false)}
-            />
-          </div>
-          <CheckCircleOutlined
-            style={{
-              fontSize: "48px",
-              color: "#1890ff",
-              marginBottom: "16px",
-              border: "2px solid #1890ff",
-              borderRadius: "50%",
-              padding: "8px",
-            }}
-          />
-          <Title level={4} style={{ marginBottom: "8px" }}>
-            เพิ่มช่วงเวลานัดสัมภาษณ์
-          </Title>
-          <Text style={{ display: "block", marginBottom: "8px" }}>
-            {selectedDate?.format("dddd")}ที่ {selectedDate?.date()} {selectedDate?.format("MMMM")} เวลา 11:00 น.
-          </Text>
-          <Text style={{ fontWeight: "bold" }}>สำเร็จ</Text>
         </div>
       </Modal>
     </div>
   )
 }
 
-export default EmployerSchedule;
+export default InterviewScheduling

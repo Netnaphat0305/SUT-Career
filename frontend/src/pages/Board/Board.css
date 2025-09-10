@@ -1,103 +1,147 @@
+/* ---------- ส่วน container หลัก ---------- */
 .board-container {
   width: 100%;
+  max-width: 100%;
   position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-  min-height: 250px;
-  height: auto;
-  background: linear-gradient(90deg, #1976d3 0%, #64b5f6 100%);
-  padding: 40px 0;
+  background: linear-gradient(90deg, #1976D3 0%, #72b9f4 100%);
+  padding: 60px 0;          
   box-sizing: border-box;
   display: flex;
   justify-content: center;
+  overflow: hidden;
+  min-height: 400px;       
 }
 
+/*เพิ่มลายกริดบนพื้นหลัง */
+.board-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px; /* ขนาดช่องกริด */
+  opacity: 1.3; /* ความโปร่งของกริด (0=หาย, 1=ทึบ) */
+  pointer-events: none; /* กันไม่ให้บล็อกปุ่มข้างใน */
+  z-index: 1;
+}
+
+
+/* ---------- เนื้อหาใน board ---------- */
 .board-content {
   position: relative;
   width: 100%;
-  max-width: 1024px;
+  max-width: 1150px;
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
+  justify-content: space-between;
+  align-items: center;
   padding: 0 20px;
-  padding-right: 620px; /* เว้นพื้นที่ขวาให้ banner */
   box-sizing: border-box;
-  flex-wrap: wrap;
   gap: 40px;
+  position: relative;
+
 }
 
+/* ---------- หัวข้อหลัก ---------- */
 .subheadline {
-  max-width: 400px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  flex-shrink: 0;
+  gap: 4px;                 /* ลดระยะห่างระหว่างบรรทัด */
+  margin-bottom: 10px;
 }
 
 .subheadline h1 {
   color: white;
   font-family: "Kanit", "Sarabun", sans-serif;
-  font-size: 30px;
+  font-size: 34px;
+  font-weight: 600;
   margin: 0;
+  line-height: 1.2;
 }
 
+/* ---------- ข้อความอธิบายเพิ่มเติม ---------- */
+.hero-subtext {
+  color: rgba(255, 255, 255, 0.9);
+  font-family: "Kanit", "Sarabun", sans-serif;
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+/* ---------- ปุ่มเริ่มโพสต์ + ปุ่มโพสต์ของฉัน ---------- */
 .button-row {
   display: flex;
   gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  margin-left: 80px;
 }
 
-.btn-startpost,
+.btn-startpost {
+  background-color: #fff;
+  color: #0079ff;
+  font-family: "Kanit", "Sarabun", sans-serif;
+  font-weight: 600;
+  height: 40px;
+  width: 160px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: 0.2s ease;
+}
+
+.btn-startpost:hover {
+  background-color: #eaf2ff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
 .btn-mypost {
-  background-color: #fff; /* พื้นหลังสีขาว */
-  color: #0088ff; /* ตัวอักษรสีฟ้า */
-  font-family: "Kanit", "Sarabun", sans-serif; /* ฟอนต์ */
-  height: 33px; /* ความสูงปุ่ม 33px */
-  width: 150px; /* ความกว้างปุ่ม 150px */
-  font-weight: 500; /* ตัวหนาปานกลาง */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* เงาปุ่ม */
-  border: none; /* ไม่มีขอบ */
-  border-radius: 6px; /* มุมโค้งมน 6px */
-  cursor: pointer; /* เคอร์เซอร์เปลี่ยนเป็น pointer */
-  transition: 0.2s ease; /* เอฟเฟกต์เปลี่ยนสีลื่น */
+  background-color: transparent;
+  color: white;
+  font-family: "Kanit", "Sarabun", sans-serif;
+  font-weight: 500;
+  height: 40px;
+  width: 150px;
+  border: 1px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
 
-.btn-startpost:hover,
 .btn-mypost:hover {
-  background-color: #e6f0ff; /* พื้นหลังสีฟ้าจางเมื่อ hover */
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
+/* ---------- การ์ดโปรโมทด้านขวา ---------- */
 .banner-container {
-  position: absolute;
-  top: 0;
-  right: 0;
-  max-width: 600px;
+  max-width: 550px;
   width: 100%;
-  height: 180px;
-  background-color: #f9edc8;
-  border-radius: 30px;
-  border: 1px solid #6B7280;
-  padding: 20px; /* ✅ padding สมดุลรอบกล่อง */
+  background-color: #fff7dc;
+  border-radius: 20px;
+  border: 1px solid #e6d9ac;
+  padding: 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
-  flex-shrink: 0;
-  margin-left: auto;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  gap: 12px;
 }
 
 .banner-content {
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* ✅ ข้อความชิดซ้าย */
-  gap: 8px;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .banner-content h1 {
   font-family: "Kanit", "Sarabun", sans-serif;
-  font-weight: 500;
+  font-weight: 600;
   color: #1f2937;
   margin: 0;
   font-size: 24px;
@@ -108,73 +152,84 @@
   color: #1f2937;
   font-weight: 400;
   margin: 0;
+  font-size: 15px;
+  margin-left: 30px;
 }
 
 .no-border-button {
   font-family: "Kanit", "Sarabun", sans-serif;
-  border: none !important;
-  box-shadow: none !important;
-  background-color: #f9edc8;
-    height: 33px; /* ความสูงปุ่ม 33px */
-  width: 100px; /* ความกว้างปุ่ม 150px */
-  color: black;
-  margin-top: 0;
-  padding: 0; /* ✅ ไม่มี padding ซ้าย */
-  font-weight: 500;
-  transition: background-color 0.3s ease;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  color: #0079ff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: 0.2s ease;
 }
 
 .no-border-button:hover {
-  background-color: #e5dbb0;
+  color: #005fcc;
+  text-decoration: underline;
 }
 
+/* ---------- รูปประกาศ ---------- */
 .banner-image {
-  width: 250px;
+  width: 220px;
   height: auto;
   flex-shrink: 0;
-  transform: scale(1.2);
+  transform: scale(1.05);
   transform-origin: right center;
-  margin-right: -40px;
-  margin-top: -5px;
-  max-width: 100%;
+
 }
 
-/* ✅ Responsive */
-@media (max-width: 768px) {
+/* ---------- ส่วนลิสต์โพสต์ ---------- */
+.board-list {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 20px 32px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
   .board-content {
     flex-direction: column;
     align-items: flex-start;
-    padding-right: 20px;
+    gap: 30px;
   }
 
   .banner-container {
-    position: static;
     width: 100%;
-    height: auto;
-    margin-top: 20px;
-    border-radius: 15px;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: flex-start;
     padding: 20px;
   }
 
   .banner-image {
     width: 100%;
-    max-width: 250px;
-    margin: 10px 0 0 0;
+    max-width: 300px;
     transform: none;
-    margin-right: 0;
-    margin-top: 0;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .subheadline h1 {
+    font-size: 26px;
   }
 
   .button-row {
     flex-direction: column;
-    gap: 10px;
+    width: 100%;
   }
 
   .btn-startpost,
   .btn-mypost {
     width: 100%;
+  }
+
+  .banner-container {
+    padding: 16px;
   }
 }

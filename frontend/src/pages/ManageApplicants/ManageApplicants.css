@@ -1,0 +1,120 @@
+.manage-applicants-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  background: #fff;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  min-height: 100vh;
+}
+
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eaf4ff;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+.job-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.job-company {
+  color: #666;
+  margin-top: 4px;
+}
+
+.job-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* Layout หลัก: ซ้าย + ขวา */
+.manage-content {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+/* ฝั่งซ้าย: รายชื่อผู้สมัคร (กว้างกว่า) */
+.applicants-list {
+  flex: 2.5;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* การ์ดผู้สมัคร */
+.applicant-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.applicant-card:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-2px);
+}
+
+.applicant-card.selected {
+  border-color: #1677ff;
+  box-shadow: 0 0 8px rgba(22, 119, 255, 0.4);
+}
+
+/* ข้อมูลผู้สมัครใน list */
+.applicant-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.applicant-name {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.applicant-details {
+  font-size: 14px;
+  color: #555;
+  margin: 0;
+}
+
+/* ฝั่งขวา: รายละเอียดผู้สมัคร (แคบกว่า) */
+.applicant-detail-panel {
+  flex: 1.5;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  height: fit-content;
+}
+
+.applicant-detail-panel h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.applicant-detail-panel p {
+  font-size: 15px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+/* ถ้ายังไม่ได้เลือกผู้สมัคร */
+.applicant-detail-panel p[style] {
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+}

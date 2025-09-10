@@ -1,0 +1,287 @@
+/* EmployerSchedule.css */
+
+/* --- Main Layout --- */
+.employer-schedule-container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.employer-schedule-main-content {
+  padding: 24px;
+}
+
+/* --- Month Navigation --- */
+.month-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.month-nav-button {
+  background-color: #2c5aa0 !important;
+  color: white !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.month-display {
+  background-color: #2c5aa0;
+  color: white;
+  padding: 12px 48px;
+  border-radius: 24px;
+  margin: 0 16px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* --- Calendar --- */
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background-color: #2c5aa0;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.day-header {
+  padding: 16px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border: 1px solid #d9d9d9;
+}
+
+.date-cell-wrapper {
+  height: 80px;
+  border: 1px solid #d9d9d9;
+  position: relative;
+  background-color: white;
+}
+
+.date-cell-wrapper-inactive {
+  background-color: #f5f5f5;
+}
+
+.inactive-date-number {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bfbfbf;
+  font-size: 16px;
+}
+
+/* --- Date Cell Base and Statuses --- */
+.date-cell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.date-cell-selected {
+  background-color: #a8e6a3;
+  color: #2d5a2d;
+}
+
+.date-cell-available {
+  background-color: #d9d9d9;
+  color: #8c8c8c;
+}
+
+.date-cell-booked {
+  background-color: #ff7875;
+  color: #ffffff;
+}
+
+.date-cell-default {
+  background-color: transparent;
+  color: #000000;
+}
+
+/* --- Right Column: Legend & Time Slots --- */
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.legend-dot-selected { background-color: #a8e6a3; }
+.legend-dot-booked { background-color: #ff7875; }
+.legend-dot-available { background-color: #d9d9d9; }
+
+.time-slots-card {
+  background-color: #e6f4ff;
+}
+
+.time-slot-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.time-slot-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* gap pill and icon */
+}
+
+.delete-icon {
+  font-size: 16px;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.delete-icon:hover {
+  color: #f5222d; /* change color when hover by cursor */
+}
+
+.delete-icon-selected{
+  color: #f5222d;
+}
+
+.time-slot-pill {
+  width: 60px;
+  height: 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+}
+
+.time-slot-pill-available { background-color: #d9d9d9; }
+.time-slot-pill-booked { background-color: #ff4d4f; }
+.time-slot-pill-selected {
+  background-color: #52c41a;
+  border: 2px solid #389e0d;
+}
+
+.no-slots-text {
+  text-align: center;
+  color: #8c8c8c;
+}
+
+/* --- Main Action Button (Add/Delete) --- */
+.main-action-button {
+  border-radius: 24px !important;
+  height: 48px !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+}
+
+/* --- Modals --- */
+.modal-centered-content {
+  text-align: center;
+}
+
+.modal-inner-content {
+  padding: 20px;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 16px;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+
+.modal-title {
+  margin-bottom: 16px !important;
+}
+
+.modal-form {
+  margin-bottom: 24px;
+}
+
+.modal-form-item {
+  margin-bottom: 16px !important;
+}
+
+.modal-time-picker {
+  width: 100%;
+}
+
+.modal-action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-cancel-button {
+  border-radius: 20px !important;
+  width: 100px;
+  border: 1px solid #1890ff !important;
+  color: #1890ff !important;
+}
+
+.modal-confirm-button {
+  border-radius: 20px !important;
+  width: 100px;
+}
+
+/* Modal Specifics */
+.delete-modal-info-text {
+  color: #1890ff;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.delete-modal-warning-text {
+  color: #ff4d4f;
+  display: block;
+  margin-bottom: 24px;
+}
+
+.delete-modal-question-text {
+  display: block;
+  margin-bottom: 24px;
+}
+
+.success-modal-inner-content {
+  padding: 40px 20px;
+}
+
+.success-modal-check-icon {
+  font-size: 48px;
+  color: #1890ff;
+  margin-bottom: 16px;
+  border: 2px solid #1890ff;
+  border-radius: 50%;
+  padding: 8px;
+}
+
+.success-modal-title {
+  margin-bottom: 8px !important;
+}
+
+.success-modal-details-text {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.success-modal-status-text {
+  font-weight: bold;
+}
