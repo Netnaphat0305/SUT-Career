@@ -34,10 +34,14 @@ const IncidentReportList: React.FC = () => {
   const [editingIncident, setEditingIncident] = useState<Incident | null>(null);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const userStorage = localStorage.getItem("user");
   const userid = userStorage ? JSON.parse(userStorage).id : null;
   console.log("userId from localStorage:", userid);
+
+ 
+
 
   const fetchReports = async () => {
     try {
@@ -131,6 +135,13 @@ const IncidentReportList: React.FC = () => {
     }
   };
 
+  const filteredIncidents = incidents.filter(
+    (incident) =>
+      incident.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      incident.place.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      incident.discription.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (currentView === "edit" && editingIncident) {
     return (
       <EditIncidentForm
@@ -154,7 +165,10 @@ const IncidentReportList: React.FC = () => {
           <input
             type="text"
             placeholder="ค้นหาด้วยชื่อเหตุการณ์ สถานที่ หรือรายละเอียด..."
+            value={searchTerm} // 3. เชื่อม input กับ state
+            onChange={(e) => setSearchTerm(e.target.value)} // 3. อัปเดต state เมื่อพิมพ์
           />
+        
         </div >
         <div className="refresh-section">
           <button
@@ -165,7 +179,7 @@ const IncidentReportList: React.FC = () => {
         >
           <RefreshCw size={15} className={loading ? "spinning" : ""} />
         </button>
-        <div className="result-count">พบ {incidents.length} รายการ</div>
+        <div className="result-count">พบ {filteredIncidents.length} รายการ</div>
         </div>
         
       </div>
@@ -185,7 +199,7 @@ const IncidentReportList: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {incidents.map((incident) => {
+            {filteredIncidents.map((incident) => {
               const { date, time } = formatDateTime(incident.datetime);
               return (
                 <tr key={incident.id}>
