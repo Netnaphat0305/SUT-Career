@@ -71,3 +71,112 @@ export const toTHDateTime = (v?: string | number | Date | null, empty = ""): str
     ? d.toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Bangkok" })
     : empty;
 };
+
+// qr payment utils
+export const payerFromPayment = (p: any): string => {
+  if (!p) return "ผู้ชำระเงิน";
+  
+  const paths = [
+    p.billable_item?.jobpost?.employer,
+    p.BillableItem?.Jobpost?.Employer,
+    p.payment?.billable_item?.jobpost?.employer,
+  ];
+  
+  for (const employer of paths) {
+    if (employer) {
+      const companyName = 
+        employer.company_name || 
+        employer.CompanyName || 
+        employer.companyName ||
+        "";
+      if (companyName) return companyName;
+    }
+  }
+  
+  return "ผู้ชำระเงิน";
+};
+
+export const getEmployerAddress = (p: any): string => {
+  if (!p) return "ที่อยู่ไม่ระบุ";
+  
+  const paths = [
+    p.billable_item?.jobpost?.employer,
+    p.BillableItem?.Jobpost?.Employer,
+    p.payment?.billable_item?.jobpost?.employer,
+  ];
+  
+  for (const employer of paths) {
+    if (employer) {
+      const address = 
+        employer.address || 
+        employer.Address || 
+        "";
+      if (address) return address;
+    }
+  }
+  
+  return "ที่อยู่ไม่ระบุ";
+};
+
+export const getPaymentMethodName = (p: any): string => {
+  if (!p) return "PromptPay";
+  
+  const paths = [
+    p.payment_method,
+    p.PaymentMethod,
+    p.payment?.payment_method,
+    p.paymentMethod,
+    p.method,
+  ];
+  
+  for (const method of paths) {
+    if (method) {
+      const methodName = 
+        method.method_name || 
+        method.MethodName || 
+        method.methodname ||
+        method.name ||
+        "";
+      if (methodName) return methodName;
+    }
+  }
+  
+  return "PromptPay";
+};
+
+export const getJobTitle = (p: any): string => {
+  if (!p) return "รายการชำระเงิน";
+  
+  const titles = [
+    p.billable_item?.jobpost?.title,
+    p.BillableItem?.Jobpost?.title,
+    p.payment?.billable_item?.jobpost?.title,
+    p.billable_item?.description,
+    p.BillableItem?.description,
+    p.payment?.billable_item?.description,
+  ];
+  
+  for (const title of titles) {
+    if (title) return title;
+  }
+  
+  return "รายการชำระเงิน";
+};
+
+export const getAmountFromData = (p: any): number => {
+  if (!p) return 0;
+  
+  const amounts = [
+    p.amount,
+    p.Amount,
+    p.payment?.amount,
+  ];
+  
+  for (const amt of amounts) {
+    if (typeof amt === 'number' && amt > 0) {
+      return amt;
+    }
+  }
+  
+  return 0;
+};

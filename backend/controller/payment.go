@@ -1,4 +1,5 @@
-// backend/controller/payment.go
+// backend/controller/payment.go - แก้ไข Preload nested relationships
+
 package controller
 
 import (
@@ -11,7 +12,6 @@ import (
 	"strings"
 	"time"
 	"sort"
-
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/entity"
 	"github.com/gin-gonic/gin"
@@ -20,62 +20,58 @@ import (
 
 /* ================== Helpers ================== */
 func statusIDByName(db *gorm.DB, names ...string) (uint, error) {
-  var id uint
-  for _, n := range names {
-    err := db.Table("statuses").
-      Select("id").
-      Where("LOWER(status_name) = ?", strings.ToLower(strings.TrimSpace(n))).
-      Take(&id).Error
-    if err == nil {
-      return id, nil
-    }
-    if !errors.Is(err, gorm.ErrRecordNotFound) {
-      return 0, err
-    }
-  }
-  return 0, gorm.ErrRecordNotFound
+	var id uint
+	for _, n := range names {
+		err := db.Table("statuses").
+			Select("id").
+			Where("LOWER(status_name) = ?", strings.ToLower(strings.TrimSpace(n))).
+			Take(&id).Error
+		if err == nil {
+			return id, nil
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, err
+		}
+	}
+	return 0, gorm.ErrRecordNotFound
 }
 
 /* ================== Masters ================== */
-
-// GET /api/payments/statuses
-func ListPaymentStatuses(c *gin.Context) {
-	var rows []struct {
-		ID         uint   `json:"id"`
-		StatusName string `json:"status_name"`
-	}
-	if err := config.DB().Table("payment_statuses").
-		Select("id, status_name").
-		Order("id asc").
-		Scan(&rows).Error; err != nil {
-
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"data": rows})
-}
+// // GET /api/payments/statuses
+// func ListPaymentStatuses(c *gin.Context) {
+// 	var rows []struct {
+// 		ID         uint   `json:"id"`
+// 		StatusName string `json:"status_name"`
+// 	}
+// 	if err := config.DB().Table("payment_statuses").
+// 		Select("id, status_name").
+// 		Order("id asc").
+// 		Scan(&rows).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, gin.H{"data": rows})
+// }
 
 // GET /api/paymentsmethods
 func ListPaymentMethods(c *gin.Context) {
-    var rows []entity.PaymentMethods
-    
-    if err := config.DB().Table("payment_methods").
-        Select("id, methodname").
-        Order("id asc").
-        Scan(&rows).Error; err != nil {
-
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
-    c.JSON(http.StatusOK, rows)
+	var rows []entity.PaymentMethods
+	if err := config.DB().Table("payment_methods").
+		Select("id, methodname").
+		Order("id asc").
+		Scan(&rows).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, rows)
 }
 
 type createPaymentReq struct {
-	BillableItemID  uint    `json:"billable_item_id" binding:"required"`
-	PaymentMethodID uint    `json:"payment_method_id" binding:"required"`
-	Amount          float32 `json:"amount" binding:"required"`
-	DiscountID      *uint   `json:"discount_id"`
-	Datetime		time.Time  `json:"datetime"`
+	BillableItemID  uint      `json:"billable_item_id" binding:"required"`
+	PaymentMethodID uint      `json:"payment_method_id" binding:"required"`
+	Amount          float32   `json:"amount" binding:"required"`
+	DiscountID      *uint     `json:"discount_id"`
+	Datetime        time.Time `json:"datetime"`
 }
 
 func CreatePayment(c *gin.Context) {
@@ -86,7 +82,6 @@ func CreatePayment(c *gin.Context) {
 	}
 
 	db := config.DB()
-
 	pendingID, err := statusIDByName(db, "รอการชำระ")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "pending status not found, please seed statuses"})
@@ -98,8 +93,9 @@ func CreatePayment(c *gin.Context) {
 		PaymentMethodID: req.PaymentMethodID,
 		Amount:          req.Amount,
 		StatusID:        pendingID,
-		Datetime: 		 time.Now(),	
+		Datetime:        time.Now(),
 	}
+
 	if req.DiscountID != nil {
 		p.DiscountID = req.DiscountID
 	}
@@ -111,7 +107,6 @@ func CreatePayment(c *gin.Context) {
 
 	_ = db.Preload("Status").Preload("PaymentMethod").
 		Preload("BillableItem").First(&p, p.ID)
-
 	c.JSON(http.StatusCreated, gin.H{"data": p})
 }
 
@@ -121,19 +116,20 @@ func ListPayments(c *gin.Context) {
 	var pays []entity.Payments
 	if err := db.
 		Preload("Status").
-		Preload("PaymentMethods").
+		Preload("PaymentMethod").                      // ← แก้ไขจาก PaymentMethods
 		Preload("Discount").
 		Preload("BillableItem").
+		Preload("BillableItem.Jobpost").              // ← เพิ่ม nested preload
+		Preload("BillableItem.Jobpost.Employer").     // ← เพิ่ม employer
 		Order("created_at DESC, id DESC").
 		Find(&pays).Error; err != nil {
-
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": pays})
 }
 
-// GET /api/payments/:id
+// GET /api/payments/:id - แก้ไข Preload ให้ครบถ้วน
 func GetPaymentByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
@@ -144,11 +140,12 @@ func GetPaymentByID(c *gin.Context) {
 	var pay entity.Payments
 	if err := config.DB().
 		Preload("Status").
-		Preload("PaymentMethods").
+		Preload("PaymentMethod").                     // ← แก้ไขจาก PaymentMethods
 		Preload("Discount").
 		Preload("BillableItem").
+		Preload("BillableItem.Jobpost").             // ← เพิ่ม nested preload
+		Preload("BillableItem.Jobpost.Employer").    // ← เพิ่ม employer พร้อม address
 		First(&pay, id).Error; err != nil {
-
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "payment not found"})
 			return
@@ -156,142 +153,138 @@ func GetPaymentByID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"data": pay})
 }
 
 // GET /api/payments/job/:jobId
 func GetPaymentByJobId(c *gin.Context) {
-    jobIdStr := c.Param("jobId")
-    if jobIdStr == "" {
-        jobIdStr = c.Param("id")
-    }
+	jobIdStr := c.Param("jobId")
+	if jobIdStr == "" {
+		jobIdStr = c.Param("id")
+	}
 
-    // ✅ แปลงเป็นเลขให้ชัดเจน
-    jobID, err := strconv.ParseUint(jobIdStr, 10, 64)
-    if err != nil || jobID == 0 {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid job id"})
-        return
-    }
+	jobID, err := strconv.ParseUint(jobIdStr, 10, 64)
+	if err != nil || jobID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid job id"})
+		return
+	}
 
-    var payment entity.Payments // ชื่อ struct ให้ตรงโปรเจกต์
-    err = config.DB().
-        Model(&entity.Payments{}).                  // ใช้ Model เพื่อให้ Preload ได้
-        Select("payments.*").                       // ป้องกันคอลัมน์ชนจาก join
-        Joins("LEFT JOIN billable_items bi ON bi.id = payments.billable_item_id").
-        Joins("JOIN jobposts jp ON (jp.billable_item_id = payments.billable_item_id OR jp.id = bi.jobpost_id)").
-        Where("jp.id = ?", jobID).
-        Order("payments.created_at DESC, payments.id DESC").
-        Preload("Status").                           // ชื่อฟิลด์ใน struct
-        Preload("PaymentMethod").                    // หรือ "PaymentMethods" ถ้าฟิลด์คุณชื่อแบบนั้น
-        Preload("Discount").
-        First(&payment).Error
+	var payment entity.Payments
+	err = config.DB().
+		Model(&entity.Payments{}).
+		Select("payments.*").
+		Joins("LEFT JOIN billable_items bi ON bi.id = payments.billable_item_id").
+		Joins("JOIN jobposts jp ON (jp.billable_item_id = payments.billable_item_id OR jp.id = bi.jobpost_id)").
+		Where("jp.id = ?", jobID).
+		Order("payments.created_at DESC, payments.id DESC").
+		Preload("Status").
+		Preload("PaymentMethod").                     // ← แก้ไขจาก PaymentMethods
+		Preload("Discount").
+		Preload("BillableItem").
+		Preload("BillableItem.Jobpost").             // ← เพิ่ม nested preload
+		Preload("BillableItem.Jobpost.Employer").    // ← เพิ่ม employer
+		First(&payment).Error
 
-    if errors.Is(err, gorm.ErrRecordNotFound) {
-        c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found for this job"})
-        return
-    }
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
-    c.JSON(http.StatusOK, gin.H{"data": payment})
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found for this job"})
+		return
+	}
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": payment})
 }
 
+// GET /api/payments/billable/:billableId - แก้ไข Preload ให้ครบถ้วน
 func GetLatestPaymentByBillable(c *gin.Context) {
 	bid := c.Param("billableId")
-
 	var p entity.Payments
+	
 	err := config.DB().
 		Where("billable_item_id = ?", bid).
 		Order("payments.created_at DESC, payments.id DESC").
 		Preload("BillableItem").
 		Preload("BillableItem.Jobpost").
-		Preload("BillableItem.Jobpost.Employer", func(db *gorm.DB) *gorm.DB {
-			// เลือกเฉพาะคอลัมน์ที่จำเป็นให้เบา query (อย่าลืม id)
-			return db.Select("employers.id", "employers.company_name")
-		}).
-		Preload("PaymentMethod").
+		Preload("BillableItem.Jobpost.Employer").    // ← แก้ไข: เลือกทุก field ของ employer รวม address
+		Preload("PaymentMethod").                     // ← เพิ่ม PaymentMethod
 		Preload("Status").
 		First(&p).Error
-
+		
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "payment not found"})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"data": p})
 }
 
 func UploadEvidence(c *gin.Context) {
-    id := c.Param("id")
-    db := config.DB()
+	id := c.Param("id")
+	db := config.DB()
+	// บันทึกใต้ ./static/payment_evidence เพื่อเสิร์ฟผ่าน /static
+	baseDir := filepath.Join(".", "static", "payment_evidence")
+	if err := os.MkdirAll(baseDir, 0o755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot prepare storage"})
+		return
+	}
 
-    // บันทึกใต้ ./static/payment_evidence เพื่อเสิร์ฟผ่าน /static
-    baseDir := filepath.Join(".", "static", "payment_evidence")
-    if err := os.MkdirAll(baseDir, 0o755); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot prepare storage"})
-        return
-    }
+	var savedRel, publicURL string
+	file, err := c.FormFile("evidence") // ฝั่ง FE ส่งคีย์ "evidence"
+	if err != nil || file == nil {
+		file, err = c.FormFile("file") // เผื่อบางที่ส่งชื่อ "file"
+	}
 
-    // ---- ไม่ใช้ multipart.FileHeader โดยตรง ----
-    var savedRel, publicURL string
+	if err == nil && file != nil {
+		orig := filepath.Base(file.Filename)
+		ext := strings.ToLower(filepath.Ext(orig))
+		if ext == "" { ext = ".bin" }
+		name := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
+		full := filepath.Join(baseDir, name)
+		if err := c.SaveUploadedFile(file, full); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "cannot save file"})
+			return
+		}
 
-    file, err := c.FormFile("evidence") // ฝั่ง FE ส่งคีย์ "evidence"
-    if err != nil || file == nil {
-        file, err = c.FormFile("file")   // เผื่อบางที่ส่งชื่อ "file"
-    }
+		// เก็บใน DB เป็น path แบบ relative ต่อ /static
+		savedRel = filepath.ToSlash(filepath.Join("payment_evidence", name))
+		publicURL = "/static/" + savedRel
+	}
 
-    if err == nil && file != nil {
-        orig := filepath.Base(file.Filename)
-        ext := strings.ToLower(filepath.Ext(orig))
-        if ext == "" { ext = ".bin" }
+	// อัปเดตสถานะเป็น "ชำระแล้ว"
+	reviewID, err := statusIDByName(db, "ชำระแล้ว")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "review status not found, please seed statuses"})
+		return
+	}
 
-        name := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
-        full := filepath.Join(baseDir, name)
+	updates := map[string]any{"status_id": reviewID}
+	if savedRel != "" {
+		updates["proof_of_payment"] = savedRel
+	}
 
-        if err := c.SaveUploadedFile(file, full); err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "cannot save file"})
-            return
-        }
+	if err := db.Model(&entity.Payments{}).
+		Where("id = ?", id).
+		Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
+		return
+	}
 
-        // เก็บใน DB เป็น path แบบ relative ต่อ /static
-        savedRel = filepath.ToSlash(filepath.Join("payment_evidence", name))
-        publicURL = "/static/" + savedRel
-    }
-
-    // อัปเดตสถานะเป็น "ชำระแล้ว"
-    reviewID, err := statusIDByName(db, "ชำระแล้ว")
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "review status not found, please seed statuses"})
-        return
-    }
-
-    updates := map[string]any{"status_id": reviewID}
-    if savedRel != "" {
-        updates["proof_of_payment"] = savedRel
-    }
-
-    if err := db.Model(&entity.Payments{}).
-        Where("id = ?", id).
-        Updates(updates).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
-        return
-    }
-
-    var p entity.Payments
-    _ = db.Preload("Status").
-        Preload("PaymentMethod").
-        Preload("BillableItem").
-        First(&p, "id = ?", id).Error
-
-    c.JSON(http.StatusOK, gin.H{
-        "data":       p,
-        "public_url": publicURL, // ตัวอย่าง: /static/payment_evidence/16942401....jpg
-    })
+	var p entity.Payments
+	_ = db.Preload("Status").
+		Preload("PaymentMethod").
+		Preload("BillableItem").
+		First(&p, "id = ?", id).Error
+	c.JSON(http.StatusOK, gin.H{
+		"data": p,
+		"public_url": publicURL, // ตัวอย่าง: /static/payment_evidence/16942401....jpg
+	})
 }
 
-
 // ------------------------------ admin -----------------------------------
-
 type dayPoint struct {
 	Date string  `json:"date"` // YYYY-MM-DD (Asia/Bangkok)
 	In   float32 `json:"in"`
@@ -304,10 +297,8 @@ func FinanceSummary(c *gin.Context) {
 	db := config.DB()
 	fromStr := c.Query("from")
 	toStr := c.Query("to")
-
 	loc, _ := time.LoadLocation("Asia/Bangkok")
 	now := time.Now().In(loc)
-
 	var from, to time.Time
 	var err error
 	if fromStr == "" {
@@ -328,9 +319,9 @@ func FinanceSummary(c *gin.Context) {
 			return
 		}
 	}
+
 	// ครอบคลุมทั้งวันสุดท้าย
 	to = to.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
-
 	// --- เงินเข้า (payments) ---
 	paidID, err := statusIDByName(db, "ชำระแล้ว")
 	if err != nil {
@@ -350,7 +341,6 @@ func FinanceSummary(c *gin.Context) {
 	// รวมยอดรายวัน
 	bucket := map[string]*dayPoint{}
 	totalIn, totalOut := float32(0), float32(0)
-
 	// Payments → In
 	for _, p := range pays {
 		d := p.Datetime.In(loc).Format("2006-01-02")
@@ -362,26 +352,24 @@ func FinanceSummary(c *gin.Context) {
 		totalIn += amt
 	}
 
-
 	// คำนวณ Net + เรียงวัน
 	var series []dayPoint
 	for _, v := range bucket {
 		v.Net = v.In - v.Out
 		series = append(series, *v)
 	}
-	sort.Slice(series, func(i, j int) bool { return series[i].Date < series[j].Date })
 
+	sort.Slice(series, func(i, j int) bool { return series[i].Date < series[j].Date })
 	c.JSON(http.StatusOK, gin.H{
-		"from":      from.Format("2006-01-02"),
-		"to":        to.Format("2006-01-02"),
-		"total_in":  totalIn,
+		"from": from.Format("2006-01-02"),
+		"to": to.Format("2006-01-02"),
+		"total_in": totalIn,
 		"total_out": totalOut,
-		"net":       totalIn - totalOut,
-		"series":    series,
+		"net": totalIn - totalOut,
+		"series": series,
 	})
 }
 
-
 func safePaymentAmount(p entity.Payments) float32 {
-    return p.Amount
+	return p.Amount
 }

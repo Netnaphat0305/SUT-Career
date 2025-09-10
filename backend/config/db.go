@@ -212,8 +212,8 @@ func SeedDatabase() {
 	employer := entity.Employer{
 		Model:         gorm.Model{ID: 1},
 		Firstname:     "พรศิริ",
-		Lasttname:     "ถาบุญศรี",
-		Email:         "hr@hormok.co.th",
+		Lastname:     "ถาบุญศรี",
+		Email:         "hr@home.co.th",
 		CompanyName:   "Home Studio",
 		ContactPerson: "คุณพรศิริ ถาบุญศรี",
 		Birthday:      birthdayEmp,

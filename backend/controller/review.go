@@ -34,27 +34,27 @@ func (p *CreateReviewPayload) Normalize() (jobID uint, scoreID uint, comment str
 	return
 }
 
-// GET /api/reviews/scores    (public)
-func ListRatingScores(c *gin.Context) {
-	role := c.GetString("role")
-	if role == "" { // ยังไม่ได้ล็อกอิน
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+// // GET /api/reviews/scores    (public)
+// func ListRatingScores(c *gin.Context) {
+// 	role := c.GetString("role")
+// 	if role == "" { // ยังไม่ได้ล็อกอิน
+// 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+// 		return
+// 	}
 
-	if role != "employer" && role != "admin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		return
-	}
+// 	if role != "employer" && role != "admin" {
+// 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+// 		return
+// 	}
 
-	var scores []entity.Ratingscores
-	if err := config.DB().Find(&scores).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch scores failed"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"data": scores})
+// 	var scores []entity.Ratingscores
+// 	if err := config.DB().Find(&scores).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch scores failed"})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, gin.H{"data": scores})
 
-}
+// }
 
 // GET /api/reviews/job/:jobId   (protected)
 func FindRatingsByJobPostID(c *gin.Context) {

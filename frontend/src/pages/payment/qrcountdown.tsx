@@ -1,39 +1,55 @@
-// src/components/payment/QRCountdown.tsx
-import React from "react";
-import { Typography } from "antd";
+import React, { useEffect, useState } from 'react';
+import { Typography } from 'antd';
 
 const { Text } = Typography;
 
-type Props = {
-  startAt?: number;      // ms timestamp
-  minutes?: number;      // default 15
-  onExpire?: () => void;
-};
+interface Props {
+  startAt?: number;
+  durationMinutes?: number;
+  onExpired: () => void;
+}
 
-const QRCountdown: React.FC<Props> = ({ startAt, minutes = 15, onExpire }) => {
-  const [remain, setRemain] = React.useState<number>(minutes * 60);
+const QRCountdown: React.FC<Props> = ({ 
+  startAt, 
+  durationMinutes = 15, 
+  onExpired 
+}) => {
+  const [timeLeft, setTimeLeft] = useState<string>('');
 
-  React.useEffect(() => {
-    const t0 = Math.floor((startAt ?? Date.now()) / 1000);
-    const end = t0 + minutes * 60;
+  useEffect(() => {
+    if (!startAt) {
+      setTimeLeft('');
+      return;
+    }
 
-    const id = setInterval(() => {
-      const now = Math.floor(Date.now() / 1000);
-      const left = Math.max(0, end - now);
-      setRemain(left);
-      if (left === 0) {
-        clearInterval(id);
-        onExpire?.();
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const elapsed = now - startAt;
+      const totalDuration = durationMinutes * 60 * 1000; // convert to milliseconds
+      const remaining = totalDuration - elapsed;
+
+      if (remaining <= 0) {
+        setTimeLeft('หมดเวลา');
+        onExpired();
+        clearInterval(interval);
+        return;
       }
+
+      const minutes = Math.floor(remaining / (60 * 1000));
+      const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+      setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
     }, 1000);
 
-    return () => clearInterval(id);
-  }, [startAt, minutes, onExpire]);
+    return () => clearInterval(interval);
+  }, [startAt, durationMinutes, onExpired]);
 
-  const mm = String(Math.floor(remain / 60)).padStart(2, "0");
-  const ss = String(remain % 60).padStart(2, "0");
+  if (!startAt || !timeLeft) return null;
 
-  return <Text type={remain <= 60 ? "danger" : "secondary"}>กรุณาชำระเงินภายใน {mm}:{ss}</Text>;
+  return (
+    <Text type={timeLeft === 'หมดเวลา' ? 'danger' : 'secondary'}>
+      กรุณาชำระเงินภายใน: {timeLeft}
+    </Text>
+  );
 };
 
 export default QRCountdown;

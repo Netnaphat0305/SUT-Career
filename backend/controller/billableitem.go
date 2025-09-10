@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"gorm.io/gorm"
     "math"
+	"strconv"
+	"errors"
     "strings"
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/entity"
@@ -21,7 +23,7 @@ import (
 // }
 
 // // DELETE /billable_item/:id
-// func DeleteCreatorById(c *gin.Context) {
+// func DeleteBillableItemById(c *gin.Context) {
 // 	id := c.Param("id")
 // 	if tx := config.DB().Exec("DELETE FROM billableitemid WHERE id = ?", id); tx.RowsAffected == 0 {
 // 		c.JSON(http.StatusNotFound, gin.H{"error": "id not found"})
@@ -247,4 +249,29 @@ func ifEmpty(s, def string) string {
 		return def
 	}
 	return s
+}
+
+func GetBillableItemByID(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var bi entity.BillableItems
+	err = config.DB().
+		Preload("Jobpost").
+		Preload("Jobpost.Employer").
+		Preload("Jobpost.PaymentMethod").
+		First(&bi, id).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "billable item not found"})
+		return
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": bi})
 }

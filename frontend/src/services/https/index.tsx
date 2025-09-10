@@ -9,7 +9,6 @@ import type {
   Review,
 } from "../../interfaces/review";
 import type { Discount } from "../../interfaces/discount";
-import type { Ratingscore } from "../../interfaces/ratingscore";
 import type { Jobpost, CreateJobpost } from "../../interfaces/jobpost";
 import type { Payment, CreatePaymentPayload } from "../../interfaces/payment";
 import type { Order } from "../../interfaces/order";
@@ -312,10 +311,6 @@ export const reviewAPI = {
     Get(`/api/reviews/view/${id}`),
 };
 
-export const ratingScoreAPI = {
-  getAll: (): Promise<{ data: Ratingscore[] }> =>
-    Get<{ data: Ratingscore[] }>(`/api/reviews/scores`),
-};
 // Job Post APIs
 export const jobPostAPI = {
   create: (data: CreateJobpost) => Post("/api/jobposts", data),

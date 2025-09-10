@@ -57,10 +57,6 @@ func main() {
 		// --- Job Categories ---
 		api.GET("/jobcategories", controller.ListJobCategories)
 		api.GET("/jobcategories/:id", controller.GetJobCategoryByID)
-		api.GET("/reviews/scores", controller.ListRatingScores)
-		api.GET("/payments/statuses", controller.ListPaymentStatuses)
-		// api.GET("/banks", controller.ListBanks)
-		// api.GET("/genders", controller.ListGenders)
 		
 		
 
@@ -155,6 +151,9 @@ func main() {
 		auth.GET("/discounts", controller.ListDiscounts)
 		auth.POST("/billable_items", controller.CreateOrUpdateBillableItem)
 		auth.GET("/paymentmethods", controller.ListPaymentMethods)
+		auth.GET("/payments/:id", controller.GetPaymentByID)
+		auth.GET("/payments/job/:jobId", controller.GetPaymentByJobId)
+		auth.GET("/billable_items/:id", controller.GetBillableItemByID)
 		auth.GET("/payments/billable/:billableId", controller.GetLatestPaymentByBillable)
 		auth.POST("/payments/:id/evidence", controller.UploadEvidence)
 
