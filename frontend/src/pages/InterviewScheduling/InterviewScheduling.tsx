@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Button, Card, Typography, Space, Row, Col, Modal, TimePicker, Form, message } from "antd"
+import { Button, Card, Typography, Space, Row, Col, Modal, TimePicker, Form, message, Input } from "antd"
 import { LeftOutlined, RightOutlined, CheckCircleOutlined, CloseOutlined, DeleteOutlined } from "@ant-design/icons"
 import type { Dayjs } from "dayjs"
 import dayjs from "dayjs"
@@ -13,6 +13,7 @@ import "./InterviewScheduling.css"
 
 const { Title, Text } = Typography
 const { RangePicker } = TimePicker
+const { TextArea } = Input;
 
 interface InterviewSlot {
   id: string
@@ -41,6 +42,7 @@ const updateTimeSlots = async (newSlots: Record<string, InterviewSlot[]>) => {
 }
 
 const InterviewScheduling: React.FC = () => {
+  const [interviewDetails, setInterviewDetails] = useState<string>("")
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null)
   const [currentMonth, setCurrentMonth] = useState<Dayjs>(dayjs("2024-12-01"))
   const [showAddTimeModal, setShowAddTimeModal] = useState<boolean>(false)
@@ -242,7 +244,7 @@ const InterviewScheduling: React.FC = () => {
         </Row>
       </div>
 
-      <Modal open={showAddTimeModal} footer={null} closable={false} centered width={500} styles={{ body: { padding: 0} }}>
+      <Modal open={showAddTimeModal} footer={null} closable={false} centered width={500} styles={{ body: { padding: 0 } }}>
         <div className="modal-centered-content">
           <div className="modal-inner-content">
             <CloseOutlined className="modal-close-button" onClick={() => { setShowAddTimeModal(false); setSelectedTimeRange(null); form.resetFields() }} />
@@ -251,6 +253,15 @@ const InterviewScheduling: React.FC = () => {
               <Form.Item name="timeRange" className="modal-form-item">
                 <RangePicker format="HH:mm" placeholder={["เวลาเริ่ม", "เวลาสิ้นสุด"]} className="modal-time-picker" onChange={(times) => setSelectedTimeRange(times as [Dayjs, Dayjs])} />
               </Form.Item>
+              <Title level={5}>
+                รายละเอียดการนัดสัมภาษณ์
+              </Title>
+              <TextArea
+                rows={4}
+                placeholder="เช่น Online: Zoom"
+                value={interviewDetails}
+                onChange={(e) => setInterviewDetails(e.target.value)}
+              />
             </Form>
             <div className="modal-action-buttons">
               <Button size="large" className="modal-cancel-button" onClick={() => { setShowAddTimeModal(false); setSelectedTimeRange(null); form.resetFields() }}>ยกเลิก</Button>
@@ -260,7 +271,7 @@ const InterviewScheduling: React.FC = () => {
         </div>
       </Modal>
 
-      <Modal open={showDeleteModal} footer={null} closable={false} centered width={500} styles={{ body: { padding: 0} }}>
+      <Modal open={showDeleteModal} footer={null} closable={false} centered width={500} styles={{ body: { padding: 0 } }}>
         <div className="modal-centered-content">
           <div className="modal-inner-content">
             <CloseOutlined className="modal-close-button" onClick={() => { setShowDeleteModal(false); setSelectedTimeSlotForDeletion(null) }} />
@@ -276,17 +287,42 @@ const InterviewScheduling: React.FC = () => {
         </div>
       </Modal>
 
-      <Modal open={showSuccessModal} footer={null} closable={false} centered width={400} styles={{ body: { padding: 0} }}>
+      <Modal open={showSuccessModal} footer={null} closable={false} centered width={400} styles={{ body: { padding: 0 } }}>
         <div className="modal-centered-content">
           <div className="success-modal-inner-content">
-            <CloseOutlined className="modal-close-button" onClick={() => { setShowSuccessModal(false); setSelectedTimeSlotForDeletion(null) }} />
+            <CloseOutlined
+              className="modal-close-button"
+              onClick={() => {
+                setShowSuccessModal(false);
+                setSelectedTimeSlotForDeletion(null);
+                setInterviewDetails(""); // รีเซ็ตด้วย
+              }}
+            />
             <CheckCircleOutlined className="success-modal-check-icon" />
-            <Title level={4} className="success-modal-title">
-              {selectedTimeSlotForDeletion ? "ลบช่วงเวลานัดสัมภาษณ์" : "เพิ่มช่วงเวลานัดสัมภาษณ์"}
-            </Title>
-            <Text className="success-modal-details-text">
-              {selectedDate?.format("ddddที่ D MMMM")} เวลา {/* เติมไรสักอย่าง */}
-            </Text>
+
+            {/* เงื่อนไข Title แยกออกมา */}
+            {selectedTimeSlotForDeletion ? (
+              <>
+                <Title level={4} className="success-modal-title">ลบช่วงเวลานัดสัมภาษณ์</Title>
+                <Text className="success-modal-details-text">
+                  {selectedDate?.format("ddddที่ D MMMM")} เวลา {/* ใส่เวลาที่ลบออก */}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Title level={4} className="success-modal-title">เพิ่มช่วงเวลานัดสัมภาษณ์</Title>
+                <Text className="success-modal-details-text">
+                  {selectedDate?.format("dddd ที่ D MMMM")} เวลา {selectedTimeRange?.[0].format("HH:mm")} - {selectedTimeRange?.[1].format("HH:mm")}
+                </Text>
+
+                {/* แสดงรายละเอียดที่ผู้ใช้กรอก */}
+                {interviewDetails && (
+                  <Text className="success-modal-extra-details">
+                    รายละเอียด: {interviewDetails}
+                  </Text>
+                )}
+              </>
+            )}
             <Text className="success-modal-status-text">สำเร็จ</Text>
           </div>
         </div>

@@ -101,7 +101,7 @@
 }
 
 .date-cell-booked {
-  background-color: #ff7875;
+  background-color: #ffd447;
   color: #ffffff;
 }
 
@@ -124,7 +124,7 @@
 }
 
 .legend-dot-selected { background-color: #a8e6a3; }
-.legend-dot-booked { background-color: #ff7875; }
+.legend-dot-booked { background-color: #ffd447; }
 .legend-dot-available { background-color: #d9d9d9; }
 
 .time-slots-card {
@@ -170,10 +170,10 @@
 }
 
 .time-slot-pill-available { background-color: #d9d9d9; }
-.time-slot-pill-booked { background-color: #ff4d4f; }
+.time-slot-pill-booked { background-color: #ffd447; }
 .time-slot-pill-selected {
-  background-color: #52c41a;
-  border: 2px solid #389e0d;
+  background-color: #ff4d4f;
+  border: 2px solid #ca0003;
 }
 
 .no-slots-text {
@@ -284,4 +284,18 @@
 
 .success-modal-status-text {
   font-weight: bold;
+}
+
+.success-modal-extra-details {}
+
+.success-modal-status-text {
+    display: block;
+    margin-top: 1%;
+    font-weight: bold;
+    unicode-bidi: isolate;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 1.4;
+    color: rgb(98, 225, 0);
 }
