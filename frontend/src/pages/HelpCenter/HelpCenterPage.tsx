@@ -124,6 +124,34 @@ const HelpCenterPage: React.FC = () => {
     fetchFaqs();
   }, []);
 
+  // ✨ START: เพิ่ม useEffect สำหรับ Polling ฝั่งผู้ใช้งาน
+  useEffect(() => {
+    // ทำงานเมื่อ Modal เปิด และมี Ticket ที่เลือกไว้
+    if (isModalVisible && selectedTicket) {
+      const intervalId = setInterval(async () => {
+        console.log(`Polling for user updates on ticket #${selectedTicket.ID}...`);
+        try {
+          const response = await qnaAPI.getTicketById(String(selectedTicket.ID));
+          const updatedTicketData = response?.data?.data || response?.data;
+          
+          if (updatedTicketData) {
+            // อัปเดต state เพื่อให้ข้อมูลใน Modal เป็นข้อมูลล่าสุด
+            setSelectedTicket(updatedTicketData);
+          }
+        } catch (error) {
+          console.error("Polling for user ticket updates failed:", error);
+        }
+      }, 5000); // ดึงข้อมูลใหม่ทุก 5 วินาที
+
+      // Cleanup: หยุดการดึงข้อมูลเมื่อ Modal ปิด
+      return () => {
+        console.log(`Stopping user polling for ticket #${selectedTicket.ID}.`);
+        clearInterval(intervalId);
+      };
+    }
+  }, [isModalVisible, selectedTicket]);
+  // ✨ END: เพิ่ม useEffect สำหรับ Polling
+
   const filteredFaqs = useMemo(() => {
     if (!searchTerm) {
       return Array.isArray(faqs) ? faqs : [];
@@ -233,6 +261,7 @@ const HelpCenterPage: React.FC = () => {
         setReplyFileList([]);
         setReplyAttachments([]);
 
+        // ดึงข้อมูลล่าสุดมาแสดงทันที
         const updatedTicketResponse = await qnaAPI.getTicketById(String(selectedTicket.ID));
         if (updatedTicketResponse && updatedTicketResponse.data) {
           const updatedTicketData = updatedTicketResponse?.data?.data || updatedTicketResponse?.data || null;
@@ -448,7 +477,7 @@ const HelpCenterPage: React.FC = () => {
           type="primary"
           icon={<SendOutlined />}
           size="large"
-          onClick={() => navigate('/help/ask')}
+          onClick={() => navigate('/help/request')}
           style={{ borderRadius: '12px', height: '48px', fontSize: '15px', fontWeight: '500', boxShadow: '0 4px 12px rgba(24, 144, 255, 0.3)' }}
         >
           ส่งคำร้องใหม่
@@ -560,4 +589,3 @@ const HelpCenterPage: React.FC = () => {
 };
 
 export default HelpCenterPage;
-

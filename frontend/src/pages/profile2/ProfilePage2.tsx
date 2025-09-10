@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Avatar,
@@ -44,10 +44,10 @@ const mockReviews = {
 };
 
 const ProfilePage2: React.FC = () => {
-  const { userId } = useParams<{ userId: string }>();
+  const { studentId } = useParams<{ studentId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-
+  
   const [student, setStudent] = useState<Student | null>(null);
   const [posts, setPosts] = useState<StudentPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,34 +56,60 @@ const ProfilePage2: React.FC = () => {
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [editingPost, setEditingPost] = useState<StudentPost | null>(null);
 
-  const isMyProfile = !userId || (user && user.id === parseInt(userId, 10));
+  // ⭐ แก้ไข: คำนวณ isMyProfile หลังจากที่ student โหลดเสร็จแล้ว
+  const isMyProfile = useMemo(() => {
+    if (!user) return false;
+    if (!studentId) return true; // ถ้าไม่มี studentId หมายถึงดูโปรไฟล์ตัวเอง
+    if (!student) return false; // ถ้า student ยังไม่โหลด
+    return student.user_id === user.id;
+  }, [user, studentId, student]);
 
+  // ⭐ แก้ไข: ลบ student?.user_id ออกจาก dependency เพื่อป้องกัน infinite loop
   const loadProfileData = useCallback(async () => {
+    console.log("=== ProfilePage2 Debug ===");
+    console.log("📍 Current params:", { studentId });
+    console.log("👤 Current user:", { userId: user?.id, role: user?.role });
+    
     setLoading(true);
     setError(null);
-
+    
     try {
       let studentData: Student | null = null;
       let studentPosts: StudentPost[] = [];
 
-      if (isMyProfile && user) {
+      if (!studentId && user) {
+        // ดูโปรไฟล์ของตัวเอง
+        console.log("🏠 Loading my profile...");
         const response = await profileAPI.getMyProfile();
-        if (response && response.data && response.data.data) {
+        if (response?.data?.data) {
           const data = response.data.data;
           studentData = data.student;
           studentPosts = data.posts || [];
+          console.log("✅ My profile loaded:", { 
+            student: studentData, 
+            postsCount: studentPosts.length,
+            studentUserId: studentData?.user_id,
+            currentUserId: user?.id 
+          });
         } else {
           throw new Error('รูปแบบข้อมูลโปรไฟล์ไม่ถูกต้อง');
         }
-      } else if (userId) {
-        const targetStudentId = Number(userId);
-        const studentRes = await profileAPI.getProfileById(userId);
-        if (studentRes && studentRes.data) {
+      } else if (studentId) {
+        // ดูโปรไฟล์ของคนอื่น
+        console.log("👥 Loading other profile with studentId:", studentId);
+        const studentRes = await profileAPI.getProfileById(studentId);
+        if (studentRes?.data?.data) {
           const data = studentRes.data.data;
           studentData = data.student;
           studentPosts = data.posts || [];
+          console.log("✅ Other profile loaded:", { 
+            student: studentData, 
+            postsCount: studentPosts.length,
+            studentUserId: studentData?.user_id,
+            currentUserId: user?.id 
+          });
         } else {
-          throw new Error(`ไม่พบข้อมูลนักศึกษาสำหรับ ID: ${targetStudentId}`);
+          throw new Error(`ไม่พบข้อมูลนักศึกษาสำหรับ ID: ${studentId}`);
         }
       } else {
         throw new Error('ไม่สามารถระบุโปรไฟล์ที่ต้องการได้');
@@ -91,16 +117,33 @@ const ProfilePage2: React.FC = () => {
 
       setStudent(studentData);
       setPosts(studentPosts);
+      
     } catch (err: any) {
+      console.error("❌ Profile loading error:", err);
       setError(err.message || 'เกิดข้อผิดพลาดในการโหลดโปรไฟล์');
     } finally {
       setLoading(false);
     }
-  }, [isMyProfile, userId, user]);
+  }, [studentId, user]); // ⭐ ลบ student?.user_id ออก
 
   useEffect(() => {
     loadProfileData();
   }, [loadProfileData]);
+
+  // ⭐ แก้ไข: เพิ่ม useEffect เพื่อ debug isMyProfile หลังจาก student โหลดเสร็จ
+  useEffect(() => {
+    if (student && user) {
+      console.log("🎯 isMyProfile calculation:", { 
+        noStudentId: !studentId, 
+        hasUser: !!user, 
+        hasStudent: !!student,
+        studentUserId: student?.user_id,
+        currentUserId: user?.id,
+        isMyProfile,
+        comparison: student.user_id === user.id
+      });
+    }
+  }, [student, user, studentId, isMyProfile]);
 
   const handleEditPost = (post: StudentPost) => {
     setEditingPost(post);
@@ -111,7 +154,7 @@ const ProfilePage2: React.FC = () => {
     try {
       await studentPostAPI.deleteStudentPost(postId);
       message.success('ลบโพสต์สำเร็จแล้ว');
-      loadProfileData(); // Refresh data
+      loadProfileData();
     } catch (error) {
       message.error('เกิดข้อผิดพลาดในการลบโพสต์');
     }
@@ -141,152 +184,157 @@ const ProfilePage2: React.FC = () => {
 
   if (error || !student) {
     return (
-      <div style={{ textAlign: 'center', padding: '50px' }}>
-        <Alert
-          message="เกิดข้อผิดพลาด"
-          description={error}
-          type="error"
-          style={{ margin: '24px' }}
-        />
-        <Button onClick={() => navigate(-1)}>กลับ</Button>
-      </div>
+      <Alert
+        message="เกิดข้อผิดพลาด"
+        description={error}
+        type="error"
+        showIcon
+        action={
+          <Button size="small" onClick={() => navigate(-1)}>
+            กลับ
+          </Button>
+        }
+      />
     );
   }
 
+  console.log("🔧 Render Check:", { 
+    isMyProfile, 
+    studentUserId: student?.user_id, 
+    currentUserId: user?.id,
+    willShowCreateButton: isMyProfile 
+  });
+
   return (
     <>
-      <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-        <Row gutter={[24, 24]}>
-          {/* Profile Information Column */}
-          <Col xs={24} lg={8}>
-            <Card>
-              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                <Avatar
-                  size={120}
-                  icon={<UserOutlined />}
-                  src={student.profile_image_url} // 🔧 แสดงรูปโปรไฟล์อย่างถูกต้อง
-                />
-                <Title level={3} style={{ marginTop: '16px', marginBottom: '8px' }}>
-                  {student.first_name} {student.last_name}
-                </Title>
-                <div>
-                  <Rate disabled defaultValue={mockReviews.rating} />
-                  <Text type="secondary"> ({mockReviews.count} รีวิว)</Text>
-                </div>
-              </div>
+      <Row gutter={[24, 24]} style={{ padding: '20px' }}>
+        {/* Profile Information Column */}
+        <Col xs={24} md={8}>
+          <Card>
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <Avatar
+                size={120}
+                icon={<UserOutlined />}
+                src={student.profile_image_url}
+              />
+              <Title level={3} style={{ marginTop: 16, marginBottom: 0 }}>
+                {student.first_name} {student.last_name}
+              </Title>
+              <Rate disabled defaultValue={mockReviews.rating} />
+              <Text type="secondary">({mockReviews.count} รีวิว)</Text>
+            </div>
 
-              <Divider />
+            <Divider />
 
-              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <div>
-                  <MailOutlined /> {student.email}
-                </div>
-                <div>
-                  <PhoneOutlined /> {student.phone}
-                </div>
-                <div>
-                  <BookOutlined /> {student.faculty} (ปี {student.year})
-                </div>
-              </Space>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <div><MailOutlined /> {student.email}</div>
+              <div><PhoneOutlined /> {student.phone}</div>
+              <div><BookOutlined /> {student.faculty} (ปี {student.year})</div>
+            </Space>
 
-              <Divider />
+            <Divider />
+            <Title level={5}>ทักษะ</Title>
+            <div>
+              {(student.skills?.split(',') || []).map(
+                (skill, index) =>
+                  skill && (
+                    <Tag key={index} style={{ marginBottom: 4 }}>
+                      {skill.trim()}
+                    </Tag>
+                  )
+              )}
+              {!student.skills && <Text type="secondary">ไม่มีทักษะระบุ</Text>}
+            </div>
 
-              <div>
-                <Title level={5}>ทักษะ</Title>
-                {(student.skills?.split(',') || []).map(
-                  (skill, index) =>
-                    skill && (
-                      <Tag key={index} style={{ marginBottom: '8px' }}>
-                        {skill.trim()}
-                      </Tag>
-                    )
-                )}
-                {!student.skills && <Text type="secondary">ไม่มีทักษะระบุ</Text>}
-              </div>
+            {isMyProfile && (
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                block
+                style={{ marginTop: 24 }}
+                onClick={() => navigate('/profile/edit')}
+              >
+                แก้ไขโปรไฟล์
+              </Button>
+            )}
+          </Card>
+        </Col>
 
-              {isMyProfile && (
+        {/* Posts Column */}
+        <Col xs={24} md={16}>
+          <Card
+            title="โพสต์หางาน"
+            extra={
+              isMyProfile && (
                 <Button
                   type="primary"
-                  icon={<EditOutlined />}
-                  block
-                  style={{ marginTop: 24 }}
-                  onClick={() => navigate('/profile/edit')}
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    console.log("🚀 Create Post Button Clicked");
+                    setCreateModalVisible(true);
+                  }}
                 >
-                  แก้ไขโปรไฟล์
+                  สร้างโพสต์ใหม่
                 </Button>
-              )}
-            </Card>
-          </Col>
-
-          {/* Posts Column */}
-          <Col xs={24} lg={16}>
-            <Card
-              title={`โพสต์หางาน (${posts.length})`}
-              extra={
-                isMyProfile && (
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => setCreateModalVisible(true)}
+              )
+            }
+          >
+            {posts.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {posts.map((post) => (
+                  <Card
+                    key={post.ID}
+                    size="small"
+                    actions={
+                      isMyProfile
+                        ? [
+                            <Button
+                              key="edit"
+                              type="text"
+                              icon={<EditOutlined />}
+                              onClick={() => handleEditPost(post)}
+                            >
+                              แก้ไข
+                            </Button>,
+                            <Popconfirm
+                              key="delete"
+                              title="ต้องการลบโพสต์นี้?"
+                              onConfirm={() => handleDeletePost(post.ID)}
+                              okText="ยืนยัน"
+                              cancelText="ยกเลิก"
+                            >
+                              <Button type="text" danger icon={<DeleteOutlined />}>
+                                ลบ
+                              </Button>
+                            </Popconfirm>,
+                          ]
+                        : undefined
+                    }
                   >
-                    สร้างโพสต์ใหม่
-                  </Button>
-                )
-              }
-            >
-              {posts.length > 0 ? (
-                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                  {posts.map((post) => (
-                    <Card
-                      key={post.ID}
-                      size="small"
-                      actions={
-                        isMyProfile ? [
-                          <Button
-                            key="edit"
-                            type="link"
-                            icon={<EditOutlined />}
-                            onClick={() => handleEditPost(post)}
-                          >
-                            แก้ไข
-                          </Button>,
-                          <Popconfirm
-                            key="delete"
-                            title="คุณแน่ใจหรือไม่ที่จะลบโพสต์นี้?"
-                            onConfirm={() => handleDeletePost(post.ID)}
-                            okText="ยืนยัน"
-                            cancelText="ยกเลิก"
-                          >
-                            <Button type="link" danger icon={<DeleteOutlined />}>
-                              ลบ
-                            </Button>
-                          </Popconfirm>,
-                        ] : undefined
-                      }
-                    >
-                      <Title level={5}>{post.title}</Title>
-                      <Paragraph>{post.introduction}</Paragraph>
-                      <Space wrap>
-                        <Tag icon={<ClockCircleOutlined />} color="cyan">
-                          {post.availability}
-                        </Tag>
-                        <Tag icon={<EnvironmentOutlined />} color="purple">
-                          {post.preferred_location}
-                        </Tag>
-                        <Tag icon={<DollarOutlined />} color="gold">
-                          {post.expected_compensation || 'ตามตกลง'}
-                        </Tag>
-                      </Space>
-                    </Card>
-                  ))}
-                </Space>
-              ) : (
-                <Empty description="ยังไม่มีโพสต์หางาน" />
-              )}
-            </Card>
-          </Col>
-        </Row>
-      </div>
+                    <Card.Meta
+                      title={post.title}
+                      description={post.introduction}
+                    />
+                    <div style={{ marginTop: 12 }}>
+                      <Tag icon={<ClockCircleOutlined />} color="cyan">
+                        {post.availability}
+                      </Tag>
+                      <Tag icon={<EnvironmentOutlined />} color="purple">
+                        {post.preferred_location}
+                      </Tag>
+                      <Tag icon={<DollarOutlined />} color="gold">
+                        {post.expected_compensation || 'ตามตกลง'}
+                      </Tag>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Empty description="ยังไม่มีโพสต์หางาน" />
+            )}
+          </Card>
+        </Col>
+      </Row>
 
       <CreateStudentPostModal
         visible={isCreateModalVisible}

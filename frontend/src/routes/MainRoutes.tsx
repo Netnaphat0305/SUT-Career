@@ -24,48 +24,44 @@ import MyPost from '../pages/MyPost/Mypost'
 import WorklogPage from "../pages/worklog/worklog";
 import StudentFeedPage from "../pages/StudentFeed/StudentFeedPage";
 import ProfilePage2 from '../pages/profile2/ProfilePage2.tsx';
-import StudentProfileEditPage from '../pages/ProfileEditPage/ProfileEditPage.tsx'; // Import the new edit page
-
+import StudentProfileEditPage from '../pages/ProfileEditPage/ProfileEditPage.tsx';
 
 const MainRoutes: React.FC = () => {
-    return (
-      <Routes>
-        <Route element={<FullLayout />}>
-            {/* --- General Routes --- */}
-            <Route path="/" element={<Homepage />} />
-            <Route path="/home" element={<Homepage />} />
-            <Route path="/Job/Board" element={<Board />} />
-            <Route path="/Job/post-detail/:id" element={<JobDetail />} />
-            <Route path="/Job/ApplyJob" element={<ApplyJob />} />
-            <Route path="/Job/post-job" element={<JobPost />} />
-            <Route path="/Job/Mypost-job" element={<MyPost />} />
-            <Route path="/interview" element={<Interview />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/students" element={<StudentListPage />} />
-            <Route path="/report" element={<Reportpage />} />
-            <Route path="/my-jobs" element={<JobsPage />} />
-            <Route path="/payment-report" element={<PaymentReportPage />} />
-            <Route path="/payment" element={<PaymentPage />} />
-            <Route path="/review" element={<ReviewPage />} />
-            <Route path="/Interview-Schedule" element={<InterviewScheduling/>} />
-            <Route path="/profile/:StudentID" element={<ProfilePageV1 />} />
-            <Route path="/review-page" element={<ReviewPage />} />
-            <Route path="/worklog" element={<WorklogPage />} />
-          
+  return (
+    <Routes>
+      <Route path="/" element={<FullLayout />}>
+        {/* --- General Routes --- */}
+        <Route index element={<Homepage />} />
+        <Route path="board" element={<Board />} />
+        <Route path="job/:id" element={<JobDetail />} />
+        <Route path="apply/:id" element={<ApplyJob />} />
+        <Route path="interview" element={<Interview />} />
+        <Route path="chat" element={<Chat />} />
+        <Route path="student-list" element={<StudentListPage />} />
+        <Route path="report" element={<Reportpage />} />
+        <Route path="myjob" element={<JobsPage />} />
+        <Route path="payment-report" element={<PaymentReportPage />} />
+        <Route path="profilev1" element={<ProfilePageV1 />} />
+        <Route path="review" element={<ReviewPage />} />
+        <Route path="payment" element={<PaymentPage />} />
+        <Route path="job-post" element={<JobPost />} />
+        <Route path="interview-scheduling" element={<InterviewScheduling />} />
+        <Route path="my-post" element={<MyPost />} />
+        <Route path="worklog" element={<WorklogPage />} />
 
-            {/* --- Feed Routes --- */}
-            <Route path="/feed" element={<StudentFeedPage />} />
-            
-            {/* --- Profile & Help Center Routes --- */}
-            <Route path="/profile/:userId" element={<ProfilePage2 />} />
-            <Route path="/profile" element={<ProfilePage2 />} />
-            <Route path="/profile/edit" element={<StudentProfileEditPage />} /> {/* Add route for editing profile */}
-            
-            <Route path="/help" element={<HelpCenterPage />} />
-            <Route path="/help/ask" element={<CreateRequestPage />} />
-            <Route path="/help/faq/:id" element={<FaqDetailPage />} />
-            <Route path="/help/request/:id" element={<RequestThreadPage />} />
-        </Route>
+        {/* --- Feed Routes --- */}
+        <Route path="/feed" element={<StudentFeedPage />} />
+
+        {/* --- Profile & Help Center Routes --- */}
+        {/* ⭐ แก้ไข: ใช้ studentId แทน userId เพื่อให้ตรงกับการส่งค่าจาก goToProfile */}
+        <Route path="profile" element={<ProfilePage2 />} />
+        <Route path="profile/:studentId" element={<ProfilePage2 />} />
+        <Route path="profile/edit" element={<StudentProfileEditPage />} />
+        <Route path="help" element={<HelpCenterPage />} />
+        <Route path="help/request" element={<CreateRequestPage />} />
+        <Route path="help/request/:id" element={<RequestThreadPage />} />
+        <Route path="help/faq/:id" element={<FaqDetailPage />} />
+      </Route>
     </Routes>
   );
 };

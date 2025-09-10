@@ -1,193 +1,3 @@
-// // src/pages/Admin2/RequestsPage.tsx
-// import React, { useState, useEffect, useRef } from 'react';
-// import { Table, Tag, Button, Typography, Space, Modal, message, Descriptions, Input, Avatar, Card } from 'antd';
-// import type { ColumnsType } from 'antd/es/table';
-// import { EyeOutlined, MessageOutlined, UserOutlined, ClockCircleOutlined, PictureOutlined } from '@ant-design/icons';
-// // 🔄 แก้ไข: เปลี่ยนการ import type จาก Question เป็น FormQuestion
-// import type { FormQuestion, Answer } from '../../types';
-
-// const { Title, Paragraph } = Typography;
-// const { TextArea } = Input;
-
-// // 🔄 เพิ่ม: กำหนด URL ของ API
-// const API_URL = 'http://localhost:8080/api';
-
-// const RequestsPage: React.FC = () => {
-//     // 🔄 แก้ไข: เปลี่ยน State ให้รองรับ FormQuestion[]
-//     const [requests, setRequests] = useState<FormQuestion[]>([]);
-//     const [loading, setLoading] = useState<boolean>(true); // เพิ่ม State สำหรับ Loading
-//     const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
-//     const [isChatModalVisible, setIsChatModalVisible] = useState(false);
-//     // 🔄 แก้ไข: เปลี่ยน State ให้รองรับ FormQuestion | null
-//     const [selectedRequest, setSelectedRequest] = useState<FormQuestion | null>(null);
-//     const [replyMessage, setReplyMessage] = useState('');
-//     const messagesEndRef = useRef<HTMLDivElement>(null);
-
-//     // 🔄 เพิ่ม: ฟังก์ชันสำหรับดึงข้อมูลคำร้องจาก API
-//     const fetchRequests = async () => {
-//         setLoading(true);
-//         try {
-//             const response = await fetch(`${API_URL}/requests`);
-//             if (!response.ok) {
-//                 throw new Error('Failed to fetch requests from server');
-//             }
-//             const data: FormQuestion[] = await response.json();
-//             setRequests(data);
-//         } catch (error) {
-//             console.error(error);
-//             message.error('ไม่สามารถดึงข้อมูลคำร้องได้');
-//         } finally {
-//             setLoading(false);
-//         }
-//     };
-
-//     // 🔄 แก้ไข: เรียกใช้ fetchRequests เมื่อ component โหลด
-//     useEffect(() => {
-//         fetchRequests();
-//     }, []);
-
-
-//     useEffect(() => {
-//         if (messagesEndRef.current) {
-//             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-//         }
-//     }, [isChatModalVisible, selectedRequest]);
-
-//     const handleViewDetails = (request: FormQuestion) => {
-//         setSelectedRequest(request);
-//         setIsDetailModalVisible(true);
-//     };
-
-//     const handleOpenChat = (request: FormQuestion) => {
-//         setSelectedRequest(request);
-//         setIsChatModalVisible(true);
-//     };
-
-//     const handleCancelModals = () => {
-//         setIsDetailModalVisible(false);
-//         setIsChatModalVisible(false);
-//         setReplyMessage('');
-//         setSelectedRequest(null);
-//     };
-
-//     const handleSendReply = () => {
-//         // (ส่วนนี้ยังไม่ได้เชื่อมต่อ API จริง)
-//         if (!replyMessage.trim() || !selectedRequest) {
-//             message.error('กรุณาพิมพ์ข้อความตอบกลับ');
-//             return;
-//         }
-//         message.success(`ตอบกลับคำร้องของคุณ "${selectedRequest.name}" สำเร็จ!`);
-//         setReplyMessage('');
-//     };
-
-//     const formatTime = (ts?: string) => {
-//         if (!ts) return '';
-//         return new Date(ts).toLocaleString('th-TH');
-//     };
-
-//     // 🔄 แก้ไข: ปรับ Columns ให้ตรงกับข้อมูลจาก FormQuestion
-//     const columns: ColumnsType<FormQuestion> = [
-//         {
-//             title: 'เวลาที่ส่ง',
-//             dataIndex: 'CreatedAt',
-//             key: 'CreatedAt',
-//             render: (text) => formatTime(text),
-//             sorter: (a, b) => new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime(),
-//             defaultSortOrder: 'ascend',
-//         },
-//         { title: 'หัวข้อ', dataIndex: 'title', key: 'title', ellipsis: true },
-//         {
-//             title: 'ผู้ส่ง',
-//             key: 'author',
-//             render: (_, record) => `${record.name} ${record.lastname}`,
-//         },
-//         {
-//             title: 'สถานะ',
-//             dataIndex: 'status',
-//             key: 'status',
-//             render: (status: string) => (
-//                 <Tag color={status === 'pending' ? 'warning' : 'success'}>
-//                     {status}
-//                 </Tag>
-//             )
-//         },
-//         {
-//             title: 'การดำเนินการ',
-//             key: 'action',
-//             render: (_, record) => (
-//                 <Space>
-//                     <Button
-//                         icon={<EyeOutlined />}
-//                         onClick={() => handleViewDetails(record)}
-//                     >
-//                         ดูรายละเอียด
-//                     </Button>
-//                     <Button
-//                         type="primary"
-//                         icon={<MessageOutlined />}
-//                         onClick={() => handleOpenChat(record)}
-//                     >
-//                         แชท
-//                     </Button>
-//                 </Space>
-//             ),
-//         },
-//     ];
-
-//     return (
-//         <div>
-//             <Title level={2}>จัดการคำร้อง</Title>
-//             <Table
-//                 columns={columns}
-//                 dataSource={requests}
-//                 rowKey="ID"
-//                 loading={loading} // เพิ่ม: แสดงสถานะโหลด
-//             />
-
-//             {/* Modal สำหรับดูรายละเอียดคำร้อง */}
-//             <Modal
-//                 title="รายละเอียดคำร้อง"
-//                 open={isDetailModalVisible}
-//                 onCancel={handleCancelModals}
-//                 width={700}
-//                 footer={[<Button key="back" onClick={handleCancelModals}>ปิด</Button>]}
-//             >
-//                 {selectedRequest && (
-//                     <Descriptions bordered column={1}>
-//                         <Descriptions.Item label="ID คำร้อง">{selectedRequest.ID}</Descriptions.Item>
-//                         <Descriptions.Item label="ผู้ส่ง">
-//                             <Space>
-//                                 <Avatar size="small" icon={<UserOutlined />} />
-//                                 {`${selectedRequest.name} ${selectedRequest.lastname}`}
-//                             </Space>
-//                         </Descriptions.Item>
-//                         <Descriptions.Item label="หัวข้อเรื่อง">{selectedRequest.title}</Descriptions.Item>
-//                         <Descriptions.Item label="รายละเอียดที่ส่งมา">
-//                             <Paragraph style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-//                                 {selectedRequest.details || 'ไม่มีรายละเอียด'}
-//                             </Paragraph>
-//                         </Descriptions.Item>
-//                     </Descriptions>
-//                 )}
-//             </Modal>
-            
-//             {/* Modal สำหรับแชท */}
-//             <Modal
-//                 title={`แชทกับ ${selectedRequest?.name}`}
-//                 open={isChatModalVisible}
-//                 onCancel={handleCancelModals}
-//                 footer={null}
-//                 width={700}
-//             >
-//                 {/* เนื้อหาใน Modal Chat ยังคงเดิม */}
-//                 <p>ส่วนการแชทยังอยู่ในระหว่างการพัฒนา</p>
-//             </Modal>
-//         </div>
-//     );
-// };
-
-// export default RequestsPage;
-// src/pages/Admin2/RequestsPage.tsx
 // src/pages/Admin2/RequestsPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Table, Tag, Button, Typography, Space, Modal, message, Descriptions, Input, Avatar, Card, Divider, Select, Upload, Image } from 'antd';
@@ -265,6 +75,38 @@ const RequestsPage: React.FC = () => {
         fetchTickets();
     }, []);
 
+    // ✨ START: เพิ่ม useEffect สำหรับ Polling เมื่อ Modal เปิด
+    // ส่วนนี้จะทำงานเมื่อ Modal แสดง และมี Ticket ที่ถูกเลือก
+    useEffect(() => {
+        if (isModalVisible && selectedTicket) {
+            // ตั้งค่าให้ดึงข้อมูลใหม่ทุกๆ 5 วินาที
+            const intervalId = setInterval(async () => {
+                console.log(`Polling for updates on ticket #${selectedTicket.ID}...`);
+                try {
+                    // ดึงข้อมูลล่าสุดของ Ticket ที่เปิดอยู่
+                    const response = await qnaAPI.getTicketById(String(selectedTicket.ID));
+                    const updatedTicketData = response?.data?.data || response?.data;
+                    
+                    if (updatedTicketData) {
+                        // อัปเดต state เพื่อ re-render หน้าแชทให้เป็นข้อมูลล่าสุด
+                        setSelectedTicket(updatedTicketData);
+                    }
+                } catch (error) {
+                    // ไม่ต้องแสดง message.error ทุกครั้งที่ polling ล้มเหลว อาจจะรบกวนผู้ใช้
+                    console.error("Polling for ticket updates failed:", error);
+                }
+            }, 5000); // ดึงข้อมูลใหม่ทุกๆ 5 วินาที
+
+            // Cleanup function: จะถูกเรียกเมื่อ modal ปิด หรือ component unmount
+            // เพื่อหยุดการดึงข้อมูลเมื่อไม่จำเป็นแล้ว
+            return () => {
+                console.log(`Stopping polling for ticket #${selectedTicket.ID}.`);
+                clearInterval(intervalId);
+            };
+        }
+    }, [isModalVisible, selectedTicket]); // dependency array: ให้ effect นี้ทำงานใหม่ทุกครั้งที่ isModalVisible หรือ selectedTicket เปลี่ยน
+    // ✨ END: เพิ่ม useEffect สำหรับ Polling
+
     const getStatusColor = (status: RequestTicket['status']) => {
         switch (status) {
           case 'Open': return 'orange';
@@ -327,8 +169,9 @@ const RequestsPage: React.FC = () => {
                 setReplyMessage('');
                 setReplyFileList([]);
                 setReplyAttachments([]);
-                fetchTickets();
+                fetchTickets(); // อัปเดตตารางหลัก
                 
+                // ดึงข้อมูลล่าสุดมาแสดงใน modal ทันทีหลังส่ง ไม่ต้องรอรอบ polling ถัดไป
                 const updatedTicketResponse = await qnaAPI.getTicketById(String(selectedTicket.ID));
                 if (updatedTicketResponse && updatedTicketResponse.data) {
                     const updatedTicketData = updatedTicketResponse.data.data || updatedTicketResponse.data;
@@ -511,4 +354,3 @@ const RequestsPage: React.FC = () => {
 };
 
 export default RequestsPage;
-
