@@ -11,13 +11,13 @@ import (
 
 // POST /interviews/book
 // นักศึกษทำการจองตารางสัมภาษณ์
+//ขอเปลี่ยนเงื่อนไขนะเพื่อน ให้มันเลือกจองคนอื่นไม่ได้
 func BookInterview(c *gin.Context) {
 	var input struct {
-		ScheduleID       uint `json:"schedule_id" binding:"required"`
-		StudentID        uint `json:"student_id" binding:"required"`
-		JobApplicationID uint `json:"job_application_id" binding:"required"` // ขอเพิ่มตรงนี้นะ จะใช้ข้อมูล
-		Description   string    `json:"description"`
-
+		ScheduleID       uint   `json:"schedule_id" binding:"required"`
+		StudentID        uint   `json:"student_id" binding:"required"`
+		JobApplicationID uint   `json:"job_application_id" binding:"required"`
+		Description      string `json:"description"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -25,17 +25,36 @@ func BookInterview(c *gin.Context) {
 		return
 	}
 
-	var schedule entity.InterviewScheduling
-	// ตรวจสอบว่า schedule ที่ต้องการจองมีอยู่จริงและยังว่างอยู่
-	if err := config.DB().Where("id = ? AND status = ?", input.ScheduleID, "available").First(&schedule).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Interview slot not available or not found"})
+	// --- ตรวจสอบว่า JobApplication มีอยู่จริง preload JobPost ---
+	var app entity.JobApplication
+	if err := config.DB().
+		Preload("JobPost").
+		First(&app, input.JobApplicationID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบใบสมัครงาน"})
 		return
 	}
 
-	// เริ่ม transaction
+	// --- ตรวจสอบว่า schedule มีอยู่  เป็นของ employer เดียวกัน ---
+	var schedule entity.InterviewScheduling
+	if err := config.DB().
+		Where("id = ? AND status = ?", input.ScheduleID, "available").
+		First(&schedule).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบตารางสัมภาษณ์หรือถูกจองแล้ว"})
+		return
+	}
+
+	// ถ้า employer_id ของตาราง != employer_id ของ JobPost ห้ามเลือก
+	if schedule.EmployerID != app.JobPost.EmployerID {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "ไม่สามารถเลือกตารางสัมภาษณ์ของนายจ้างคนอื่นได้",
+		})
+		return
+	}
+
+	// --- เริ่ม Transaction ---
 	tx := config.DB().Begin()
 
-	// สร้าง Interview record
+	// --- สร้าง Interview record ---
 	interview := entity.Interview{
 		InterviewSchedulingID: input.ScheduleID,
 		StudentID:             input.StudentID,
@@ -43,52 +62,44 @@ func BookInterview(c *gin.Context) {
 	}
 	if err := tx.Create(&interview).Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create interview record"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "สร้างข้อมูลสัมภาษณ์ไม่สำเร็จ"})
 		return
 	}
 
-	// อัปเดตสถานะของตารางนัดหมาย (InterviewScheduling)
+	// --- อัปเดตสถานะตารางสัมภาษณ์ ---
 	schedule.Status = "booked"
 	if err := tx.Save(&schedule).Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update schedule status"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตสถานะตารางสัมภาษณ์ไม่สำเร็จ"})
 		return
 	}
 
-	//  อัปเดตสถานะ JobApplication  InterviewScheduled ขอดเพิ่มเติมตรงนี้นะ
-	//ปหติหลังจากนักศึกษาเลือกวันสัมภาษณ์เสร็จ หน้า MyApplications ยังคงแสดงสถานะเป็น "รอเลือกวันสัมภาษณ์"แต่ความจริงคือ นักศึกษาเลือกวันเรียบร้อยแล้ว ควรแสดงเป็น "รอสัมภาษณ์"
-	//ชั้นจำเป็นต้องอัปเดตฟิลด์ application_status ใน JobApplication เป็น InterviewScheduled
+	// --- อัปเดตสถานะ JobApplication ---
 	if err := tx.Model(&entity.JobApplication{}).
 		Where("id = ?", input.JobApplicationID).
-		Select("application_status", "interview_scheduling_id", "interview_date").//เปลี่ยนมา select อันที่จะ update ก่อนอันเก่ามันไม่ update interview_scheduling_id ให้ชั้น
+		Select("application_status", "interview_scheduling_id", "interview_date").
 		Updates(entity.JobApplication{
 			ApplicationStatus:     entity.StatusInterviewScheduled,
 			InterviewSchedulingID: &input.ScheduleID,
-			 InterviewDate:         &schedule.DateAndTime, 
+			InterviewDate:         &schedule.DateAndTime,
 		}).Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update job application status"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตใบสมัครไม่สำเร็จ"})
 		return
 	}
 
-	// Commit transaction
+	// --- Commit Transaction ---
 	if err := tx.Commit().Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Transaction commit failed"})
 		return
 	}
 
-	// เอาไว้ใช้ ดึงข้อมูลการสัมภาษณ์ (Interview) ของนักศึกษาหลังจากที่มีการจองวันสัมภาษณ์แล้ว 
-	// ดึงข้อมูลความสัมพันธ์ มาด้วย
-	if err := config.DB().
-		Preload("InterviewScheduling").
-		Preload("Student").
-		First(&interview, interview.ID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch interview details"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{"data": interview})
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "จองตารางสัมภาษณ์สำเร็จ",
+		"data":    interview,
+	})
 }
+
 
 // GET /interviews/student/:studentId
 // ดูการนัดหมายทั้งหมดของนักศึกษา
