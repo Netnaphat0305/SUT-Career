@@ -2,6 +2,7 @@
 package config
 
 import (
+
 	"github.com/KBook22/System-Analysis-and-Design/entity"
 	"github.com/KBook22/System-Analysis-and-Design/config/seed"
 	"gorm.io/driver/sqlite"
@@ -52,6 +53,18 @@ func SetupDatabase() {
 		&entity.Report{},
 		&entity.Admin{},
 		&entity.Worklog{},
+		// ================ เพิ่มโดยพรศิริ ============================================
+		&entity.StudentPost{},
+		&entity.Skill{},
+		&entity.StudentPostAttachment{},
+		// ✨ [เพิ่ม] Entity ของระบบ Q&A ที่ขาดไป
+		&entity.FAQ{},
+		&entity.FAQComment{},
+		&entity.RequestTicket{},
+		&entity.TicketReply{},
+		&entity.TicketAttachment{},
+		&entity.Notification{},
+		// =========================สิ้นสุดการเพิ่มของพรศิริ==============================
 
 		//=========================
 		&entity.Interview{}, //ขอเพิ่มหน่อยนะบุ๊คชั้นต้องใช้ถือว่ายังไงแกก็ต้องใช้

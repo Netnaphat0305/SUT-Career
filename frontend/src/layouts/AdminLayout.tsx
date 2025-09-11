@@ -15,12 +15,12 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import '../pages/Admin2/Admin.css';
 
 const { Header, Content, Sider } = Layout;
-// 🔄 แก้ไขบรรทัดนี้: ดึง Text เข้ามาด้วย
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const AdminLayout: React.FC = () => {
   const location = useLocation();
 
+  // ✅ เพิ่มเมนู "จัดการ FAQ" เข้าไปในรายการ
   const menuItems = [
     { key: '/admin', icon: <DashboardOutlined />, label: <Link to="/admin">Dashboard</Link> },
     { key: '/admin/users', icon: <TeamOutlined />, label: <Link to="/admin/users">จัดการผู้ใช้งาน</Link> },

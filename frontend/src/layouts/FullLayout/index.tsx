@@ -10,9 +10,12 @@ import {
   Space, 
   Dropdown,
 } from "antd";
+import { DownOutlined, UserOutlined, LogoutOutlined, ProfileOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import { DownOutlined, BellOutlined, UserOutlined, LogoutOutlined, LoginOutlined } from "@ant-design/icons";
-import logoImage from "../../assets/logo.svg";
+import logoImage from '../../assets/logo.svg';
+import NotificationBell from '../../components/NotificationBell';
+// Import useAuth to get user and logout function
+import { useAuth } from "../../context/AuthContext"; 
 
 const { Header, Content, Footer } = Layout;
 
@@ -34,9 +37,9 @@ const navItems: MenuItem[] = [
   createMenuItem("payment-report", "Payment Report"),
   createMenuItem("help", "Help"),
   createMenuItem("chat", "Chat"),
-  createMenuItem("interview", "Interview Table"),
-  createMenuItem("students", "Students List"),
-  createMenuItem("report", "Report"),
+  createMenuItem("interview","Interview Table"),
+  createMenuItem("students","Students List"),
+  createMenuItem("report","Report"),
   createMenuItem("feed", "Feed"),
   createMenuItem("Interview-Schedule", "Interview Schedule"),
 ];
@@ -53,43 +56,72 @@ const FullLayout: React.FC = () => {
   // current selected key for top menu
   const currentPageKey = location.pathname.split("/")[1] || "home";
 
+
   // read auth info
-  const user = React.useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "{}");
-    } catch {
-      return {};
-    }
-  }, []);
-  const role: string | undefined = user?.role;
-  const isLoggedIn = !!localStorage.getItem("token");
+  // const user = React.useMemo(() => {
+  //   try {
+  //     return JSON.parse(localStorage.getItem("user") || "{}");
+  //   } catch {
+  //     return {};
+  //   }
+  // }, []);
+  // const role: string | undefined = user?.role;
+  // const isLoggedIn = !!localStorage.getItem("token");
 
-  // dropdown menu actions
-  const onProfileMenuClick = ({ key }: { key: string }) => {
-    if (key === "profile") {
-      if (role === "employer") {
-        navigate("/employer/profile");
-      } else if (role === "student") {
-        navigate("/student/profile");
-      } else {
-        navigate("/login");
-      }
-    }
-    if (key === "logout") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      navigate("/login");
-    }
-  };
+  // // dropdown menu actions
+  // const onProfileMenuClick = ({ key }: { key: string }) => {
+  //   if (key === "profile") {
+  //     if (role === "employer") {
+  //       navigate("/employer/profile");
+  //     } else if (role === "student") {
+  //       navigate("/student/profile");
+  //     } else {
+  //       navigate("/login");
+  //     }
+  //   }
+  //   if (key === "logout") {
+  //     localStorage.removeItem("token");
+  //     localStorage.removeItem("user");
+  //     navigate("/login");
+  //   }
+  // };
 
-  const profileMenu: MenuProps = {
-    items: [
-      { key: "profile", icon: <UserOutlined />, label: "Profile" },
-      { type: "divider" },
-      { key: "logout", icon: <LogoutOutlined />, label: "Logout" },
-    ],
-    onClick: onProfileMenuClick,
-  };
+  // const profileMenu: MenuProps = {
+  //   items: [
+  //     { key: "profile", icon: <UserOutlined />, label: "Profile" },
+  //     { type: "divider" },
+  //     { key: "logout", icon: <LogoutOutlined />, label: "Logout" },
+  //   ],
+  //   onClick: onProfileMenuClick,
+  // };
+
+  // Get user and logout function from AuthContext
+  const { user, logout } = useAuth();
+
+  // Dynamically create menu items based on user role
+  const menuItems: MenuProps['items'] = [];
+
+  if (user) {
+    // Check if user is a student (case-insensitive check)
+    const userRole = user.role.toLowerCase();
+    if (userRole === 'student' || userRole === 'stu') {
+        menuItems.push({
+            key: 'profile',
+            label: <Link to="/profile">ดูโปรไฟล์</Link>,
+            icon: <ProfileOutlined />,
+        });
+    }
+
+    // Add logout option for all logged-in users
+    menuItems.push({
+        key: 'logout',
+        label: 'ออกจากระบบ',
+        icon: <LogoutOutlined />,
+        onClick: logout, // Call logout function on click
+        danger: true,
+    });
+  }
+
 
   return (
     <Layout style={{ minHeight: "auto" }}>
@@ -141,50 +173,67 @@ const FullLayout: React.FC = () => {
         {/* Right: notif + language + profile/login */}
         <Flex align="center">
           <Space size="middle">
-            <BellOutlined style={{ fontSize: 20, color: colorText }} />
 
-            <Dropdown
-              menu={{
-                items: [{ key: "th", label: "TH" }],
-              }}
-            >
-              <Button type="text" style={{ fontSize: 16, color: colorText }}>
-                <Space>
-                  TH
-                  <DownOutlined />
-                </Space>
-              </Button>
-            </Dropdown>
 
-            {isLoggedIn ? (
-              <Dropdown menu={profileMenu} trigger={["click"]}>
-                <Button
-                  type="text"
-                  style={{
-                    fontSize: 20,
-                    border: "1px solid #d9d9d9",
-                    borderRadius: 6,
-                    color: "#0088FF",
-                  }}
-                >
-                  Profile
-                </Button>
-              </Dropdown>
+
+              {/* {isLoggedIn ? ( 
+            //   <Dropdown menu={profileMenu} trigger={["click"]}>
+            //     <Button
+            //       type="text"
+            //       style={{
+            //         fontSize: 20,
+            //         border: "1px solid #d9d9d9",
+            //         borderRadius: 6,
+            //         color: "#0088FF",
+            //       }}
+            //     >
+            //       Profile
+            //     </Button>
+            //   </Dropdown>
+            // ) : (
+            //   <Button
+            //     type="text"
+            //     icon={<LoginOutlined />}
+            //     onClick={() => navigate("/login")}
+            //     style={{
+            //       fontSize: 16,
+            //       border: "1px solid #d9d9d9",
+            //       borderRadius: 6,
+            //       color: "#0088FF",
+            //     }}
+            //   >
+            //     Login
+            //   </Button> */}
+
+            
+            {/* Conditional rendering for user profile/login */}
+            {user ? (
+                 <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+                    <Button
+                        type="text"
+                        style={{
+                            fontSize: "16px",
+                            border: "1px solid #d9d9d9",
+                            borderRadius: "6px",
+                            color: "#0088FF",
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '4px 15px'
+                        }}
+                    >
+                        <Space>
+                            <UserOutlined />
+                            {user.username}
+                            <DownOutlined />
+                        </Space>
+                    </Button>
+                </Dropdown>
             ) : (
-              <Button
-                type="text"
-                icon={<LoginOutlined />}
-                onClick={() => navigate("/login")}
-                style={{
-                  fontSize: 16,
-                  border: "1px solid #d9d9d9",
-                  borderRadius: 6,
-                  color: "#0088FF",
-                }}
-              >
-                Login
-              </Button>
-            )}
+                <Link to="/login">
+                    <Button type="primary">เข้าสู่ระบบ</Button>
+                </Link>
+
+            )};
           </Space>
         </Flex>
       </Header>

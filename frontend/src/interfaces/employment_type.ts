@@ -1,4 +1,4 @@
 export interface EmploymentType {
-    id: number;
+    ID: number;
     employment_type_name: string;
 }

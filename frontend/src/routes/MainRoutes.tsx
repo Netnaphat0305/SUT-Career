@@ -1,8 +1,11 @@
 import React from "react";
 import { Route, Routes, useOutletContext } from "react-router-dom";
-import FullLayout from "../layouts/FullLayout";
 import EmployerProfile from "../pages/EmployerProfile/EmployerProfile";
-import Homepage from "../pages/Home/Home";
+import FullLayout from '../layouts/FullLayout';
+import HelpCenterPage from '../pages/HelpCenter/HelpCenterPage';
+import CreateRequestPage from '../pages/HelpCenter/CreateRequestPage';
+import RequestThreadPage from '../pages/RequestThreadPage/RequestThreadPage';
+import Homepage from '../pages/Home/Home';
 import Board from "../pages/Board/Board";
 import JobDetail from "../pages/Board/JobDetail";
 import ApplyJob from "../pages/ApplyJob/ApplyJob";
@@ -18,12 +21,9 @@ import PaymentPage from '../pages/payment';
 
 import JobPost from "../pages/JobPost/JobPost";
 import InterviewScheduling from "../pages/InterviewScheduling/InterviewScheduling";
-import EmployerFeedPage from '../pages/Employer/EmployerFeedPage';
-import StudentPostForm from '../pages/StudentPost/StudentPostForm';
-import RequestSentPage from '../pages/StudentPost/RequestSentPage'; // เพิ่ม import นี้
+import FaqDetailPage from "../pages/HelpCenter/FaqDetailPage";
 import MyPost from '../pages/MyPost/Mypost'
 import WorklogPage from "../pages/worklog/worklog";
-
 import IncidentReportList from "../pages/Reportpage/reportlist";
 
 import ManageApplicants from "../pages/ManageApplicants/ManageApplicants"; 
@@ -32,63 +32,10 @@ import EditJobPost from "../pages/EditJobPost/EditJobPost";
 import QRPaymentPage from "../pages/payment/qrpaymentpage";
 import ViewReviewPage from "../pages/review/reviewhistory";
 import FinancialReportPage from "../pages/studentfinance";
+import StudentFeedPage from "../pages/StudentFeed/StudentFeedPage";
+import ProfilePage2 from '../pages/profile2/ProfilePage2.tsx';
+import StudentProfileEditPage from '../pages/ProfileEditPage/ProfileEditPage.tsx';
 
-
-
-
-// Helper components to pass context from Outlet
-// const PostCreatorRoute = () => {
-//   const { handleAddPost }: any = useOutletContext();
-//   return <PostCreator onAddPost={handleAddPost} />;
-// };
-
-// const ProfilePageV2Route = () => {
-//   const context: any = useOutletContext();
-//   if (!context) return <div>Loading profile...</div>;
-//   return (
-//     <ProfilePageV2
-//       posts={context.posts}
-//       handleAddPost={context.handleAddPost}
-//       handleDeletePost={context.handleDeletePost}
-//       handleLikePost={context.handleLikePost}
-//       handleAddComment={context.handleAddComment}
-//       onAddReport={context.onAddReport}
-//       onEdit={context.handleEditPost}
-//       onLikeComment={context.handleLikeComment}
-//     />
-//   );
-// };
-
-// const FAQPageRoute = () => {
-//   const { faqQuestions, myRequests, handleLikeQuestion }: any = useOutletContext();
-//   return (
-//     <FAQPage
-//       questions={faqQuestions}
-//       myRequests={myRequests}
-//       onLike={handleLikeQuestion}
-//     />
-//   );
-// };
-
-// const AskQuestionPageRoute = () => {
-//   const { handleAddQuestion }: any = useOutletContext();
-//   return <AskQuestionPage onFormSubmit={handleAddQuestion} />;
-// };
-
-// const QuestionDetailPageRoute = () => {
-//   const context: any = useOutletContext();
-//   return (
-//     <QuestionDetailPage
-//       questions={context.questions}
-//       onAddAnswer={context.handleAddAnswer}
-//     />
-//   );
-// };
-
-// const RequestStatusPageRoute = () => {
-//   const { questions }: any = useOutletContext();
-//   return <RequestStatusPage questions={questions} />;
-// };
 
 const MainRoutes: React.FC = () => {
     return (
@@ -124,28 +71,20 @@ const MainRoutes: React.FC = () => {
             <Route path="/edit-report" element={<IncidentReportList />} />
 
 
-            {/* --- Feed Routes (now independent) --- */}
-            <Route path="/feed" element={<EmployerFeedPage />} />
-            <Route path="/feed/create" element={<StudentPostForm />} />
-
+        {/* --- Feed Routes --- */}
+        <Route path="/feed" element={<StudentFeedPage />} />
         {/* โปรไฟล์เวอร์ชันเก่า ใช้ path ใหม่เพื่อไม่ชนกับ V2 */}
         <Route path="/profile-v1" element={<ProfilePageV1 />} />
         {/* --- Feed Routes (independent) --- */}
-        <Route path="/feed" element={<EmployerFeedPage />} />
-        <Route path="/feed/create" element={<StudentPostForm />} />
-
-        {/* --- Student-focused Routes (state by StudentPostManager) --- */}
-        {/* <Route element={<StudentPostManager />}>
-          <Route path="/create" element={<PostCreatorRoute />} />
-          <Route path="/profile/:userId" element={<ProfilePageV2Route />} />
-          <Route path="/profile" element={<ProfilePageV2Route />} />
-          <Route path="/help" element={<FAQPageRoute />} />
-          <Route path="/help/ask" element={<AskQuestionPageRoute />} />
-          <Route path="/help/request-sent" element={<RequestSentPage />} />
-          <Route path="/help/question/:id" element={<QuestionDetailPageRoute />} />
-          <Route path="/help/request-status/:id" element={<RequestStatusPageRoute />} />
-          <Route path="/help/request/:id" element={<RequestThreadPage />} />
-        </Route> */}
+        {/* <Route path="/feed" element={<EmployerFeedPage />} />
+        <Route path="/feed/create" element={<StudentPostForm />} /> */}
+        <Route path="profile" element={<ProfilePage2 />} />
+        <Route path="profile/:studentId" element={<ProfilePage2 />} />
+        <Route path="profile/edit" element={<StudentProfileEditPage />} />
+        <Route path="help" element={<HelpCenterPage />} />
+        <Route path="help/request" element={<CreateRequestPage />} />
+        <Route path="help/request/:id" element={<RequestThreadPage />} />
+        <Route path="help/faq/:id" element={<FaqDetailPage />} />
       </Route>
     </Routes>
   );

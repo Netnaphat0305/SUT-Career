@@ -1,17 +1,13 @@
-// services/https/index.tsx
+
 import axios from "axios";
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-
-//==================== edit by book ===========================
 import type { ChatRoom, ChatHistory, UserRole } from "../../interfaces/Chat";
-//==================== edit by book ===========================
 
-import type { Employer } from "../../interfaces/employer";
-import type { Student } from "../../interfaces/student";
-import type {
-  CreateReviewPayload,
-  Review,
-} from "../../interfaces/review";
+
+import type { Employer, SignInEmployer } from "../../interfaces/employer";
+import type { Student, SignInStudent } from "../../interfaces/student";
+import type {CreateReviewPayload,Review,FindReviewRequest,} from "../../interfaces/review";
+import type { FAQ, RequestTicket, TicketAttachment, FAQComment } from '../../interfaces/helpcenter';
 import type { Discount } from "../../interfaces/discount";
 import type { Jobpost, CreateJobpost } from "../../interfaces/jobpost";
 import type { Payment, CreatePaymentPayload, StudentFinanceResponse, FinanceSummaryResponse } from "../../interfaces/payment";
@@ -22,10 +18,11 @@ import type { SalaryType } from "../../interfaces/salary_type";
 import type { SignInCommon } from "../../interfaces/user";
 import type { CreateBillableitemPayload } from "../../interfaces/billableitem";
 import type { Paymentmethod } from "../../interfaces/paymentmethod";
-
+import type { Ratingscore } from "../../interfaces/ratingscore";
+import type { Skill } from "../../interfaces/skill"
 /** ใช้ VITE_API_KEY เป็น baseURL เหมือนเดิม */
 const API_URL = import.meta.env.VITE_API_KEY || "http://localhost:8080";
-
+export const UPLOAD_URL = `${API_URL}/upload`;
 /** build URL ให้สะอาด */
 const buildUrl = (path: string) =>
   `${API_URL.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
@@ -223,29 +220,70 @@ export const Delete = async (
     });
 };
 
-// Authentication APIs
+
+
+const getConfig = (requireAuth = true) => {
+  const token = localStorage.getItem("token");
+  const headers: { [key: string]: string } = {
+    "Content-Type": "application/json",
+  };
+  if (requireAuth && token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return { headers };
+};
+
+// --- Helper Functions ---
+const handleRequest = async (request: Promise<AxiosResponse>) => {
+  try {
+    const res = await request;
+    return res;
+  } catch (error) {
+    const err = error as AxiosError;
+    if (err.response?.status === 401) {
+      console.error("Authentication error:", err.response);
+    }
+    return err.response;
+  }
+};
+
+const get = (url: string, requireAuth = true) => handleRequest(axios.get(`${API_URL}${url}`, getConfig(requireAuth)));
+const post = (url: string, data: any, requireAuth = true) => handleRequest(axios.post(`${API_URL}${url}`, data, getConfig(requireAuth)));
+const put = (url: string, data: any, requireAuth = true) => handleRequest(axios.put(`${API_URL}${url}`, data, getConfig(requireAuth)));
+const del = (url: string, requireAuth = true) => handleRequest(axios.delete(`${API_URL}${url}`, getConfig(requireAuth)));
+
+// --- API Service Objects ---
+
 export const authAPI = {
   login: (data: SignInCommon) => Post("/api/login", data, false),
+  studentLogin: (data: SignInStudent) =>post("/auth/student/login", data, false),
+  employerLogin: (data: { email: string; password?: string }) =>post("/auth/employer/login", data, false),
 };
 
 export const studentAPI = {
-  signup: (data: Student) => Post("/students", data, false),
-  getAll: () => Get("/students"),
-  getById: (id: number) => Get(`/students/${id}`),
+  signup: (data: Student) => post("/students", data, false),
+  getAll: () => get("/students"),
+  getById: (id: number) => get(`/students/${id}`),
+  getByUserId: (userId: number) => get(`/students/user/${userId}`),
   update: (id: number, data: Partial<Student>) =>
-    Update(`/api/student/${id}`, data),
-  delete: (id: number) => DeleteReq(`/students/${id}`),
+  //   Update(`/api/student/${id}`, data),
+  // delete: (id: number) => DeleteReq(`/students/${id}`),
+    put(`students/${id}`, data),
+  delete: (id: number) => del(`/students/${id}`),
 };
 
 export const employerAPI = {
-  signup: (data: Employer) => Post("/employers", data, false),
-  getAll: () => Get("/employers"),
-  getById: (id: number) => Get(`/employers/${id}`),
+  signup: (data: Employer) => post("/employers", data, false),
+  getAll: () => get("/employers"),
+  getById: (id: number) => get(`/employers/${id}`),
   update: (id: number, data: Partial<Employer>) =>
+
     Update(`/employers/${id}`, data),
   delete: (id: number) => DeleteReq(`/employers/${id}`),
 };
-
+//     put(`/employers/${id}`, data),
+//   delete: (id: number) => del(`/employers/${id}`),
+// };
 // Employer Profile APIs (Base64 JSON version)
 export const employerProfileAPI = {
   getMe: () =>
@@ -548,10 +586,55 @@ export const jobApplicationAPI = {
   },
 };
 
+// Student Post APIs (รวมจาก studentPostService.ts)
+export const studentPostAPI = {
+    getStudentPosts: () => get("/student-posts", false),
+    getStudentPostById: (id: number) => get(`/student-posts/${id}`, false),
+    getPostsByStudentId: (studentId: number) => get(`/student-posts/student/${studentId}`, false),
+    createStudentPost: (postData: any) => post("/student-posts", postData),
+    updateStudentPost: (postId: number, postData: any) => put(`/student-posts/${postId}`, postData),
+    deleteStudentPost: (postId: number) => del(`/student-posts/${postId}`),
+    getMyStudentPosts: () => get("/my-posts"),
+};
+
+// Skill API
+export const skillAPI = {
+    getAllSkills: (): Promise<AxiosResponse<Skill[]>> => get("/skills") as Promise<AxiosResponse<Skill[]>>,
+};
+
+// Q&A and Help Center APIs
+export const qnaAPI = {
+  // FAQ APIs
+  getFaqs: (): Promise<AxiosResponse<{ data: FAQ[] }>> => get("/faqs", false) as Promise<AxiosResponse<{ data: FAQ[] }>>,
+  getFaqById: (id: string): Promise<AxiosResponse<{ data: FAQ }>> => get(`/faqs/${id}`, false) as Promise<AxiosResponse<{ data: FAQ }>>,
+  createFaq: (data: { title: string; content: string; image_url?: string; comments_enabled: boolean }) => post("/admin/faqs", data),
+  updateFaq: (id: string, data: { title: string; content: string; image_url?: string; comments_enabled: boolean }) => put(`/admin/faqs/${id}`, data),
+  deleteFaq: (id: string) => del(`/admin/faqs/${id}`),
+
+  // FAQ Comment APIs
+  getFaqComments: (faqId: string): Promise<AxiosResponse<{ data: FAQComment[] }>> => get(`/faqs/${faqId}/comments`, false) as Promise<AxiosResponse<{ data: FAQComment[] }>>,
+  createFaqComment: (faqId: string, data: { content: string }): Promise<AxiosResponse<{ data: FAQComment }>> => post(`/faqs/${faqId}/comments`, data) as Promise<AxiosResponse<{ data: FAQComment }>>,
+
+  // Ticket APIs
+  createTicket: (data: { subject: string; initial_message: string; attachments?: any[] }) => post("/tickets", data),
+  getMyTickets: () => get("/tickets"),
+  getAllTicketsForAdmin: () => get("/admin/tickets"),
+  getTicketById: (ticketId: string) => get(`/tickets/${ticketId}`),
+  createTicketReply: (ticketId: string, data: { message: string; is_staff_reply: boolean; attachments?: Omit<TicketAttachment, 'ID'>[] }) => post(`/tickets/${ticketId}/replies`, data),
+  updateTicketStatus: (ticketId: string, status: string) => put(`/admin/tickets/${ticketId}/status`, { status }),
+};
+
+// Profile API
+export const profileAPI = {
+    getMyProfile: () => get("/profile"),
+    getProfileById: (studentId: string) => get(`/profile/${studentId}`),
+};
+
+
 // Job Category APIs
 export const jobCategoryAPI = {
-  getAll: () => Get("/api/jobcategories", false),
-  getById: (id: number) => Get(`/api/jobcategories/${id}`, false),
+  getAll: () => get("/jobcategories", false),
+  getById: (id: number) => get(`/jobcategories/${id}`, false),
 };
 
 // Job employmentType APIs
@@ -562,8 +645,14 @@ export const employmentTypeAPI = {
 
 // Salary Type APIs
 export const salaryTypeAPI = {
-  getAll: () => Get("/api/salarytype", false),
-  getById: (id: number) => Get(`/api/salarytype/${id}`, false),
+  getAll: () => get("/salarytype", false),
+  getById: (id: number) => get(`/salarytype/${id}`, false),
+};
+
+
+
+export const ratingScoreAPI = {
+  getAll: (): Promise<AxiosResponse<Ratingscore[]>> => get("/ratingscores") as Promise<AxiosResponse<Ratingscore[]>>,
 };
 
 // report APIs
@@ -575,6 +664,7 @@ export const reportAPI = {
   update: (id: number, data: Partial<any>) => Update(`/api/reports/${id}`, data),
   delete: (id: number) => Delete(`/api/reports/${id}`),
 };
+
 
 //==================== edit by book ===========================
 export const chatAPI = {
