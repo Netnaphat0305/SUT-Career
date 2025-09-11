@@ -1,29 +1,21 @@
 import React from "react";
 import { Route, Routes, useOutletContext } from "react-router-dom";
 import FullLayout from "../layouts/FullLayout";
-import StudentPostManager from "../pages/StudentPost";
-import FeedPage from "../components/QA/FeedPage";
-import PostCreator from "../components/QA/PostCreator";
-import ProfilePageV2 from "../pages/ProfilePage2/ProfilePage";
-import FAQPage from "../pages/StudentPost/FAQPage";
-import AskQuestionPage from "../pages/StudentPost/AskQuestionPage";
-import QuestionDetailPage from "../pages/StudentPost/QuestionDetailPage";
-import RequestThreadPage from "../pages/RequestThreadPage/RequestThreadPage";
-import RequestStatusPage from "../pages/RequestThreadPage/RequestStatusPage";
 import EmployerProfile from "../pages/EmployerProfile/EmployerProfile";
 import Homepage from "../pages/Home/Home";
 import Board from "../pages/Board/Board";
 import JobDetail from "../pages/Board/JobDetail";
 import ApplyJob from "../pages/ApplyJob/ApplyJob";
-import Interview from "../pages/Interview/Interview";
-import Chat from "../pages/Chat/Chat";
+import Interview from '../pages/Interview/Interview';
+import Chat from '../pages/Chat/Chat';
 import StudentListPage from "../pages/StudentListpage/StudentListPage";
-import Reportpage from "../pages/Reportpage/report";
-import JobsPage from "../pages/myjob";
-import PaymentReportPage from "../pages/paymentreport";
-import ProfilePageV1 from "../pages/profile";
-import ReviewPage from "../pages/review";
-import PaymentPage from "../pages/payment";
+import Reportpage from '../pages/Reportpage/reportpage/report';
+import JobsPage from '../pages/myjob';
+import PaymentReportPage from '../pages/paymentreport';
+import ProfilePageV1 from '../pages/profile';
+import ReviewPage from '../pages/review';
+import PaymentPage from '../pages/payment';
+
 import JobPost from "../pages/JobPost/JobPost";
 import InterviewScheduling from "../pages/InterviewScheduling/InterviewScheduling";
 import EmployerFeedPage from '../pages/Employer/EmployerFeedPage';
@@ -31,12 +23,16 @@ import StudentPostForm from '../pages/StudentPost/StudentPostForm';
 import RequestSentPage from '../pages/StudentPost/RequestSentPage'; // เพิ่ม import นี้
 import MyPost from '../pages/MyPost/Mypost'
 import WorklogPage from "../pages/worklog/worklog";
+
+import IncidentReportList from "../pages/Reportpage/reportlist";
+
 import ManageApplicants from "../pages/ManageApplicants/ManageApplicants"; 
 import MyApplications from "../pages/MyApplications/MyApplications"; 
 import EditJobPost from "../pages/EditJobPost/EditJobPost";
 import QRPaymentPage from "../pages/payment/qrpaymentpage";
 import ViewReviewPage from "../pages/review/reviewhistory";
 import FinancialReportPage from "../pages/studentfinance";
+
 
 
 
@@ -125,6 +121,8 @@ const MainRoutes: React.FC = () => {
             <Route path="/student/:id/finance/summary" element={<FinancialReportPage />} />
             <Route path="/my/finance/summary" element={<FinancialReportPage />} />
             <Route path="/worklog" element={<WorklogPage />} />
+            <Route path="/edit-report" element={<IncidentReportList />} />
+
 
             {/* --- Feed Routes (now independent) --- */}
             <Route path="/feed" element={<EmployerFeedPage />} />

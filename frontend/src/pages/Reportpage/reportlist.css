@@ -1,0 +1,357 @@
+/* Container Styles */
+.incident-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  background-color: #f9fafb;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+
+/* Refresh Button */
+.refresh-btn {
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  min-width: 24px;
+  height: 24px;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.refresh-section{
+  display: flex;
+  align-items: center;
+  justify-content: center; /* จัดให้อยู่ตรงกลาง */
+  gap: 10px; /* ระยะห่างระหว่างปุ่มกับข้อความ */
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.separator {
+  margin: 0 8px;
+}
+
+/* Page Header */
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.page-header p {
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Search Section */
+.search-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.search-bar {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 8px 8px 8px 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.result-count {
+  font-size: 14px;
+  color: #6b7280;
+ 
+}
+
+/* Table Container */
+.table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+/* Table Styles */
+.incident-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.incident-table thead {
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.incident-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.checkbox-col {
+  width: 40px;
+}
+
+.incident-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+}
+
+.incident-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.incident-table td {
+  padding: 16px;
+  vertical-align: top;
+}
+
+/* Cell Specific Styles */
+.title-cell .title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.title-cell .description {
+  font-size: 12px;
+  color: #6b7280;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.datetime-cell .date {
+  font-size: 14px;
+  color: #111827;
+}
+
+.datetime-cell .time {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-cell .avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.user-cell .name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.user-cell .department {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-yellow {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-blue {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-green {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-red {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-default {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+}
+
+.view-btn {
+  color: #6b7280;
+}
+
+.view-btn:hover {
+  color: #374151;
+  background-color: #f3f4f6;
+}
+
+.edit-btn {
+  color: #6b7280;
+}
+
+.edit-btn:hover {
+  color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.delete-btn {
+  color: #6b7280;
+}
+
+.delete-btn:hover {
+  color: #dc2626;
+  background-color: #fef2f2;
+}
+
+/* Checkbox Styles */
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+input[type="checkbox"]:checked {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .incident-container {
+    padding: 16px;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .incident-table {
+    min-width: 900px;
+  }
+}
+
+.incident-table th {
+  text-align: center;
+  vertical-align: middle; /* ถ้าอยากให้กึ่งกลางแนวตั้งด้วย */
+}
+
+.incident-table td:last-child {
+  text-align: center;       /* จัดเนื้อหาในช่องสุดท้ายให้อยู่กลาง */
+  vertical-align: middle;   /* กึ่งกลางแนวตั้ง */
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;  /* จัดปุ่มให้อยู่กลางแนวนอน */
+  gap: 8px;                 /* ระยะห่างระหว่างปุ่ม */
+}
+
+@media (max-width: 768px) {
+  .page-header h1 {
+    font-size: 20px;
+  }
+  
+  .search-section {
+    padding: 16px;
+  }
+  
+  .incident-table th,
+  .incident-table td {
+    padding: 8px 12px;
+  }
+  
+  .title-cell .description {
+    max-width: 200px;
+  }
+}
