@@ -1,0 +1,226 @@
+/* Container */
+.interview-container {
+    min-height: 100vh;
+    background-color: #f5f5f5;
+}
+
+.interview-header {
+    padding: 24px;
+}
+
+/* Month Navigation */
+.month-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.nav-btn {
+    background-color: #2c5aa0 !important;
+    color: white !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+}
+
+.month-display {
+    background-color: #2c5aa0;
+    color: white;
+    padding: 12px 48px;
+    border-radius: 24px;
+    margin: 0 16px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Calendar */
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background-color: #2c5aa0;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.calendar-header-cell {
+    padding: 16px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border: 1px solid #d9d9d9;
+}
+
+.calendar-cell {
+    height: 80px;
+    border: 1px solid #d9d9d9;
+    position: relative;
+    background-color: white;
+}
+
+.cell-other-month {
+    background-color: #f5f5f5;
+}
+
+.cell-disabled {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #bfbfbf;
+    font-size: 16px;
+}
+
+/* Legend */
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+}
+
+.legend-dot.selected {
+    background-color: #a8e6a3;
+}
+
+.legend-dot.busy {
+    background-color: #ff7875;
+}
+
+.legend-dot.available {
+    background-color: #c9c9c9;
+}
+
+/* Time Slots */
+.time-slot-card {
+    background-color: #e6f4ff;
+}
+
+.time-slot-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.time-slot-btn {
+    width: 60px;
+    height: 20px;
+    border-radius: 10px;
+}
+
+.time-slot-btn.available {
+    background-color: #1890ff;
+    cursor: pointer;
+}
+
+.time-slot-btn.available.selected {
+    background-color: #0050b3;
+    border: 2px solid #003a8c;
+}
+
+.time-slot-btn.booked,
+.time-slot-btn.unavailable {
+    background-color: #d9d9d9;
+    cursor: not-allowed;
+}
+
+/* Schedule Button */
+.schedule-btn {
+    border-radius: 24px;
+    height: 48px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.schedule-btn.enabled {
+    background-color: #1890ff !important;
+    border-color: #1890ff !important;
+    color: white !important;
+    cursor: pointer;
+}
+
+.schedule-btn.disabled {
+    background-color: #d9d9d9 !important;
+    border-color: #d9d9d9 !important;
+    color: #8c8c8c !important;
+    cursor: not-allowed;
+}
+
+/* Modal */
+.modal-box {
+    text-align: center;
+}
+
+.modal-content {
+    padding: 20px;
+    position: relative;
+    text-align: center;
+}
+
+.modal-content.success {
+    padding: 40px 20px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 16px;
+    color: #8c8c8c;
+    cursor: pointer;
+}
+
+.modal-icon {
+    font-size: 48px;
+    color: #1890ff;
+    margin-bottom: 16px;
+    border: 2px solid #1890ff;
+    border-radius: 50%;
+    padding: 8px;
+}
+
+.modal-text {
+    font-size: 16px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.modal-warning {
+    color: #ff4d4f;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 24px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.modal-cancel {
+    border-radius: 20px;
+    width: 100px;
+    border: 1px solid #1890ff !important;
+    color: #1890ff !important;
+}
+
+.modal-confirm {
+    border-radius: 20px;
+    width: 100px;
+    background-color: #1890ff !important;
+    color: white !important;
+}

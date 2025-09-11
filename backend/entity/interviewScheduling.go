@@ -1,3 +1,4 @@
+// backend/entity/interviewScheduling.go
 package entity
 
 import (
@@ -8,12 +9,12 @@ type InterviewScheduling struct {
 	gorm.Model
 	DateAndTime time.Time `json:"Date_And_Time"`
 	Status string `json:"Status"`
-	Description string `gorm:"type:text" json:"Description"`
+	Detail string `gorm:"type:text" json:"Detail"`
 
 	//FK
 
 	EmployerID uint
-	Employer *Employer `gorm:"foreignKey:EmployerID" json:"Employer_ID"`
+	Employer *Employer `gorm:"foreignKey:EmployerID" json:"Employer"`
 
-	Interview []Interview `gorm:"foreignKey:InterviewSchedulingID"`
+	Interview []Interview `gorm:"foreignKey:Interview"`
 }

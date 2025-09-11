@@ -115,6 +115,7 @@ func main() {
 		// --- FAQs & Student Profile (Public) ---
 		api.GET("/faqs", controller.GetFAQs)
 		api.GET("/student-profile-posts", controller.GetStudentProfilePosts)
+
 	}
 
 	// -------------------- 🔐 Protected Routes (ต้องล็อกอิน) --------------------
@@ -152,7 +153,7 @@ func main() {
 
 
 
-
+		// ======================================= Interview by looktao =======================================
 		// Interviews
 		// ชั้นขออุญาติเพิ่มนะแกชั้นต้องใช้ TT 😭😭😭
 		// --- Interview Schedules ---
@@ -164,6 +165,7 @@ func main() {
 		auth.POST("/interviews/book", controller.BookInterview) //สร้างเรคคอร์ด Interview จริง ๆ หลังจากนักศึกษาจองวันสัมภาษณ์ ก็คือผูกกับตารางนั่นแหละ
 		auth.GET("/interviews/student/:studentId", controller.GetInterviewsByStudent)
 		auth.GET("/interviews/employer/:employerId", controller.GetInterviewsByEmployer)
+		// ======================================= Interview by looktao =======================================
 
 		// --- Tickets ---
 		auth.POST("/tickets", controller.CreateRequestTicket)
@@ -203,6 +205,33 @@ func main() {
 		auth.GET("/my/finance/summary", controller.GetMyFinanceSummary)
 		auth.GET("/student/:id/finance", controller.GetStudentFinance)
 		auth.GET("/student/:id/finance/summary", controller.GetStudentFinanceSummary)
+		// auth.GET("/billable_items", controller.ListBillableItems)
+
+		// ===== Chat API =====
+		chat := auth.Group("/chat")
+		{
+			chat.GET("/rooms", controller.ListMyChatRooms)
+			chat.POST("/rooms", controller.CreateOrGetRoom)
+			chat.GET("/rooms/:roomId/messages", controller.ListRoomMessages)
+			chat.POST("/rooms/:roomId/messages", controller.SendMessage)
+		}
+		// ===== Chat API =====
+
+		// ========= Interview & Interview Scheduling API =========
+		interviewScheduling := auth.Group("/interview-scheduling")
+		{
+			interviewScheduling.GET("", controller.GetInterviewSchedules)          // ดึงทั้งหมด
+			interviewScheduling.GET("/:id", controller.GetInterviewSchedule)       // ดึงตาม ID
+			interviewScheduling.POST("", controller.CreateInterviewSchedule)       // เพิ่มใหม่
+			interviewScheduling.PUT("/:id", controller.UpdateInterviewSchedule)    // แก้ไข
+			interviewScheduling.DELETE("/:id", controller.DeleteInterviewSchedule) // ลบ
+		}
+
+		// interview := auth.Group("/interview")
+		// {
+
+		// }
+		// ========= Interview & Interview Scheduling API =========
 	}
 
 	// -------------------- 🛡️ Admin Routes --------------------

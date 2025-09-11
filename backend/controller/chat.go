@@ -2,95 +2,165 @@ package controller
 
 import (
 	"net/http"
-	//"strconv"
+	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/entity"
-	"github.com/gin-gonic/gin"
 )
 
-// POST /chat/room
-// สร้างห้องแชทใหม่
-func CreateChatRoom(c *gin.Context) {
-	var input struct {
-		StudentID  uint `json:"student_id" binding:"required"`
-		EmployerID uint `json:"employer_id" binding:"required"`
-	}
+// ===== Chat API =====
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// GET /api/chat/rooms
+func ListMyChatRooms(c *gin.Context) {
+	userID := c.MustGet("userID")
+
+	roleVal := c.MustGet("role")
+
+	role := string(roleVal.(entity.RoleEnum))
+
+	db := config.DB()
+	var rooms []entity.ChatRoom
+
+	q := db.Model(&entity.ChatRoom{})
+	if role == "student" {
+
+		var student entity.Student
+		if err := db.Where("user_id = ?", userID).Find(&student).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "student not found"})
+			return
+		}
+
+		quserid := student.ID
+
+		q = q.Where("student_id = ?", quserid)
+	} else if role == "employer" {
+
+        var employer entity.Employer
+		if err := db.Where("user_id = ?", userID).Find(&employer).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "employer not found"})
+			return
+		}
+
+		quserid := employer.ID
+
+		q = q.Where("employer_id = ?", quserid)
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
 		return
 	}
 
-	// ตรวจสอบว่ามีห้องแชทระหว่างสองคนนี้อยู่แล้วหรือไม่
-	var existingRoom entity.ChatRoom
-	if err := config.DB().Where("(student_id = ? AND employer_id = ?) OR (student_id = ? AND employer_id = ?)", input.StudentID, input.EmployerID, input.EmployerID, input.StudentID).First(&existingRoom).Error; err == nil {
-		c.JSON(http.StatusOK, gin.H{"data": existingRoom})
+	// Preload เฉพาะ student/employer ของห้องที่เกี่ยวข้อง
+	q = q.Preload("Student.User").Preload("Employer.User").Order("last_message_at desc")
+
+	if err := q.Find(&rooms).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	chatRoom := entity.ChatRoom{
-		StudentID:  input.StudentID,
-		EmployerID: input.EmployerID,
-		StatusRoom: "active",
-	}
-
-	if err := config.DB().Create(&chatRoom).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create chat room"})
-		return
-	}
-	c.JSON(http.StatusCreated, gin.H{"data": chatRoom})
+	c.JSON(http.StatusOK, rooms)
 }
 
-// GET /chat/rooms/:userId
-// ดึงห้องแชททั้งหมดของผู้ใช้
-func GetUserChatRooms(c *gin.Context) {
-	userId := c.Param("userId")
-	var chatRooms []entity.ChatRoom
+// POST /api/chat/rooms
+func CreateOrGetRoom(c *gin.Context) {
+	userID := c.MustGet("userID")
+	role := c.MustGet("role")
 
-	if err := config.DB().Preload("Student").Preload("Employer").Where("student_id = ? OR employer_id = ?", userId, userId).Find(&chatRooms).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Chat rooms not found"})
+	var req struct {
+		TargetID   uint   `json:"target_id"`
+		TargetRole string `json:"target_role"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": chatRooms})
+	db := config.DB()
+	var room entity.ChatRoom
+
+	var studentID uint
+	var employerID uint
+
+	if role == "student" && req.TargetRole == "employer" {
+		id := userID.(uint)
+		studentID = id
+		employerID = req.TargetID
+	} else if role == "employer" && req.TargetRole == "student" {
+		id := userID.(uint)
+		studentID = req.TargetID
+		employerID = id
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid role combination"})
+		return
+	}
+
+	err := db.Where("student_id = ? AND employer_id = ?", studentID, employerID).First(&room).Error
+	if err == gorm.ErrRecordNotFound {
+		room = entity.ChatRoom{StudentID: studentID, EmployerID: employerID}
+		db.Create(&room)
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, room)
 }
 
-// GET /chat/history/:roomId
-// ดึงประวัติการแชทในห้อง
-func GetChatHistory(c *gin.Context) {
-	roomId := c.Param("roomId")
-	var chatHistory []entity.ChatHistory
+// GET /api/chat/rooms/:roomId/messages
+func ListRoomMessages(c *gin.Context) {
+	roomId, _ := strconv.Atoi(c.Param("roomId"))
+	db := config.DB()
+	var msgs []entity.ChatHistory
 
-	if err := config.DB().Where("chat_room_id = ?", roomId).Order("created_at asc").Preload("User").Find(&chatHistory).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Chat history not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": chatHistory})
+	db.Preload("User").Where("chat_room_id = ?", roomId).Preload("User").Order("created_at asc").Find(&msgs)
+	c.JSON(http.StatusOK, msgs)
 }
 
-// POST /chat/message
-// ส่งข้อความใหม่
-func SendChatMessage(c *gin.Context) {
-	var message entity.ChatHistory
-	if err := c.ShouldBindJSON(&message); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// POST /api/chat/rooms/:roomId/messages
+func SendMessage(c *gin.Context) {
+	userID := c.MustGet("userID")
+
+	roomId, _ := strconv.Atoi(c.Param("roomId"))
+	var req struct {
+		Message string `json:"message"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.Message == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "message required"})
 		return
 	}
 
-	message.TimeStampSend = time.Now()
+	db := config.DB()
+	now := time.Now()
 
-	if err := config.DB().Create(&message).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to send message"})
+	// 1. สร้าง ChatHistory record
+	msg := entity.ChatHistory{
+		ChatRoomID:    uint(roomId),
+		UserSenderID:  userID.(uint),
+		Message:       req.Message,
+		TimeStampSend: now,
+	}
+
+	if err := db.Create(&msg).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save message"})
 		return
 	}
 
-	// อัปเดต last message ใน chat room
-	if err := config.DB().Model(&entity.ChatRoom{}).Where("id = ?", message.ChatRoomID).Update("last_message", message.Message).Error; err != nil {
-		// สามารถ log error ไว้ได้ แต่ไม่จำเป็นต้อง block การทำงาน
+	// 2. อัปเดต ChatRoom
+	if err := db.Model(&entity.ChatRoom{}).
+		Where("id = ?", roomId).
+		Updates(map[string]interface{}{
+			"Lastmessage":    req.Message,
+			"LastMessageAt": now, // บันทึกเป็น time.Time
+		}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update chat room"})
+		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": message})
+	// 3. ส่ง response กลับ
+	c.JSON(http.StatusOK, msg)
 }
+
+// ===== Chat API =====
