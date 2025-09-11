@@ -265,10 +265,11 @@ export const studentAPI = {
   getAll: () => get("/students"),
   getById: (id: number) => get(`/students/${id}`),
   getByUserId: (userId: number) => get(`/students/user/${userId}`),
-  update: (id: number, data: Partial<Student>) =>
-  //   Update(`/api/student/${id}`, data),
-  // delete: (id: number) => DeleteReq(`/students/${id}`),
-    put(`students/${id}`, data),
+  //============edit by netnaphat แก้ให้มันไม่ซ้ำเพราะต้องใช้ update เหมือนกัน=============================//
+  updateapply: (id: number, data: Partial<Student>) => Update(`/api/student/${id}`, data),
+  deleteapply: (id: number) => DeleteReq(`/students/${id}`),
+  //===============================================================================================//
+  update: (id: number, data: Partial<Student>) => put(`students/${id}`, data),
   delete: (id: number) => del(`/students/${id}`),
 };
 

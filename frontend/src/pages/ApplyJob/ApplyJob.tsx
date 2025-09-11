@@ -69,7 +69,7 @@ const ApplyJob: React.FC = () => {
   // ฟังก์ชันสมัครงาน + อัปเดตข้อมูลนักศึกษา
   const onFinish = async (values: any) => {
     try {
-      // ✅ 1. อัปเดตข้อมูลนักศึกษาใน DB ก่อน
+      // ✅1. อัปเดตข้อมูลนักศึกษาใน DB ก่อน
       const updatedStudent = {
         first_name: values.first_name,
         last_name: values.last_name,
@@ -82,7 +82,7 @@ const ApplyJob: React.FC = () => {
         gpa: parseFloat(values.gpa),
       };
 
-      await studentAPI.update(student.ID, updatedStudent);
+      await studentAPI.updateapply(student.ID, updatedStudent);
       console.log("update student ---------",updatedStudent);
 
 
