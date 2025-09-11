@@ -127,7 +127,7 @@ func main() {
 
 		// --- Employer Profile (me) ---
 		auth.GET("/employer/me", controller.GetEmployerProfile)
-		auth.PUT("/employer/me/avatar", controller.UpdateMyEmployerAvatar) 
+		auth.PUT("/employer/me/avatar", controller.UpdateMyEmployerAvatar)
 
 		// --- JobPosts (สร้าง/แก้ไข/ลบ) ---
 		auth.POST("/jobposts", controller.CreateJobPost)
@@ -149,13 +149,14 @@ func main() {
 		auth.GET("/jobapplications/job/:jobpost_id", controller.GetApplicantsByJobPost)
 		auth.PUT("/jobapplications/:id/status", controller.UpdateApplicationStatus)
 		auth.GET("/jobapplications/check/:jobpost_id/:student_id", controller.CheckJobApplication)
-		auth.PUT("/api/jobapplications/:id/interview", controller.UpdateInterviewSchedule)
+		auth.PUT("/jobapplications/:id/interview", controller.UpdateInterviewSchedule)
 
 		// Interviews
 		// ชั้นขออุญาติเพิ่มนะแกชั้นต้องใช้ TT 😭😭😭
-		auth.POST("/interviews/book", controller.BookInterview)
-		auth.GET("/interviews/student/:studentId", controller.GetInterviewsByStudent)
-		auth.GET("/interviews/employer/:employerId", controller.GetInterviewsByEmployer)
+		// --- Interview Schedules ---
+		auth.POST("/interview-schedules", controller.CreateInterviewSchedule)                    // สร้างช่วงเวลา
+		auth.GET("/interview-schedules/employer/:employerId", controller.GetSchedulesByEmployer) // ดูทั้งหมด
+		auth.DELETE("/interview-schedules/:id", controller.DeleteInterviewSchedule)              // ลบช่วงเวลา
 
 		// --- Tickets ---
 		auth.POST("/tickets", controller.CreateRequestTicket)

@@ -151,7 +151,7 @@
   width: 120px;
   height: 120px;
   object-fit: cover;
-  border: 1px solid #e2e2e2;
+  /* border: 1px solid #e2e2e2; */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   border-radius: 8px;
 }
@@ -268,22 +268,132 @@
   background-color: #f3f4f6; /* เทาอ่อนลงอีกตอนกด */
   transform: scale(0.98);
 }
+/* ======== Modal Container ======== */
+.application-modal {
+  padding: 20px;
+  font-family: "Kanit", "Sarabun", Arial, sans-serif;
+}
 
-/* ===== Responsive ===== */
+/* ======== หัวข้อใน Modal ======== */
+.modal-job-title {
+  font-size: 24px;
+  font-weight: 500;
+  color: #2d2d2d;
+  margin-bottom: 6px;
+}
+
+.modal-company-name {
+  font-size: 18px;
+  font-weight: 400;
+  color: #2d2d2d;
+  margin-bottom: 12px;
+}
+
+/* ======== Status Tag ======== */
+.modal-status-tag {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  margin-bottom: 18px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ======== Layout สองฝั่ง ======== */
+.modal-two-columns {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+/* ======== กล่องรายละเอียด ======== */
+.modal-student-info,
+.modal-job-info {
+  flex: 1;
+  background: #ffffff;
+  padding: 16px 18px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* .modal-student-info:hover,
+.modal-job-info:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+} */
+
+/* ======== หัวข้อกล่อง ======== */
+.modal-student-info h3,
+.modal-job-info h3 {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: #1976d3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-student-info h3::before,
+.modal-job-info h3::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 18px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #1976d3, #64b5f6);
+}
+
+/* ======== รายละเอียดในแต่ละบรรทัด ======== */
+.modal-student-info p,
+.modal-job-info p {
+  margin: 6px 0;
+  font-size: 15px;
+  color: #333;
+  line-height: 1.6;
+}
+
+.modal-student-info p strong,
+.modal-job-info p strong {
+  color: #2d2d2d;
+  font-weight: 400;
+}
+
+/* ======== รูปภาพงานใน Modal ======== */
+.modal-image {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.modal-image img {
+  max-width: 80%;
+  height: auto;
+  border-radius: 8px;
+  /* border: 1px solid #D1D6D9; */
+  /* box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15); */
+  transition: transform 0.3s ease;
+}
+
+.modal-image img:hover {
+  transform: scale(1.05);
+}
+
+/* ======== Responsive Modal ======== */
 @media (max-width: 768px) {
-  .mypost-card {
+  .modal-two-columns {
     flex-direction: column;
-    align-items: flex-start;
   }
 
-  .mypost-right img {
-    margin: 16px auto 0;
-    width: 120px;
-    height: 120px;
+  .modal-student-info,
+  .modal-job-info {
+    width: 100%;
   }
 
-  .mypost-details {
-    flex-direction: column;
-    gap: 12px;
+  .modal-image img {
+    max-width: 100%;
   }
 }

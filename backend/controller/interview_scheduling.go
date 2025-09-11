@@ -18,15 +18,32 @@ func CreateInterviewSchedule(c *gin.Context) {
 		return
 	}
 
-	// อาจจะมีการดึง EmployerID จาก token ในอนาคต
-	// schedule.EmployerID = ...
+	// ดึง userID จาก JWT token
+	userID, _ := c.Get("userID")
 
-	schedule.Status = "available" // สถานะเริ่มต้นคือ "ว่าง"
+	// หา employer_id ของ user นี้
+	var employer entity.Employer
+	if err := config.DB().Where("user_id = ?", userID).First(&employer).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบนายจ้าง"})
+		return
+	}
+
+	// บันทึก employer_id ลง schedule
+	schedule.EmployerID = employer.ID
+	schedule.Status = "available"
 
 	if err := config.DB().Create(&schedule).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create interview schedule"})
 		return
 	}
+	// โหลดข้อมูล employer มาด้วย
+	if err := config.DB().
+		Preload("Employer").
+		First(&schedule, schedule.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "โหลดข้อมูลนายจ้างไม่สำเร็จ"})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{"data": schedule})
 }
 
@@ -35,8 +52,11 @@ func CreateInterviewSchedule(c *gin.Context) {
 func GetSchedulesByEmployer(c *gin.Context) {
 	employerId := c.Param("employerId")
 	var schedules []entity.InterviewScheduling
-
-	if err := config.DB().Where("employer_id = ?", employerId).Find(&schedules).Error; err != nil {
+	//จะเอาไว้ดูข้อมูลผู้ว่าจ้าง
+	if err := config.DB().
+		Preload("Employer").
+		Where("employer_id = ?", employerId).
+		Find(&schedules).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Schedules not found for this employer"})
 		return
 	}

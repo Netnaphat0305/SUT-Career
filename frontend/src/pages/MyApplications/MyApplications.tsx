@@ -1,185 +1,5 @@
-// import React, { useEffect, useState } from "react";
-// import { Card, Spin, Empty, message, Tag, Progress, Button } from "antd";
-// import { useNavigate } from "react-router-dom";
-// import { jobApplicationAPI } from "../../services/https";
-// import "./MyApplications.css";
-
-// import defaultLogo from "../../assets/profile.svg";
-
-// const MyApplications: React.FC = () => {
-//   const [loading, setLoading] = useState(true);
-//   const [applications, setApplications] = useState<any[]>([]);
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     const fetchApplications = async () => {
-//       try {
-//         const res = await jobApplicationAPI.getMyApplications();
-//         setApplications(res?.data || []);
-//       } catch (error) {
-//         message.error("โหลดใบสมัครไม่สำเร็จ");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchApplications();
-//   }, []);
-
-//   const getStatusColor = (status: string) => {
-//     switch (status) {
-//       case "Pending":
-//         return "blue";
-//       case "InterviewPending":
-//         return "orange";
-//       case "InterviewScheduled":
-//         return "gold";
-//       case "Interviewed":
-//         return "purple";
-//       case "Accepted":
-//         return "green";
-//       case "Rejected":
-//         return "red";
-//       case "Cancelled":
-//         return "gray";
-//       default:
-//         return "default";
-//     }
-//   };
-
-//   if (loading) {
-//     return (
-//       <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
-//     );
-//   }
-
-//   return (
-//     <div className="my-applications-container">
-//       <h2 className="page-title">ใบสมัครของฉัน</h2>
-
-//       {applications.length === 0 ? (
-//         <Empty description="ยังไม่มีใบสมัคร" />
-//       ) : (
-//         <div className="applications-list">
-//           {applications.map((app) => (
-//             <Card key={app.ID} className="application-card">
-//               <div className="application-info">
-//                 <div className="application-details">
-//                   <h3>{app.JobPost?.title}</h3>
-//                   <p>{app.JobPost?.Employer?.company_name}</p>
-//                   <p>
-//                     วันที่สมัคร:{" "}
-//                     {new Date(app.CreatedAt).toLocaleDateString("th-TH")}
-//                   </p>
-
-//                   {/* แสดงสถานะ */}
-//                   <Tag color={getStatusColor(app.application_status)}>
-//                     {app.application_status === "Pending" && "รอพิจารณา"}
-//                     {app.application_status === "InterviewPending" &&
-//                       "รอเลือกวันสัมภาษณ์"}
-//                     {app.application_status === "InterviewScheduled" &&
-//                       "รอสัมภาษณ์"}
-//                     {app.application_status === "Interviewed" &&
-//                       "สัมภาษณ์เสร็จแล้ว"}
-//                     {app.application_status === "Accepted" && "ผ่านการคัดเลือก"}
-//                     {app.application_status === "Cancelled" && "ยกเลิกการสมัคร"}
-//                     {app.application_status === "Rejected" &&
-//                       "ไม่ผ่านการคัดเลือก"}
-//                   </Tag>
-
-//                   {/* แสดงวันสัมภาษณ์ */}
-//                   {app.application_status === "InterviewScheduled" &&
-//                     app.InterviewScheduling && (
-//                       <p style={{ marginTop: "8px" }}>
-//                         วันสัมภาษณ์:{" "}
-//                         {new Date(
-//                           app.InterviewScheduling.DateAndTime
-//                         ).toLocaleString("th-TH")}
-//                       </p>
-//                     )}
-//                   {/* ยกเลิกการสมัคร */}
-//                   {app.application_status === "Pending" && (
-//                     <Button
-//                       danger
-//                       style={{ marginTop: "10px" }}
-//                       onClick={async () => {
-//                         try {
-//                           await jobApplicationAPI.updateStatus(
-//                             app.ID,
-//                             "Cancelled"
-//                           );
-//                           message.success("ยกเลิกการสมัครเรียบร้อยแล้ว");
-
-//                           // อัปเดต state ให้ UI เปลี่ยนสถานะทันที
-//                           setApplications((prev) =>
-//                             prev.map((item) =>
-//                               item.ID === app.ID
-//                                 ? { ...item, application_status: "Cancelled" }
-//                                 : item
-//                             )
-//                           );
-//                         } catch (error) {
-//                           message.error("ยกเลิกการสมัครไม่สำเร็จ");
-//                         }
-//                       }}
-//                     >
-//                       ยกเลิกการสมัคร
-//                     </Button>
-//                   )}
-
-//                   {/* ปุ่มเลือกวันสัมภาษณ์ */}
-//                   {app.application_status === "InterviewPending" && (
-//                     <Button
-//                       type="primary"
-//                       style={{ marginTop: "10px" }}
-//                       onClick={() =>
-//                         navigate(`/interview?applicationId=${app.ID}`)
-//                       }
-//                     >
-//                       เลือกวันสัมภาษณ์
-//                     </Button>
-//                   )}
-//                 </div>
-
-//                 <div className="application-logo">
-//                   <img
-//                     src={app.JobPost?.Employer?.logo || defaultLogo}
-//                     alt="logo"
-//                   />
-//                 </div>
-//               </div>
-
-//               {/* Progress bar */}
-//               <Progress
-//                 percent={
-//                   app.application_status === "Pending"
-//                     ? 20
-//                     : app.application_status === "InterviewPending"
-//                     ? 40
-//                     : app.application_status === "InterviewScheduled"
-//                     ? 60
-//                     : app.application_status === "Interviewed"
-//                     ? 80
-//                     : app.application_status === "Accepted"
-//                     ? 100
-//                     : 0
-//                 }
-//                 showInfo={false}
-//                 strokeColor="#1890ff"
-//               />
-//             </Card>
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default MyApplications;
-
-
 import React, { useEffect, useState } from "react";
-import { Button, Empty, Spin, message } from "antd";
+import { Button, Empty, Spin, message, Modal } from "antd";
 import { ClockCircleOutlined, DollarCircleOutlined } from "@ant-design/icons";
 import { jobApplicationAPI } from "../../services/https";
 import { useNavigate } from "react-router-dom";
@@ -190,6 +10,8 @@ import PageHeader from "../../components/PageHeader";
 const MyApplications: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [applications, setApplications] = useState<any[]>([]);
+  const [selectedApp, setSelectedApp] = useState<any | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -228,8 +50,20 @@ const MyApplications: React.FC = () => {
     }
   };
 
+  const openModal = (app: any) => {
+    setSelectedApp(app);
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setSelectedApp(null);
+    setIsModalVisible(false);
+  };
+
   if (loading) {
-    return <Spin size="large" style={{ display: "block", margin: "50px auto" }} />;
+    return (
+      <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
+    );
   }
 
   return (
@@ -239,86 +73,198 @@ const MyApplications: React.FC = () => {
       {applications.length === 0 ? (
         <Empty description="ยังไม่มีใบสมัคร" />
       ) : (
-        applications.map((app) => (
-          <div key={app.ID} className="my-application-card">
-            {/* ฝั่งซ้าย */}
-            <div className="my-application-left">
-              <h2 className="my-application-title">
-                {app.JobPost?.title} {getStatusTag(app.application_status)}
-              </h2>
-              <p className="my-application-company">
-                {app.JobPost?.Employer?.company_name}
-              </p>
+        <>
+          {applications.map((app) => (
+            <div
+              key={app.ID}
+              className="my-application-card"
+              onClick={() => openModal(app)}
+              style={{ cursor: "pointer" }}
+            >
+              {/* ฝั่งซ้าย */}
+              <div className="my-application-left">
+                <h2 className="my-application-title">
+                  {app.JobPost?.title} {getStatusTag(app.application_status)}
+                </h2>
+                <p className="my-application-company">
+                  {app.JobPost?.Employer?.company_name}
+                </p>
 
-              <div className="my-application-details">
-                <div className="my-application-detail">
-                  <ClockCircleOutlined className="my-application-icon" />
-                  <div>
-                    <span>วันที่สมัคร</span>
-                    <strong>
-                      {new Date(app.CreatedAt).toLocaleDateString("th-TH")}
-                    </strong>
+                <div className="my-application-details">
+                  <div className="my-application-detail">
+                    <ClockCircleOutlined className="my-application-icon" />
+                    <div>
+                      <span>วันที่สมัคร</span>
+                      <strong>
+                        {new Date(app.CreatedAt).toLocaleDateString("th-TH")}
+                      </strong>
+                    </div>
+                  </div>
+                  <div className="my-application-detail">
+                    <DollarCircleOutlined className="my-application-icon" />
+                    <div>
+                      <span>ค่าตอบแทน</span>
+                      <strong>
+                        {app.JobPost?.salary?.toLocaleString() || "-"} บาท
+                      </strong>
+                    </div>
                   </div>
                 </div>
-                <div className="my-application-detail">
-                  <DollarCircleOutlined className="my-application-icon" />
-                  <div>
-                    <span>ค่าตอบแทน</span>
-                    <strong>
-                      {app.JobPost?.salary?.toLocaleString() || "-"} บาท
-                    </strong>
-                  </div>
+
+                {/* ปุ่ม */}
+                <div className="my-application-actions">
+                  {app.application_status === "Pending" && (
+                    <Button
+                      className="btn-delete"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          await jobApplicationAPI.updateStatus(
+                            app.ID,
+                            "Cancelled"
+                          );
+                          message.success("ยกเลิกการสมัครเรียบร้อยแล้ว");
+                          setApplications((prev) =>
+                            prev.map((item) =>
+                              item.ID === app.ID
+                                ? { ...item, application_status: "Cancelled" }
+                                : item
+                            )
+                          );
+                        } catch {
+                          message.error("ยกเลิกการสมัครไม่สำเร็จ");
+                        }
+                      }}
+                    >
+                      ยกเลิกการสมัคร
+                    </Button>
+                  )}
+
+                  {app.application_status === "InterviewPending" && (
+                    <Button
+                      className="btn-manageapp"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/interview?applicationId=${app.ID}`);
+                      }}
+                    >
+                      เลือกวันสัมภาษณ์
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              {/* ปุ่ม */}
-              <div className="my-application-actions">
-                {app.application_status === "Pending" && (
-                  <Button
-                    className="btn-delete"
-                    onClick={async () => {
-                      try {
-                        await jobApplicationAPI.updateStatus(app.ID, "Cancelled");
-                        message.success("ยกเลิกการสมัครเรียบร้อยแล้ว");
-                        setApplications((prev) =>
-                          prev.map((item) =>
-                            item.ID === app.ID
-                              ? { ...item, application_status: "Cancelled" }
-                              : item
-                          )
-                        );
-                      } catch {
-                        message.error("ยกเลิกการสมัครไม่สำเร็จ");
-                      }
-                    }}
-                  >
-                    ยกเลิกการสมัคร
-                  </Button>
-                )}
-
-                {app.application_status === "InterviewPending" && (
-                  <Button
-                    className="btn-manageapp"
-                    onClick={() =>
-                      navigate(`/interview?applicationId=${app.ID}`)
-                    }
-                  >
-                    เลือกวันสัมภาษณ์
-                  </Button>
+              {/* ฝั่งขวา */}
+              <div className="my-application-right">
+                {app.JobPost?.image_url ? (
+                  <img
+                    src={app.JobPost.image_url}
+                    alt={app.JobPost.title}
+                    className="my-application-image"
+                  />
+                ) : (
+                  <div className="my-application-image-fallback">
+                    <img
+                      src={defaultLogo}
+                      alt="Default Logo"
+                      className="my-application-image"
+                    />
+                  </div>
                 )}
               </div>
             </div>
+          ))}
 
-            {/* ฝั่งขวา */}
-            <div className="my-application-right">
-              <img
-                src={app.JobPost?.Employer?.logo || defaultLogo}
-                alt="logo"
-                className="my-application-image"
-              />
-            </div>
-          </div>
-        ))
+          {/* ===== Modal เดียวสำหรับทุกการ์ด ===== */}
+          <Modal
+            open={isModalVisible}
+            onCancel={closeModal}
+            footer={null}
+            centered
+            width={850}
+            className="application-modal"
+          >
+            {selectedApp && (
+              <div className="modal-content">
+                {/* หัวเรื่อง */}
+                <h2 className="modal-job-title">
+                  {selectedApp.JobPost?.title}{" "}
+                  {getStatusTag(selectedApp.application_status)}
+                </h2>
+                <p className="modal-company-name">
+                  {selectedApp.JobPost?.Employer?.company_name}
+                </p>
+
+                {/* ข้อมูลแบบสองฝั่ง */}
+                <div className="modal-two-columns">
+                  {/* ฝั่งซ้าย - ข้อมูลผู้สมัคร */}
+                  <div className="modal-student-info">
+                    <h3>ข้อมูลผู้สมัคร</h3>
+                    <p>
+                      <strong>ชื่อ-นามสกุล:</strong>{" "}
+                      {selectedApp.Student?.first_name}{" "}
+                      {selectedApp.Student?.last_name}
+                    </p>
+                    <p>
+                      <strong>อีเมล:</strong> {selectedApp.Student?.email}
+                    </p>
+                    <p>
+                      <strong>เบอร์โทร:</strong> {selectedApp.Student?.phone}
+                    </p>
+                    <p>
+                      <strong>คณะ:</strong> {selectedApp.Student?.faculty}
+                    </p>
+                    <p>
+                      <strong>ปีการศึกษา:</strong> {selectedApp.Student?.year}
+                    </p>
+                    <p>
+                      <strong>GPA:</strong> {selectedApp.Student?.gpa}
+                    </p>
+                    <p>
+                      <strong>วันที่สมัคร:</strong>{" "}
+                      {new Date(selectedApp.CreatedAt).toLocaleDateString(
+                        "th-TH"
+                      )}
+                    </p>
+                  </div>
+
+                  {/* ฝั่งขวา - ข้อมูลงาน */}
+                  <div className="modal-job-info">
+                    <h3>รายละเอียดงาน</h3>
+                    <p>
+                      <strong>บริษัท:</strong>{" "}
+                      {selectedApp.JobPost?.Employer?.company_name}
+                    </p>
+                    <p>
+                      <strong>สถานที่:</strong>{" "}
+                      {selectedApp.JobPost?.locationjob}
+                    </p>
+                    <p>
+                      <strong>ค่าตอบแทน:</strong>{" "}
+                      {selectedApp.JobPost?.salary?.toLocaleString()} บาท
+                    </p>
+                    <p>
+                      <strong>วันหมดเขตรับสมัคร:</strong>{" "}
+                      {new Date(
+                        selectedApp.JobPost?.deadline
+                      ).toLocaleDateString("th-TH")}
+                    </p>
+
+                    {/* รูปภาพงาน */}
+                    {selectedApp.JobPost?.image_url && (
+                      <div className="modal-image">
+                        <img
+                          src={selectedApp.JobPost.image_url}
+                          alt={selectedApp.JobPost.title}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </Modal>
+        </>
       )}
     </div>
   );
