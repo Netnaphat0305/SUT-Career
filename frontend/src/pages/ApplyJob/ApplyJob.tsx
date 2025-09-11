@@ -17,7 +17,9 @@ import dayjs from "dayjs";
 import PageHeader from "../../components/PageHeader";
 import "./ApplyJob.css";
 import "./AppJobDetail.css";
-import { jobApplicationAPI, studentAPI } from "../../services/https"; // ✅ เพิ่ม studentAPI
+import { jobApplicationAPI, studentAPI } from "../../services/https"; // เพิ่ม studentAPI
+import profile from "../../assets/profile.svg";
+
 
 const { TextArea } = Input;
 
@@ -144,7 +146,7 @@ const ApplyJob: React.FC = () => {
 
       {/* รายละเอียดประกาศงาน */}
       <div className="apply-job-content">
-        <img src={post?.image_url} alt="Job" className="apply-job-image" />
+        <img src={post.image_url || profile } alt="Job" className="apply-job-image" />
         <div className="apply-detail-container">
           <div className="apply-detail">
             <h2 className="post-title-AppJob">

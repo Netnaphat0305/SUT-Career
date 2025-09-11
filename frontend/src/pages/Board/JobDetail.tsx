@@ -14,6 +14,7 @@ import { jobPostAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
 
 
+
 const PostLayout: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const role = user.role;
