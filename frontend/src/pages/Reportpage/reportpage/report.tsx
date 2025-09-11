@@ -29,10 +29,10 @@ const Reportpage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault(); // ป้องกันการรีเฟรชหน้า
 
-        if (!auth?.user?.id) {
-            message.error("กรุณาเข้าสู่ระบบก่อนทำการรายงาน");
-            return;
-        }
+            if (!auth?.user?.id) {
+                message.error("กรุณาเข้าสู่ระบบก่อนทำการรายงาน");
+                return;
+            }
 
         // 6. เตรียมข้อมูล (payload) ที่จะส่งไปให้ API
         // สังเกตว่าเราส่งเป็น ID ไม่ได้ส่งเป็น Object ตาม interface
@@ -51,10 +51,10 @@ const Reportpage: React.FC = () => {
             const response = await reportAPI.create(reportData);
 
             // console.log('Report submission response:', response);
-            // console.log('Report submission response:', reportData);
 
-            // ตรวจสอบ response จาก axios (ใน service)
-            if (response && response.status >= 200 && response.status < 300) {
+            // // ตรวจสอบ response จาก axios (ใน service)
+            // console.log('Response status:', response.status); 
+            if (response.id || response.ID) {
                 message.success('บันทึกรายงานสำเร็จ!');
                 // เคลียร์ฟอร์มหลังจากส่งข้อมูลสำเร็จ
                 setFormData({
@@ -64,6 +64,7 @@ const Reportpage: React.FC = () => {
                     time: '',
                     discription: '',
                 });
+                // console.log("data clear");  
             } else {
                 // หาก service คืน error มาใน response.data
                 message.error(response?.data?.error || 'บันทึกข้อมูลไม่สำเร็จ');

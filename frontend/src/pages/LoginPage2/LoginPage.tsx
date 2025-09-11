@@ -65,9 +65,9 @@ const LoginPage: React.FC = () => {
         if (data.user.role === 'admin') {
             navigate('/admin');
         } else if (data.user.role === 'employer') {
-            navigate('/employer/feed'); // หรือหน้า dashboard ของนายจ้าง
+            navigate('/home'); // หรือหน้า dashboard ของนายจ้าง
         } else {
-            navigate('/feed'); // หน้าของนักศึกษา
+            navigate('/home'); // หน้าของนักศึกษา
         }
       } else {
         message.error(data.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');

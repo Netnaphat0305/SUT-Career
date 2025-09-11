@@ -333,10 +333,10 @@ export const jobPostAPI = {
   create: (data: CreateJobpost) => Post("/api/jobposts", data),
   getAll: () => Get("/api/jobposts"),
   getById: (id: number) => Get(`/api/jobposts/${id}`),
-  update: (id: number, data: Partial<Jobpost>) =>
-    Update(`/api/jobposts/${id}`, data),
+  update: (id: number, data: Partial<Jobpost>) => Update(`/api/jobposts/${id}`, data),
   delete: (id: number) => Delete(`/api/jobposts/${id}`),
   getMyPosts: () => Get("/api/employer/myposts"), // ใช้ token จาก localStorage
+  
 
 
 
@@ -396,12 +396,15 @@ export const reportAPI = {
 };
 
 export const worklogAPI = {
-  create: (data: any) => Post("/worklogs", data),
+  create: (data: any) => Post("api/worklogs", data),
   getAll: () => Get("/worklogs"),
   getById: (id: number) => Get(`/worklogs/${id}`),
   getByUserId: (userId: number) => Get(`/worklogs/user/${userId}`),
   update: (id: number, data: Partial<any>) => Update(`/worklogs/${id}`, data),
   delete: (id: number) => Delete(`/worklogs/${id}`),
-  
+  getByEmployerID: (employerId: number) => Get(`/api/worklogs/employer/${employerId}`),
+  getJobpostByUserID: (userId: number) => Get(`/api/worklogs/user/${userId}`),
+  getJobApplicationByJobpostID: (jobpostID: number) => Get(`/api/jobapplications/${jobpostID}`),
+
 };
 
