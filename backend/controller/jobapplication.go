@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
+    "fmt"
 )
 
 // ดึงข้อมูลนักศึกษา  JobPost พร้อม Preload
@@ -247,5 +248,44 @@ func UpdateInterviewSchedule(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{
         "message": "เลือกวันสัมภาษณ์สำเร็จ",
         "data":    app,
+    })
+}
+
+// POST /api/jobapplications/:id/upload-resume_file
+func UploadResume(c *gin.Context) {
+    id := c.Param("id")
+
+    var jobApp entity.JobApplication
+    if err := config.DB().First(&jobApp, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบการสมัครงานนี้"})
+        return
+    }
+
+    // รับไฟล์จาก form-data
+    file, err := c.FormFile("resume_file")
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "กรุณาเลือกไฟล์"})
+        return
+    }
+
+    // กำหนด path สำหรับบันทึกไฟล์
+    path := fmt.Sprintf("uploads/resume_file/%d_%s", jobApp.ID, file.Filename)
+
+    // บันทึกไฟล์ลง server
+    if err := c.SaveUploadedFile(file, path); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกไฟล์ได้"})
+        return
+    }
+
+    // อัปเดตชื่อไฟล์ใน DB
+    jobApp.ResumeFile = path
+    if err := config.DB().Save(&jobApp).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตข้อมูลไม่สำเร็จ"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "อัปโหลด Portfolio สำเร็จ",
+        "resume_file": path,
     })
 }

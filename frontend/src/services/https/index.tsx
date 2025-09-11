@@ -241,7 +241,6 @@ export const employerAPI = {
   delete: (id: number) => DeleteReq(`/employers/${id}`),
 };
 
-
 // Employer Profile APIs (Base64 JSON version)
 export const employerProfileAPI = {
   getMe: () =>
@@ -262,10 +261,6 @@ export const employerProfileAPI = {
       withCredentials: true,
     }),
 };
-
-
-
-
 
 export const jobpostAPI = {
   create: (data: Jobpost) => Post("/api/myjobposts", data),
@@ -338,8 +333,6 @@ export const jobPostAPI = {
   delete: (id: number) => Delete(`/api/jobposts/${id}`),
   getMyPosts: () => Get("/api/employer/myposts"), // ใช้ token จาก localStorage
 
-
-
   uploadPortfolio: (id: number, file: File) => {
     const formData = new FormData();
     formData.append("portfolio", file);
@@ -364,8 +357,23 @@ export const jobApplicationAPI = {
   getMyApplications: () => Get(`/api/jobapplications/me`),
   getByJobPost: (jobpost_id: number) => Get(`/api/jobapplications/job/${jobpost_id}`),
   updateStatus: (id: number, status: string) => Update(`/api/jobapplications/${id}/status`, { application_status: status }),
-  checkApplied: (jobpost_id: number, student_id: number) => Get(`/api/jobapplications/check/${jobpost_id}/${student_id}`)
+  checkApplied: (jobpost_id: number, student_id: number) => Get(`/api/jobapplications/check/${jobpost_id}/${student_id}`),
+
+  // แก้ตรงนี้ ให้รับ FormData
+  uploadResume: (id: number, formData: FormData) => {
+    return axios.post(
+      `${API_URL}/api/jobapplications/${id}/upload-resume`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+  },
 };
+
 
 // Job Category APIs
 export const jobCategoryAPI = {

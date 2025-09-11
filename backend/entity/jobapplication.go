@@ -39,5 +39,8 @@ type JobApplication struct {
     // เพิ่ม FK เพื่อเชื่อมกับตาราง InterviewScheduling
 	InterviewSchedulingID *uint               `json:"interview_scheduling_id"`
 	InterviewScheduling   *InterviewScheduling `gorm:"foreignKey:InterviewSchedulingID" json:"interview_scheduling"`
+
+     // เพิ่มช่องเก็บไฟล์ ResumeFile
+    ResumeFile string `gorm:"type:varchar(255)" json:"resume_file"`
     
 }

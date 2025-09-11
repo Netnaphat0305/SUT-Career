@@ -150,6 +150,10 @@ func main() {
 		auth.PUT("/jobapplications/:id/status", controller.UpdateApplicationStatus)
 		auth.GET("/jobapplications/check/:jobpost_id/:student_id", controller.CheckJobApplication)
 		auth.PUT("/jobapplications/:id/interview", controller.UpdateInterviewSchedule) //นักศึกษาเลือก วันสัมภาษณ์ โดยตรง จากตารางเวลาที่นายจ้างสร้างไว้
+		auth.POST("/jobapplications/:id/upload-resume", controller.UploadResume)
+
+
+
 
 		// Interviews
 		// ชั้นขออุญาติเพิ่มนะแกชั้นต้องใช้ TT 😭😭😭

@@ -1,43 +1,3 @@
-// import React from "react";
-// import { useLocation } from "react-router-dom";
-// import PageHeader from "../../components/PageHeader";
-// import "./ApplyJob.css";
-// import JobAppDetail from "./AppJobDetail";
-
-// const ApplyJob: React.FC = () => {
-//   const location = useLocation();
-//   const post = location.state?.post;
-
-//   if (!post) {
-//     return <div>ไม่พบข้อมูลโพสต์</div>;
-//   }
-
-//   return (
-//     <div className="apply-job-container">
-//       <PageHeader title="ยื่นสมัครงาน" />
-
-//       <div className="apply-job-content">
-//         <img src={post.image} alt="Job" className="apply-job-image" />
-//         <div className="apply-detail-container">
-//           <div className="apply-detail">
-//             <h2 className="post-title-AppJob">{post.title}</h2>
-//             <p>{post.description}</p>
-//             <p>
-//               <strong>ระยะเวลา:</strong> {post.duration}
-//             </p>
-//             <p>
-//               <strong>ค่าตอบแทน:</strong> {post.salary}
-//             </p>
-//             <p>
-//               <strong>สถานที่:</strong> {post.location}
-//             </p>
-//           </div>
-//         </div>
-//       </div>
-//       <JobAppDetail />
-//     </div>
-//   );
-// };
 import React, { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import {
@@ -69,10 +29,8 @@ const ApplyJob: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<any>({});
   const [jobpost, setJobpost] = useState<any>({});
-  const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
-
-  // state สำหรับ Modal
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handleClose = () => {
@@ -104,7 +62,7 @@ const ApplyJob: React.FC = () => {
     fetchData();
   }, [form, jobpost_id, post]);
 
-  // กดปุ่มยืนยันสมัครงาน
+  // ฟังก์ชันสมัครงาน
   const onFinish = async (values: any) => {
     try {
       const payload = {
@@ -117,16 +75,19 @@ const ApplyJob: React.FC = () => {
       const res = await jobApplicationAPI.create(payload);
 
       if (res?.status === 201 || res?.status === 200 || res?.data) {
-        // // ถ้าแนบ Portfolio → อัปโหลดเพิ่ม
-        // if (portfolioFile) {
-        //   await jobApplicationAPI.uploadPortfolio(res.data.ID, portfolioFile);
-        // }
+        const applicationId = res.data?.ID || res.ID;
 
-        // แสดง Toast แจ้งผลสำเร็จ
+        // ถ้ามีไฟล์ resume อัปโหลดไฟล์
+        if (resumeFile) {
+          const formData = new FormData();
+          formData.append("resume_file", resumeFile);
+
+          await jobApplicationAPI.uploadResume(applicationId, formData);
+          message.success("แนบ Resume สำเร็จ!");
+        }
+
         message.success("สมัครงานสำเร็จ!");
-        // เปิด Modal
         setIsModalVisible(true);
-        // ล้างฟอร์ม
         form.resetFields();
       } else {
         message.error("สมัครงานไม่สำเร็จ");
@@ -160,7 +121,7 @@ const ApplyJob: React.FC = () => {
     <div className="apply-job-container">
       <PageHeader title="ยื่นสมัครงาน" />
 
-      {/* ส่วนรายละเอียดประกาศงาน */}
+      {/* รายละเอียดประกาศงาน */}
       <div className="apply-job-content">
         <img src={post?.image_url} alt="Job" className="apply-job-image" />
         <div className="apply-detail-container">
@@ -185,7 +146,7 @@ const ApplyJob: React.FC = () => {
         </div>
       </div>
 
-      {/* ส่วนกรอกฟอร์มสมัครงาน */}
+ {/* ส่วนกรอกฟอร์มสมัครงาน */}
       <div className="job-app-detail-wrapper">
         <Form
           form={form}
@@ -263,22 +224,23 @@ const ApplyJob: React.FC = () => {
             />
           </Form.Item>
 
-          {jobpost.portfolio_required === true && (
-            <Form.Item
-              label="ไฟล์ผลงาน (Resume)"
-              name="portfolio"
-              rules={[{ required: true, message: "กรุณาอัปโหลด Portfolio" }]}
+          {/* ปุ่มแนบไฟล์ Resume */}
+          <Form.Item
+            label="แนบไฟล์ Resume"
+            name="resume_file"
+            rules={[{ required: true, message: "กรุณาอัปโหลด Resume" }]}
+          >
+            <Upload
+              beforeUpload={(file) => {
+                setResumeFile(file);
+                return false; // ไม่อัปโหลดอัตโนมัติ
+              }}
+              maxCount={1}
+              showUploadList={{ showRemoveIcon: true }}
             >
-              <Upload
-                beforeUpload={(file) => {
-                  setPortfolioFile(file);
-                  return false;
-                }}
-              >
-                <Button icon={<UploadOutlined />}>คลิกเพื่ออัปโหลด</Button>
-              </Upload>
-            </Form.Item>
-          )}
+              <Button icon={<UploadOutlined />}>คลิกเพื่ออัปโหลด</Button>
+            </Upload>
+          </Form.Item>
 
           <Alert
             message="กรุณาตรวจสอบข้อมูลให้ถูกต้อง และแนบเอกสารให้ครบถ้วนก่อนกดยืนยัน"
