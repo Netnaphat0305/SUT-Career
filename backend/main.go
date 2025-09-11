@@ -132,11 +132,12 @@ func main() {
 		auth.GET("/employer/me", controller.GetEmployerProfile)
 		auth.PUT("/employer/me/avatar", controller.UpdateMyEmployerAvatar)
 
-		// --- JobPosts (สร้าง/แก้ไข/ลบ) ---
+		// --- JobPosts (สร้าง/แก้ไข/ลบ/ค้น) ---
 		auth.POST("/jobposts", controller.CreateJobPost)
 		auth.PUT("/jobposts/:id", controller.UpdateJobPost)
 		auth.DELETE("/jobposts/:id", controller.DeleteJobPost)
 		auth.POST("/jobposts/upload-portfolio/:id", controller.UploadPortfolio)
+		auth.GET("/jobposts/:id", controller.GetJobPostByID)
 
 		// --- Employer: My Posts ---
 		auth.GET("/employer/myposts", controller.GetEmployerPosts)
