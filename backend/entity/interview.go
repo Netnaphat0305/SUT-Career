@@ -14,4 +14,9 @@ type Interview struct {
 	Student *Student `gorm:"foreignKey:StudentID" json:"Student_ID"`
 
 	Status string `gorm:"not null" json:"Status"`
+
+	// FK → JobApplication
+    JobApplicationID uint           `gorm:"not null" json:"job_application_id"`
+    JobApplication   JobApplication `gorm:"foreignKey:JobApplicationID"`
+
 }

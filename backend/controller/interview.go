@@ -11,93 +11,87 @@ import (
 
 // POST /interviews/book
 // นักศึกษทำการจองตารางสัมภาษณ์
-//ขอเปลี่ยนเงื่อนไขนะเพื่อน ให้มันเลือกจองคนอื่นไม่ได้
+// ขอเปลี่ยนเงื่อนไขนะเพื่อน ให้มันเลือกจองคนอื่นไม่ได้
 func BookInterview(c *gin.Context) {
-	var input struct {
-		ScheduleID       uint   `json:"schedule_id" binding:"required"`
-		StudentID        uint   `json:"student_id" binding:"required"`
-		JobApplicationID uint   `json:"job_application_id" binding:"required"`
-		Description      string `json:"description"`
-	}
+    var input struct {
+        ScheduleID       uint   `json:"schedule_id" binding:"required"`
+        StudentID        uint   `json:"student_id" binding:"required"`
+        JobApplicationID uint   `json:"job_application_id" binding:"required"`
+        Description      string `json:"description"`
+    }
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
 
-	// --- ตรวจสอบว่า JobApplication มีอยู่จริง preload JobPost ---
-	var app entity.JobApplication
-	if err := config.DB().
-		Preload("JobPost").
-		First(&app, input.JobApplicationID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบใบสมัครงาน"})
-		return
-	}
+    // ตรวจสอบว่า JobApplication มีอยู่จริง
+    var app entity.JobApplication
+    if err := config.DB().
+        Preload("JobPost").
+        First(&app, input.JobApplicationID).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบใบสมัครงาน"})
+        return
+    }
 
-	// --- ตรวจสอบว่า schedule มีอยู่  เป็นของ employer เดียวกัน ---
-	var schedule entity.InterviewScheduling
-	if err := config.DB().
-		Where("id = ? AND status = ?", input.ScheduleID, "available").
-		First(&schedule).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบตารางสัมภาษณ์หรือถูกจองแล้ว"})
-		return
-	}
+    // ตรวจสอบว่า schedule มีอยู่จริง และยัง available
+    var schedule entity.InterviewScheduling
+    if err := config.DB().
+        Where("id = ? AND status = ?", input.ScheduleID, "available").
+        First(&schedule).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบตารางสัมภาษณ์หรือถูกจองแล้ว"})
+        return
+    }
 
-	// ถ้า employer_id ของตาราง != employer_id ของ JobPost ห้ามเลือก
-	if schedule.EmployerID != app.JobPost.EmployerID {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "ไม่สามารถเลือกตารางสัมภาษณ์ของนายจ้างคนอื่นได้",
-		})
-		return
-	}
+    // ตรวจสอบว่าตารางนี้เป็นของนายจ้างเดียวกัน
+    if schedule.EmployerID != app.JobPost.EmployerID {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error": "ไม่สามารถเลือกตารางสัมภาษณ์ของนายจ้างคนอื่นได้",
+        })
+        return
+    }
 
-	// --- เริ่ม Transaction ---
-	tx := config.DB().Begin()
+    tx := config.DB().Begin()
 
-	// --- สร้าง Interview record ---
-	interview := entity.Interview{
-		InterviewSchedulingID: input.ScheduleID,
-		StudentID:             input.StudentID,
-		Status:                "booked",
-	}
-	if err := tx.Create(&interview).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "สร้างข้อมูลสัมภาษณ์ไม่สำเร็จ"})
-		return
-	}
+    // สร้าง Interview
+    interview := entity.Interview{
+        InterviewSchedulingID: input.ScheduleID,
+        StudentID:             input.StudentID,
+        JobApplicationID:      input.JobApplicationID, // เพิ่มตรงนี้
+        Status:                "booked",
+    }
+    if err := tx.Create(&interview).Error; err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "สร้างข้อมูลสัมภาษณ์ไม่สำเร็จ"})
+        return
+    }
 
-	// --- อัปเดตสถานะตารางสัมภาษณ์ ---
-	schedule.Status = "booked"
-	if err := tx.Save(&schedule).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตสถานะตารางสัมภาษณ์ไม่สำเร็จ"})
-		return
-	}
+    // อัปเดตสถานะตารางสัมภาษณ์
+    schedule.Status = "booked"
+    if err := tx.Save(&schedule).Error; err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตสถานะตารางสัมภาษณ์ไม่สำเร็จ"})
+        return
+    }
 
-	// --- อัปเดตสถานะ JobApplication ---
-	if err := tx.Model(&entity.JobApplication{}).
-		Where("id = ?", input.JobApplicationID).
-		Select("application_status", "interview_scheduling_id", "interview_date").
-		Updates(entity.JobApplication{
-			ApplicationStatus:     entity.StatusInterviewScheduled,
-			InterviewSchedulingID: &input.ScheduleID,
-			InterviewDate:         &schedule.DateAndTime,
-		}).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตใบสมัครไม่สำเร็จ"})
-		return
-	}
+    // อัปเดตสถานะใบสมัครเป็น InterviewScheduled
+    if err := tx.Model(&entity.JobApplication{}).
+        Where("id = ?", input.JobApplicationID).
+        Updates(map[string]interface{}{
+            "application_status": entity.StatusInterviewScheduled,
+            "last_update":        gorm.Expr("CURRENT_TIMESTAMP"),
+        }).Error; err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตใบสมัครไม่สำเร็จ"})
+        return
+    }
 
-	// --- Commit Transaction ---
-	if err := tx.Commit().Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Transaction commit failed"})
-		return
-	}
+    tx.Commit()
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "จองตารางสัมภาษณ์สำเร็จ",
-		"data":    interview,
-	})
+    c.JSON(http.StatusCreated, gin.H{
+        "message": "จองตารางสัมภาษณ์สำเร็จ",
+        "data":    interview,
+    })
 }
 
 

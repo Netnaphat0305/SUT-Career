@@ -24,8 +24,11 @@ type JobApplication struct {
     LastUpdate        time.Time              `gorm:"not null" json:"last_update"`
     ApplicationReason string                 `gorm:"type:varchar(255);not null" json:"application_reason"`
 
-    // วันที่นัดสัมภาษณ์ (หน้าบุ๊คจะกำหนด)
-    InterviewDate *time.Time `json:"interview_date"`
+    //บอกตัวเอง อย่าลืมไปเพื่อมตาราง JobApplication (1) to (1) Interview
+   // FK Interview (1:1) ขแยาดเปลี่ยน ชั้นคิดผิดTTTT
+   
+
+    Interview   *Interview `gorm:"foreignKey:JobApplicationID" json:"interview"`
 
 	//FK
 
@@ -37,8 +40,8 @@ type JobApplication struct {
 
     //บอกตัวเอง อย่าลืมไปเพื่อมตาราง JobApplication (1) to (1) InterviewScheduling
     // เพิ่ม FK เพื่อเชื่อมกับตาราง InterviewScheduling
-	InterviewSchedulingID *uint               `json:"interview_scheduling_id"`
-	InterviewScheduling   *InterviewScheduling `gorm:"foreignKey:InterviewSchedulingID" json:"interview_scheduling"`
+	// InterviewSchedulingID *uint               `json:"interview_scheduling_id"`
+	// InterviewScheduling   *InterviewScheduling `gorm:"foreignKey:InterviewSchedulingID" json:"interview_scheduling"`
 
      // เพิ่มช่องเก็บไฟล์ ResumeFile
     ResumeFile string `gorm:"type:varchar(255)" json:"resume_file"`

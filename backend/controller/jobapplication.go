@@ -89,7 +89,8 @@ func GetMyApplications(c *gin.Context) {
         Preload("Student.Bank").
         Preload("JobPost").
         Preload("JobPost.Employer").
-        Preload("InterviewScheduling").
+        Preload("Interview").
+        Preload("Interview.InterviewScheduling"). // preload ตาราง interview scheduling ผ่าน interview
         Where("student_id = ?", student.ID).
         Order("created_at DESC").
         Find(&applications).Error; err != nil {
@@ -110,7 +111,8 @@ func GetApplicantsByJobPost(c *gin.Context) {
         Preload("Student.User").
         Preload("Student.Gender").
         Preload("Student.Bank").
-        Preload("InterviewScheduling").
+        Preload("Interview").
+        Preload("Interview.InterviewScheduling"). // preload ตาราง interview scheduling ผ่าน interview
         Where("job_post_id = ?", jobpostID).
         Find(&applications).Error; err != nil {
 
@@ -195,7 +197,7 @@ func UpdateInterviewSchedule(c *gin.Context) {
         return
     }
 
-    // หาใบสมัคร
+    // หา JobApplication ปัจจุบัน
     var app entity.JobApplication
     if err := config.DB().
         Preload("JobPost").
@@ -212,7 +214,7 @@ func UpdateInterviewSchedule(c *gin.Context) {
         return
     }
 
-    // ตรวจสอบว่าตารางสัมภาษณ์นี้เป็นของ Employer ของโพสต์นี้จริงไหม
+    // ตรวจสอบว่านายจ้างของตารางต้องตรงกับนายจ้างของโพสต์
     if schedule.EmployerID != app.JobPost.EmployerID {
         c.JSON(http.StatusBadRequest, gin.H{
             "error": "ไม่สามารถเลือกตารางสัมภาษณ์ของนายจ้างคนอื่นได้",
@@ -220,7 +222,7 @@ func UpdateInterviewSchedule(c *gin.Context) {
         return
     }
 
-    // ตรวจสอบว่ายัง Available อยู่ไหม
+    // ตรวจสอบว่าตารางยัง available อยู่ไหม
     if schedule.Status != "available" {
         c.JSON(http.StatusBadRequest, gin.H{
             "error": "ตารางสัมภาษณ์นี้ถูกจองไปแล้ว",
@@ -228,28 +230,51 @@ func UpdateInterviewSchedule(c *gin.Context) {
         return
     }
 
-    // อัปเดตสถานะของใบสมัคร + ผูก InterviewSchedulingID
-    app.InterviewSchedulingID = &input.InterviewSchedulingID
-    app.ApplicationStatus = entity.StatusInterviewScheduled
-    app.LastUpdate = time.Now()
+    // ใช้ Transaction เพื่อความปลอดภัย
+    tx := config.DB().Begin()
 
-    if err := config.DB().Save(&app).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตวันสัมภาษณ์ไม่สำเร็จ"})
+    // 1. อัปเดตสถานะของ JobApplication เป็น InterviewScheduled
+    if err := tx.Model(&entity.JobApplication{}).
+        Where("id = ?", id).
+        Updates(map[string]interface{}{
+            "application_status": entity.StatusInterviewScheduled,
+            "last_update":        time.Now(),
+        }).Error; err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตสถานะใบสมัครไม่สำเร็จ"})
         return
     }
 
-    // 6. อัปเดตสถานะของตารางสัมภาษณ์ให้ไม่ว่าง
+    // 2. สร้าง Interview ใหม่
+    interview := entity.Interview{
+        InterviewSchedulingID: input.InterviewSchedulingID,
+        StudentID:             app.StudentID,
+        JobApplicationID:      app.ID,
+        Status:                "booked",
+    }
+    if err := tx.Create(&interview).Error; err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "สร้างข้อมูลสัมภาษณ์ไม่สำเร็จ"})
+        return
+    }
+
+    // 3. อัปเดตสถานะของตารางสัมภาษณ์เป็น booked
     schedule.Status = "booked"
-    if err := config.DB().Save(&schedule).Error; err != nil {
+    if err := tx.Save(&schedule).Error; err != nil {
+        tx.Rollback()
         c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตสถานะตารางสัมภาษณ์ไม่สำเร็จ"})
         return
     }
 
+    // Commit
+    tx.Commit()
+
     c.JSON(http.StatusOK, gin.H{
         "message": "เลือกวันสัมภาษณ์สำเร็จ",
-        "data":    app,
+        "data":    interview,
     })
 }
+
 
 // POST /api/jobapplications/:id/upload-resume_file
 func UploadResume(c *gin.Context) {
