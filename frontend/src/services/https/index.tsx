@@ -228,7 +228,7 @@ export const studentAPI = {
   getAll: () => Get("/students"),
   getById: (id: number) => Get(`/students/${id}`),
   update: (id: number, data: Partial<Student>) =>
-    Update(`/students/${id}`, data),
+    Update(`/api/student/${id}`, data),
   delete: (id: number) => DeleteReq(`/students/${id}`),
 };
 
@@ -355,9 +355,12 @@ export const jobApplicationAPI = {
   init: (jobpost_id: number) => Get(`/api/jobapplications/init/${jobpost_id}`),
   create: (data: any) => Post(`/api/jobapplications`, data),
   getMyApplications: () => Get(`/api/jobapplications/me`),
-  getByJobPost: (jobpost_id: number) => Get(`/api/jobapplications/job/${jobpost_id}`),
-  updateStatus: (id: number, status: string) => Update(`/api/jobapplications/${id}/status`, { application_status: status }),
-  checkApplied: (jobpost_id: number, student_id: number) => Get(`/api/jobapplications/check/${jobpost_id}/${student_id}`),
+  getByJobPost: (jobpost_id: number) =>
+    Get(`/api/jobapplications/job/${jobpost_id}`),
+  updateStatus: (id: number, status: string) =>
+    Update(`/api/jobapplications/${id}/status`, { application_status: status }),
+  checkApplied: (jobpost_id: number, student_id: number) =>
+    Get(`/api/jobapplications/check/${jobpost_id}/${student_id}`),
 
   // แก้ตรงนี้ ให้รับ FormData
   uploadResume: (id: number, formData: FormData) => {
@@ -373,7 +376,6 @@ export const jobApplicationAPI = {
     );
   },
 };
-
 
 // Job Category APIs
 export const jobCategoryAPI = {

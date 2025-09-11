@@ -120,3 +120,66 @@ func GetMyProfile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+// PUT /api/student/:id
+func UpdateStudent(c *gin.Context) {
+    var student entity.Student
+    id := c.Param("id")
+
+    // ดึงข้อมูล student จาก DB
+    if err := config.DB().First(&student, id).Error; err != nil {
+        if err == gorm.ErrRecordNotFound {
+            c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบนักศึกษา"})
+            return
+        }
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "เกิดข้อผิดพลาดในการค้นหาข้อมูล"})
+        return
+    }
+
+    // Bind JSON จาก request body
+    var input struct {
+        FirstName string `json:"first_name"`
+        LastName  string `json:"last_name"`
+        Phone     string `json:"phone"`
+        Birthday  string `json:"birthday"` // 👈 เปลี่ยนเป็น string
+        Age       int    `json:"age"`
+        Email     string `json:"email"`
+        Faculty   string `json:"faculty"`
+        Year      int    `json:"year"`
+        GPA       float64 `json:"gpa"`
+    }
+
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    // ✅ แปลง string → time.Time อย่างถูกต้อง
+    parsedBirthday, err := time.Parse("2006-01-02", input.Birthday)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "รูปแบบวันเกิดไม่ถูกต้อง"})
+        return
+    }
+
+    // อัปเดตข้อมูลใน student struct
+    student.FirstName = input.FirstName
+    student.LastName = input.LastName
+    student.Phone = input.Phone
+    student.Birthday = parsedBirthday // ✅ ใช้ตัวแปร parsedBirthday ที่เพิ่งประกาศ
+    student.Age = input.Age
+    student.Email = input.Email
+    student.Faculty = input.Faculty
+    student.Year = input.Year
+    student.GPA = float32(input.GPA)
+
+    // บันทึกการเปลี่ยนแปลงลง DB
+    if err := config.DB().Save(&student).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "เกิดข้อผิดพลาดในการอัปเดตข้อมูล"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "อัปเดตข้อมูลสำเร็จ",
+        "data":    student,
+    })
+}

@@ -1,38 +1,44 @@
-/*โครงสร้างหลักของหน้า Apply Job */
+/* ============ GLOBAL CONTAINER ============ */
 .apply-job-container {
-  padding: 24px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 0;
-  background-color: #fff; /* สีพื้นหลังเหมือนตัวอย่าง */
+  background-color: #fff; /* ✅ พื้นหลังโทนสว่าง */
   font-family: "Kanit", "Sarabun", sans-serif;
+  min-height: 100vh;
 }
 
-/* กล่องรายละเอียดประกาศงาน */
+/* ============ JOB DETAIL CARD ============ */
 .apply-job-content {
   display: flex;
-  align-items: center;
-  background: white;
+  align-items: flex-start;
+  background: #fff;
   padding: 24px;
   border-radius: 16px;
   border: 1px solid #e0e6ed;
-  max-width: 700px;
+  max-width: 800px;
   width: 100%;
-  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); */
   margin-top: 16px;
   margin-bottom: 32px;
+  /* box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease; */
 }
 
-/* โลโก้บริษัท / รูปงาน */
+.apply-job-content:hover {
+  transform: translateY(-2px);
+}
+
+/* รูปงาน */
 .apply-job-image {
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   border-radius: 12px;
   object-fit: cover;
   margin-right: 24px;
   border: 1px solid #e0e6ed;
   background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 /* ข้อความรายละเอียด */
@@ -50,45 +56,51 @@
 
 /* หัวข้อประกาศงาน */
 .post-title-AppJob {
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 700;
   margin-bottom: 8px;
+  color: #1677ff;
 }
 
 /* ข้อความเน้น */
 .apply-detail p strong {
-  font-size: 14px;
-  color: #2d2d2d;
-  font-weight: 500;
+  font-size: 15px;
+  color: #444;
+  font-weight: 600;
 }
 
-/*  กล่องฟอร์มสมัครงาน */
+/* ============ FORM CONTAINER ============ */
 .job-app-detail-wrapper {
   max-width: 900px;
   width: 100%;
   margin: 0 auto;
-  padding: 0;
   box-sizing: border-box;
   justify-content: center;
 }
 
+/* กล่องฟอร์ม */
 .apply-form {
   background: white;
-  padding: 24px;
+  padding: 32px;
   border-radius: 16px;
   /* border: 1px solid #e0e6ed; */
-  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); */
+  /* box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); */
   width: 100%;
-  max-width: 800px; /* ✅ กำหนด max-width */
-  margin: 0 auto; /* ✅ จัดฟอร์มให้อยู่กลาง */
+  max-width: 820px;
+  margin: 0 auto;
+  transition: box-shadow 0.2s ease;
 }
 
-/* กริดจัด 2 คอลัมน์ */
+/* .apply-form:hover {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+} */
+
+/* ============ FORM GRID ============ */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 400px); /* ✅ ช่องละ 400px เท่ากัน */
+  grid-template-columns: repeat(2, minmax(320px, 1fr));
   gap: 24px;
-  justify-content: center; /* ✅ จัด grid ให้อยู่กลาง */
+  justify-content: center;
   margin: 0 auto;
 }
 
@@ -97,78 +109,82 @@
 .ant-select-selector,
 .ant-picker {
   font-size: 16px;
-  height: 42px;
-  padding: 6px 12px;
-  border-radius: 8px !important;
+  height: 44px;
+  padding: 8px 14px;
+  border-radius: 10px !important;
   border: 1px solid #d1d6d9;
   transition: all 0.2s ease;
   width: 100%;
-  margin: 0 auto; /* ✅ จัด input ให้อยู่กลาง */
 }
 
 .ant-input:focus,
 .ant-select-selector:focus,
 .ant-picker-focused {
   border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.2);
 }
 
-/* TextArea (เหตุผลการสมัคร) */
+/* TextArea */
 .ant-input-textarea {
   font-size: 16px;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
-/* Upload Resume*/
+/* ============ UPLOAD RESUME ============ */
 .ant-upload {
   width: 100%;
 }
 
 .ant-upload .ant-btn {
   font-size: 15px;
-  padding: 6px 16px;
-  height: 42px;
+  padding: 8px 20px;
+  height: 44px;
   border-radius: 8px;
 }
 
-/* Alert*/
+/* ============ ALERT ============ */
 .custom-job-description-note-AppJob {
   margin-top: 24px;
   margin-bottom: 24px;
   background-color: #e6f4ff;
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 14px;
   font-size: 14px;
 }
 
-/*ปุ่มยืนยันสมัครงาน*/
+/* ============ SUBMIT BUTTON ============ */
 .submit-wrapper {
   display: flex;
   justify-content: center;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .submit-wrapper button {
-  width: 220px;
-  height: 46px;
+  width: 240px;
+  height: 48px;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   color: white;
   background: #1677ff;
   border: none;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s ease;
 }
-
 
 .submit-wrapper button:hover {
   background: #135fcc;
+  transform: translateY(-1px);
 }
 
+/* ============ MODAL RESULT ============ */
+.ant-modal-content {
+  border-radius: 14px;
+  padding: 32px;
+}
 
-/*Responsive สำหรับมือถือ*/
+/* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
   .apply-job-content {
     flex-direction: column;
@@ -179,14 +195,67 @@
 
   .apply-job-image {
     margin: 0 0 16px 0;
+    width: 120px;
+    height: 120px;
   }
 
   .form-grid {
-    grid-template-columns: 1fr; /* ✅ ให้เหลือ 1 คอลัมน์ */
+    grid-template-columns: 1fr;
     gap: 16px;
   }
 
   .submit-wrapper button {
     width: 100%;
   }
+}
+
+
+/* ============ FORCE FONT IN FORM INPUTS ============ */
+
+/* Input, TextArea, Select, DatePicker, Upload */
+.ant-input,
+.ant-input::placeholder,
+.ant-input-textarea,
+.ant-input-textarea::placeholder,
+.ant-select-selector,
+.ant-select-selection-item,
+.ant-select-selection-placeholder,
+.ant-picker-input > input,
+.ant-upload .ant-btn,
+.ant-btn,
+textarea,
+input,
+select,
+button {
+  font-family: "Kanit", "Sarabun", sans-serif !important; /* ✅ บังคับใช้ฟอนต์ */
+}
+
+/* Label ของ Form.Item */
+.ant-form-item-label > label {
+  font-family: "Kanit", "Sarabun", sans-serif !important;
+}
+
+/* ปรับ Placeholder ให้ใช้ฟอนต์เดียวกัน */
+input::placeholder,
+textarea::placeholder {
+  font-family: "Kanit", "Sarabun", sans-serif !important;
+}
+
+/* ปุ่ม */
+button,
+.ant-btn {
+  font-family: "Kanit", "Sarabun", sans-serif !important;
+}
+
+/* Select Dropdown Options */
+.ant-select-item-option-content {
+  font-family: "Kanit", "Sarabun", sans-serif !important;
+}
+
+/* Calendar ของ DatePicker */
+.ant-picker-content,
+.ant-picker-cell,
+.ant-picker-header-view,
+.ant-picker-time-panel-cell-inner {
+  font-family: "Kanit", "Sarabun", sans-serif !important;
 }

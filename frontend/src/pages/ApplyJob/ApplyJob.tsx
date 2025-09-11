@@ -17,7 +17,7 @@ import dayjs from "dayjs";
 import PageHeader from "../../components/PageHeader";
 import "./ApplyJob.css";
 import "./AppJobDetail.css";
-import { jobApplicationAPI } from "../../services/https";
+import { jobApplicationAPI, studentAPI } from "../../services/https"; // ✅ เพิ่ม studentAPI
 
 const { TextArea } = Input;
 
@@ -62,26 +62,46 @@ const ApplyJob: React.FC = () => {
     fetchData();
   }, [form, jobpost_id, post]);
 
-  // ฟังก์ชันสมัครงาน
+  useEffect(() => {
+  console.log("📌 student object:", student);
+}, [student]);
+
+  // ฟังก์ชันสมัครงาน + อัปเดตข้อมูลนักศึกษา
   const onFinish = async (values: any) => {
     try {
+      // ✅ 1. อัปเดตข้อมูลนักศึกษาใน DB ก่อน
+      const updatedStudent = {
+        first_name: values.first_name,
+        last_name: values.last_name,
+        phone: values.phone,
+        birthday: values.birthday.format("YYYY-MM-DD"),
+        age: values.age,
+        email: values.email,
+        faculty: values.faculty,
+        year: values.year,
+        gpa: parseFloat(values.gpa),
+      };
+
+      await studentAPI.update(student.ID, updatedStudent);
+      console.log("update student ---------",updatedStudent);
+
+
+      // ✅ 2. สมัครงานตามปกติ
       const payload = {
         student_id: student.ID,
         job_post_id: jobpost.ID,
         application_reason: values.application_reason,
       };
 
-      // เรียก API สมัครงาน
       const res = await jobApplicationAPI.create(payload);
 
       if (res?.status === 201 || res?.status === 200 || res?.data) {
         const applicationId = res.data?.ID || res.ID;
 
-        // ถ้ามีไฟล์ resume อัปโหลดไฟล์
+        // ✅ 3. ถ้ามีไฟล์ Resume ให้ Upload
         if (resumeFile) {
           const formData = new FormData();
           formData.append("resume_file", resumeFile);
-
           await jobApplicationAPI.uploadResume(applicationId, formData);
           message.success("แนบ Resume สำเร็จ!");
         }
@@ -93,6 +113,7 @@ const ApplyJob: React.FC = () => {
         message.error("สมัครงานไม่สำเร็จ");
       }
     } catch (error) {
+      console.error(error);
       message.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
     }
   };
@@ -146,7 +167,7 @@ const ApplyJob: React.FC = () => {
         </div>
       </div>
 
- {/* ส่วนกรอกฟอร์มสมัครงาน */}
+      {/* ส่วนกรอกฟอร์มสมัครงาน */}
       <div className="job-app-detail-wrapper">
         <Form
           form={form}
@@ -155,40 +176,20 @@ const ApplyJob: React.FC = () => {
           className="apply-form"
         >
           <div className="form-grid">
-            <Form.Item
-              label="ชื่อ"
-              name="first_name"
-              rules={[{ required: true }]}
-            >
+            <Form.Item label="ชื่อ" name="first_name" rules={[{ required: true }]}>
               <Input size="large" />
             </Form.Item>
-            <Form.Item
-              label="นามสกุล"
-              name="last_name"
-              rules={[{ required: true }]}
-            >
+            <Form.Item label="นามสกุล" name="last_name" rules={[{ required: true }]}>
               <Input size="large" />
             </Form.Item>
             <Form.Item label="รหัสนักศึกษา" name="student_code">
               <Input size="large" readOnly />
             </Form.Item>
-            <Form.Item
-              label="เบอร์โทร"
-              name="phone"
-              rules={[{ required: true }]}
-            >
+            <Form.Item label="เบอร์โทร" name="phone" rules={[{ required: true }]}>
               <Input size="large" />
             </Form.Item>
-            <Form.Item
-              label="วันเกิด"
-              name="birthday"
-              rules={[{ required: true }]}
-            >
-              <DatePicker
-                size="large"
-                style={{ width: "100%" }}
-                format="YYYY-MM-DD"
-              />
+            <Form.Item label="วันเกิด" name="birthday" rules={[{ required: true }]}>
+              <DatePicker size="large" style={{ width: "100%" }} format="YYYY-MM-DD" />
             </Form.Item>
             <Form.Item label="อายุ" name="age" rules={[{ required: true }]}>
               <Input size="large" />
@@ -243,7 +244,7 @@ const ApplyJob: React.FC = () => {
           </Form.Item>
 
           <Alert
-            message="กรุณาตรวจสอบข้อมูลให้ถูกต้อง และแนบเอกสารให้ครบถ้วนก่อนกดยืนยัน"
+            message="หากแก้ไขข้อมูลส่วนตัว ข้อมูลจะถูกบันทึกในระบบก่อนกดยืนยันสมัครงาน"
             type="info"
             showIcon
             style={{

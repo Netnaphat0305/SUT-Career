@@ -141,6 +141,7 @@ func main() {
 		// --- Student Profile ---
 		auth.POST("/student-profile-posts", controller.CreateStudentProfilePost)
 		auth.GET("/profile", controller.GetMyProfile)
+		auth.PUT("/student/:id", controller.UpdateStudent)
 
 		// --- Job Applications ---
 		auth.GET("/jobapplications/init/:id", controller.InitJobApplication)
