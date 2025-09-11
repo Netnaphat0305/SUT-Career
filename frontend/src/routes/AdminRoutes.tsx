@@ -7,6 +7,7 @@ import ReportsPage from '../pages/Admin2/ReportsPage';
 import ManageFaqPage from '../pages/Admin2/ManageFaqPage';
 import UserManagementPage from '../pages/Admin2/UserManagementPage';
 import EmployerFeedPage from '../pages/Employer/EmployerFeedPage'// Import new page
+import FinanceDashboardPage from '../pages/Admin2/FinancePage';
 
 const AdminRoutes: React.FC = () => {
   const isAdmin = true; // Should be replaced with real auth logic
@@ -24,6 +25,7 @@ const AdminRoutes: React.FC = () => {
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/manage-faq" element={<ManageFaqPage />} />
         <Route path="/feed" element={<EmployerFeedPage />} /> {/* Add new route */}
+        <Route path="/finance/summary" element={<FinanceDashboardPage />} />
       </Route>
     </Routes>
   );

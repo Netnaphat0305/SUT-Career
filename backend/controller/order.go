@@ -34,7 +34,7 @@ func GetOrderByJobPostID(c *gin.Context) {
 		Preload("Employer").
 		Preload("BillableItem").
 		Preload("Discount").
-		Where("job_post_id = ?", jobId).First(&order).Error; err != nil {
+		Where("jobpost_id = ?", jobId).First(&order).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found for the specified job post"})
 		return
 	}

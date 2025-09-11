@@ -6,17 +6,18 @@ import type { Employer } from "../../interfaces/employer";
 import type { Student } from "../../interfaces/student";
 import type {
   CreateReviewPayload,
-  FindReviewRequest,
+  Review,
 } from "../../interfaces/review";
 import type { Discount } from "../../interfaces/discount";
-import type { Ratingscore } from "../../interfaces/ratingscore";
 import type { Jobpost, CreateJobpost } from "../../interfaces/jobpost";
-import type { Payment, CreatePaymentPayload } from "../../interfaces/payment";
+import type { Payment, CreatePaymentPayload, StudentFinanceResponse, FinanceSummaryResponse } from "../../interfaces/payment";
 import type { Order } from "../../interfaces/order";
 import type { EmploymentType } from "../../interfaces/employment_type";
 import type { JobCategory } from "../../interfaces/job_category";
 import type { SalaryType } from "../../interfaces/salary_type";
 import type { SignInCommon } from "../../interfaces/user";
+import type { CreateBillableitemPayload } from "../../interfaces/billableitem";
+import type { Paymentmethod } from "../../interfaces/paymentmethod";
 
 /** ใช้ VITE_API_KEY เป็น baseURL เหมือนเดิม */
 const API_URL = import.meta.env.VITE_API_KEY || "http://localhost:8080";
@@ -220,7 +221,7 @@ export const Delete = async (
 
 // Authentication APIs
 export const authAPI = {
-  login: (data: SignInCommon) => Post("/login", data, false),
+  login: (data: SignInCommon) => Post("/api/login", data, false),
 };
 
 export const studentAPI = {
@@ -274,13 +275,24 @@ export const jobpostAPI = {
   delete: (id: number) => DeleteReq(`/api/myjobposts/${id}`),
 };
 
+export const myjobpostAPI = {
+  getAcceptedApplications: () => Get(`/api/my-jobs/accepted`),
+  getById: (id: number) => Get(`/api/my-jobs/${id}`),
+};
+
+export const billableItemAPI = {
+  create: (data: CreateBillableitemPayload) => Post("/api/billable_items", data),
+  getById: (id: number) => Get(`/api/billable_items/${id}`),
+  getByJobPostId: (jobPostId: number) => Get(`/api/billable_items/jobpost/${jobPostId}`),
+  list: () => Get("/billable_items"),
+  delete: (id: number) => DeleteReq(`/api/billable_items/${id}`),
+};
+
 export const paymentAPI = {
   create: (data: CreatePaymentPayload) => Post("/api/payments", data),
   getById: (id: number): Promise<{ data: Payment }> =>
     Get(`/api/payments/${id}`, true, { silent404: true }),
-  getByBillableItem: (billableId: number): Promise<{ data: Payment }> =>
-    Get(`/api/payments/billable/${billableId}`, true, { silent404: true }),
-  getByJobId: (jobId: number) => Get(`/api/payments/job/${jobId}`),
+  getLatestByBillable: (billableId: number) => Get(`/api/payments/billable/${billableId}`),
   getByEmployerId: (employerId: number): Promise<{ data: Payment[] }> =>
     Get(`/api/payments/employer/${employerId}`),
   update: (id: number, data: Partial<Payment>) =>
@@ -299,9 +311,27 @@ export const paymentAPI = {
     }),
 };
 
+export const PaymentmethodAPI = {
+  list: () => Get<Paymentmethod[]>(`/api/paymentmethods`),
+};
+
+export const discountAPI = {
+  list: () => Get<Discount[]>(`/api/discounts`),
+  getApplicableByJob: (jobPostId: number) =>
+    Get<Discount[]>(`/discounts/applicable?job_post_id=${jobPostId}`),
+  getUsedByEmployer: (employerId: number) =>
+    Get<number[] | { discount_id: number }[]>(
+      `/discounts/used?employer_id=${employerId}&employerId=${employerId}`
+    ),
+  checkUsage: (discountId: number, employerId: number) =>
+    Get<{ used: boolean } | { data: { used: boolean } }>(
+      `/discounts/${discountId}/usage?employer_id=${employerId}&employerId=${employerId}`
+    ),
+};
+
 export const paymentReportAPI = {
-  getMine: () => Get("/api/payment-reports/me"),
-  getByEmployerId: (id: number) => Get(`/api/payment-reports/employer/${id}`),
+  getMine: () => Get("/api/payment-reports/me", true),
+  getByEmployerId: (id: number) => Get(`/api/payment-reports/employer/${id}`, true),
   upload: (form: FormData) =>
     axios.post(buildUrl("/api/payment-reports/upload"), form, {
       headers: {
@@ -312,17 +342,154 @@ export const paymentReportAPI = {
       },
     }),
 };
+export const StudentFinanceAPI = {
+  // API ใหม่ที่ใช้ JWT token
+  getFinanceData: async (): Promise<StudentFinanceResponse> => {
+    console.log(`📊 Fetching my finance data (using JWT token)`);
+    
+    try {
+      const response = await Get<StudentFinanceResponse>(`/api/my/finance`);
+      
+      console.log("💰 My finance data response:", {
+        hasData: !!response?.data,
+        dataLength: response?.data?.length || 0,
+        data: response?.data
+      });
+      
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+      
+      if (!response.data) {
+        console.warn("⚠️ Response has no data property");
+        return { data: [] };
+      }
+      
+      if (!Array.isArray(response.data)) {
+        console.warn("⚠️ Response data is not an array:", typeof response.data);
+        return { data: [] };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("💥 Error fetching my finance data:", error);
+      throw error;
+    }
+  },
+
+  getFinanceSummary: async (): Promise<FinanceSummaryResponse> => {
+    console.log(`📈 Fetching my finance summary (using JWT token)`);
+    
+    try {
+      const response = await Get<FinanceSummaryResponse>(`/api/my/finance/summary`);
+      
+      console.log("📊 My finance summary response:", {
+        hasData: !!response?.data,
+        summary: response?.data
+      });
+      
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+      
+      if (!response.data) {
+        console.warn("⚠️ Summary response has no data property");
+        return { 
+          data: { 
+            monthlyJobCount: 0, 
+            totalJobCount: 0, 
+            totalEarnings: 0 
+          } 
+        };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("💥 Error fetching my finance summary:", error);
+      throw error;
+    }
+  },
+
+  // ✅ เพิ่ม missing functions ที่ Frontend ต้องการ
+  getFinanceDataByStudentId: async (studentId: number): Promise<StudentFinanceResponse> => {
+    console.log(`📊 Fetching finance data for student ID: ${studentId}`);
+    
+    try {
+      const response = await Get<StudentFinanceResponse>(`/api/student/${studentId}/finance`);
+      
+      console.log("💰 Finance data response:", {
+        hasData: !!response?.data,
+        dataLength: response?.data?.length || 0,
+        data: response?.data
+      });
+      
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+      
+      if (!response.data) {
+        console.warn("⚠️ Response has no data property");
+        return { data: [] };
+      }
+      
+      if (!Array.isArray(response.data)) {
+        console.warn("⚠️ Response data is not an array:", typeof response.data);
+        return { data: [] };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("💥 Error fetching finance data:", error);
+      throw error;
+    }
+  },
+
+  getFinanceSummaryByStudentId: async (studentId: number): Promise<FinanceSummaryResponse> => {
+    console.log(`📈 Fetching finance summary for student ID: ${studentId}`);
+    
+    try {
+      const response = await Get<FinanceSummaryResponse>(`/api/student/${studentId}/finance/summary`);
+      
+      console.log("📊 Finance summary response:", {
+        hasData: !!response?.data,
+        summary: response?.data
+      });
+      
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+      
+      if (!response.data) {
+        console.warn("⚠️ Summary response has no data property");
+        return { 
+          data: { 
+            monthlyJobCount: 0, 
+            totalJobCount: 0, 
+            totalEarnings: 0 
+          } 
+        };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("💥 Error fetching finance summary:", error);
+      throw error;
+    }
+  }
+};
+
+export const adminFinanceAPI = {
+  summary: (from?: string, to?: string) =>
+    Get(`/api/admin/finance/summary${from ? `?from=${from}&to=${to ?? from}` : ""}`),
+};
 
 export const reviewAPI = {
   create: (data: CreateReviewPayload) => Post("/api/reviews", data),
-  find: (data: FindReviewRequest) => Post("/api/reviews/find", data),
   getForJob: (jobId: number) => Get(`/api/reviews/job/${jobId}`),
+  getById: (id: string): Promise<{ data: Review }> =>
+    Get(`/api/reviews/view/${id}`),
 };
 
-export const ratingScoreAPI = {
-  getAll: (): Promise<{ data: Ratingscore[] }> =>
-    Get<{ data: Ratingscore[] }>(`/api/reviews/scores`),
-};
 // Job Post APIs
 export const jobPostAPI = {
   create: (data: CreateJobpost) => Post("/api/jobposts", data),

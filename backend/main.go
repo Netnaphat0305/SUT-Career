@@ -54,13 +54,10 @@ func main() {
 	{
 		// --- JobPosts (ดูได้ทุกคน) ---
 		api.GET("/jobposts", controller.ListJobPosts)
-		api.GET("/jobposts/:id", controller.GetJobPostByID)
 
 		// --- Job Categories ---
 		api.GET("/jobcategories", controller.ListJobCategories)
 		api.GET("/jobcategories/:id", controller.GetJobCategoryByID)
-		api.GET("/reviews/scores", controller.ListRatingScores)
-		api.GET("/payments/statuses", controller.ListPaymentStatuses)
 		api.GET("/payments/methods", controller.ListPaymentMethods)
 
 		// api.GET("/banks", controller.ListBanks)
@@ -136,7 +133,7 @@ func main() {
 		auth.POST("/jobposts/upload-portfolio/:id", controller.UploadPortfolio)
 
 		// --- Employer: My Posts ---
-		auth.GET("/employer/myposts", controller.GetEmployerPosts)
+		// auth.GET("/employer/myposts", controller.GetEmployerPosts)
 
 		// --- Student Profile ---
 		auth.POST("/student-profile-posts", controller.CreateStudentProfilePost)
@@ -174,18 +171,38 @@ func main() {
 		auth.GET("/tickets/:id", controller.GetRequestTicketByID)
 		auth.POST("/tickets/:id/replies", controller.CreateTicketReply)
 
+		// --- myjob ---
+        auth.GET("/my-jobs/accepted", controller.GetEmployerPostsWithAcceptedApplications)
+		auth.GET("/my-jobs/:id", controller.GetMyJobpostByID)
+
 		// --- Reviews ---
-		auth.POST("/reviews/new-rating", controller.CreateReview)
-		auth.GET("/reviews", controller.FindRatingsByJobPostID)
+		auth.GET("/reviews/job/:jobId", controller.FindRatingsByJobPostID)
+		auth.POST("/reviews", controller.CreateReview)
+		auth.GET("/reviews/view/:id", controller.GetReviewByID)
 
 		// --- Payments ---
 		auth.POST("/payments", controller.CreatePayment)
 		auth.GET("/payments", controller.ListPayments)
-		auth.GET("/payments/:id", controller.GetPaymentByID)
-		auth.GET("/payment_reports", controller.ListPaymentReports)
 		auth.GET("/orders", controller.ListOrders)
 		auth.GET("/discounts", controller.ListDiscounts)
-		auth.GET("/billable_items", controller.ListBillableItems)
+		auth.POST("/billable_items", controller.CreateOrUpdateBillableItem)
+		auth.GET("/paymentmethods", controller.ListPaymentMethods)
+		auth.GET("/payments/:id", controller.GetPaymentByID)
+		auth.GET("/payments/job/:jobId", controller.GetPaymentByJobId)
+		auth.GET("/billable_items/:id", controller.GetBillableItemByID)
+		auth.GET("/payments/billable/:billableId", controller.GetLatestPaymentByBillable)
+		auth.POST("/payments/:id/evidence", controller.UploadEvidence)
+
+		// --- Payment Reports ---
+		auth.GET("/payment-reports/me", controller.ListMyPaymentReports)
+		auth.GET("/payment-reports/employer/:id", controller.ListPaymentReportsByEmployerID)
+		auth.POST("/payment-reports/upload", controller.UploadPaymentReport)
+
+		// --- Student Finance ---
+		auth.GET("/my/finance", controller.GetMyFinance)
+		auth.GET("/my/finance/summary", controller.GetMyFinanceSummary)
+		auth.GET("/student/:id/finance", controller.GetStudentFinance)
+		auth.GET("/student/:id/finance/summary", controller.GetStudentFinanceSummary)
 	}
 
 	// -------------------- 🛡️ Admin Routes --------------------
@@ -197,6 +214,7 @@ func main() {
 		admin.POST("/faqs", controller.CreateFAQ)
 		admin.PUT("/faqs/:id", controller.UpdateFAQ)
 		admin.DELETE("/faqs/:id", controller.DeleteFAQ)
+		admin.GET("/finance/summary", controller.FinanceSummary)	
 	}
 
 	// -------------------- 📂 Static & Files --------------------

@@ -1,0 +1,138 @@
+package controller
+
+import (
+	"errors"
+	"github.com/KBook22/System-Analysis-and-Design/config"
+	"github.com/KBook22/System-Analysis-and-Design/entity"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+	"net/http"
+	"strconv"
+)
+
+func GetEmployerPostsWithAcceptedApplications(c *gin.Context) {
+	empID, ok := c.Get("employerID")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: employerID not found"})
+		return
+	}
+
+	db := config.DB()
+
+	// หา id/name ของสถานะ "รอการชำระ" ไว้เป็นค่าเริ่มต้น
+	var pending struct {
+		ID         uint
+		StatusName string `gorm:"column:status_name"`
+	}
+	if err := db.Table("statuses").
+		Where("LOWER(status_name) IN (?)", []string{"รอการชำระ", "unpaid", "pending"}).
+		Limit(1).
+		Scan(&pending).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "query pending status failed"})
+		return
+	}
+	if pending.ID == 0 {
+		pending.ID = 1
+		pending.StatusName = "รอการชำระ"
+	}
+
+	type Row struct {
+		entity.Jobpost
+		PaymentStatusID   *uint   `json:"status_id" gorm:"column:status_id"`
+		PaymentStatusName *string `json:"status_name" gorm:"column:status_name"`
+		StudentAssigned   bool    `json:"student_assigned" gorm:"column:student_assigned"`
+	}
+
+	var rows []Row
+
+	err := db.Table("jobposts AS j").
+		// งานที่มีใบสมัคร Accepted
+		Joins(`
+			JOIN job_applications AS ja
+			  ON ja.job_post_id = j.id
+			 AND ja.application_status = ?
+		`, entity.StatusAccepted).
+		// เลือก billable_item "ล่าสุด" ของงาน (ผ่าน jobpost_id)
+		Joins(`
+			LEFT JOIN billable_items AS bi
+			  ON bi.id = (
+			     SELECT bi2.id
+			       FROM billable_items bi2
+			      WHERE bi2.jobpost_id = j.id
+			        AND bi2.deleted_at IS NULL
+			   ORDER BY bi2.created_at DESC, bi2.id DESC
+			      LIMIT 1
+			  )
+		`).
+		// เลือก payment "ล่าสุด" ของ billable_item นั้น
+		Joins(`
+			LEFT JOIN payments AS p
+			  ON p.id = (
+			     SELECT p2.id
+			       FROM payments p2
+			      WHERE p2.billable_item_id = bi.id
+			        AND p2.deleted_at IS NULL
+			   ORDER BY p2.created_at DESC, p2.id DESC
+			      LIMIT 1
+			  )
+		`).
+		Joins(`LEFT JOIN statuses AS s ON s.id = p.status_id`).
+		Select(`
+			j.*,
+			COALESCE(s.id, ?) AS status_id,
+			COALESCE(s.status_name, ?) AS status_name,
+			CASE WHEN j.student_id IS NOT NULL THEN 1 ELSE 0 END AS student_assigned
+		`, pending.ID, pending.StatusName).
+		Where("j.employer_id = ?", empID).
+		Order("j.created_at DESC").
+		Scan(&rows).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if rows == nil {
+		c.JSON(http.StatusOK, gin.H{"data": []Row{}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": rows})
+}
+
+// GET /api/my-jobs/:id
+func GetMyJobpostByID(c *gin.Context) {
+	empID, ok := c.Get("employerID")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: employerID not found"})
+		return
+	}
+
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var jp entity.Jobpost
+	if err := config.DB().
+		Where("id = ? AND employer_id = ?", id, empID).
+		Preload("Employer", func(db *gorm.DB) *gorm.DB {
+			return db.Select("employers.id", "employers.company_name")
+		}).
+		Preload("SalaryType").
+		Preload("EmploymentType").
+		Preload("JobCategory").
+		First(&jp).Error; err != nil {
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "jobpost not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": jp})
+}

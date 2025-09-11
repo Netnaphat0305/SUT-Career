@@ -110,21 +110,6 @@ const ReviewPage: React.FC = () => {
       return;
     }
 
-    const raw = localStorage.getItem("profile");
-    let employerId: number | undefined;
-    try {
-      const p = raw ? JSON.parse(raw) : null;
-      employerId = Number(p?.ID ?? p?.id ?? p?.employer_id);
-    } catch {
-      /* ignore */
-    }
-
-    if (!employerId || Number.isNaN(employerId)) {
-      message.error("ไม่พบรหัสนายจ้าง (employer_id) กรุณาล็อกอินใหม่");
-      navigate("/login");
-      return;
-    }
-
     try {
       setSubmitting(true);
 
@@ -132,8 +117,6 @@ const ReviewPage: React.FC = () => {
         jobpost_id: Number(jobId),
         ratingscore_id: Number(rating),
         comment: (comment || "").trim(),
-        employer_id: employerId,
-        datetime: new Date(),
       };
 
       const createdRes = await reviewAPI.create(payload);
@@ -143,8 +126,20 @@ const ReviewPage: React.FC = () => {
       setReviews((prev) => (created ? [created, ...prev] : prev));
       setSuccessOpen(true);
     } catch (e: any) {
+      const status = e?.response?.status;
       const msg = e?.response?.data?.error || e?.message || "ส่งรีวิวไม่สำเร็จ";
-      message.error(msg);
+
+      if (status === 409) {
+        // กันกรณีรีวิวซ้ำ
+        setAlreadyReviewed(true);
+        Modal.warning({
+          title: "คุณได้รีวิวงานนี้แล้ว",
+          content: "ระบบจะปิดการส่งซ้ำโดยอัตโนมัติ",
+          centered: true,
+        });
+      } else {
+        message.error(msg);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -176,7 +171,9 @@ const ReviewPage: React.FC = () => {
         title: scoreTag(r.ratingscore_id) || "-",
         description: r.comment || "-",
         datetime: toTHDateTime(r.datetime, "-"),
-        by: r.student ? `${r.student.first_name ?? ""} ${r.student.last_name ?? ""}`.trim() : "",
+        by: r.student
+          ? `${r.student.first_name ?? ""} ${r.student.last_name ?? ""}`.trim()
+          : "",
       })),
     [reviews]
   );
@@ -185,7 +182,13 @@ const ReviewPage: React.FC = () => {
     return (
       <div
         className="review-page-container"
-        style={{ minHeight: "85vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}
+        style={{
+          minHeight: "85vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#fff",
+        }}
       >
         <Spin />
       </div>
@@ -193,8 +196,14 @@ const ReviewPage: React.FC = () => {
   }
 
   return (
-    <div className="review-page-container" style={{ background: "#fff", padding: 24, minHeight: "85vh" }}>
-      <Title level={2} style={{ textAlign: "center", marginBottom: 24, color: "#1E3A5F" }}>
+    <div
+      className="review-page-container"
+      style={{ background: "#fff", padding: 24, minHeight: "85vh" }}
+    >
+      <Title
+        level={2}
+        style={{ textAlign: "center", marginBottom: 24, color: "#1E3A5F" }}
+      >
         รายการรีวิว
       </Title>
 
@@ -211,8 +220,16 @@ const ReviewPage: React.FC = () => {
             <Text strong style={{ fontSize: 18, color: "#1E3A5F" }}>
               ให้คะแนนการทำงานกับนักศึกษาที่คุณจ้าง
             </Text>
-            <Rate value={rating} onChange={setRating} tooltips={tips} style={{ fontSize: 44, color: "#1890ff" }} />
-            <Flex justify="space-between" style={{ width: "45%", color: "#1E3A5F" }}>
+            <Rate
+              value={rating}
+              onChange={setRating}
+              tooltips={tips}
+              style={{ fontSize: 44, color: "#1890ff" }}
+            />
+            <Flex
+              justify="space-between"
+              style={{ width: "45%", color: "#1E3A5F" }}
+            >
               <Text type="secondary">แย่ที่สุด</Text>
               <Text type="secondary">ยอดเยี่ยมที่สุด</Text>
             </Flex>

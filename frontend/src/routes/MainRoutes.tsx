@@ -34,6 +34,9 @@ import WorklogPage from "../pages/worklog/worklog";
 import ManageApplicants from "../pages/ManageApplicants/ManageApplicants"; 
 import MyApplications from "../pages/MyApplications/MyApplications"; 
 import EditJobPost from "../pages/EditJobPost/EditJobPost";
+import QRPaymentPage from "../pages/payment/qrpaymentpage";
+import ViewReviewPage from "../pages/review/reviewhistory";
+import FinancialReportPage from "../pages/studentfinance";
 
 
 
@@ -113,11 +116,14 @@ const MainRoutes: React.FC = () => {
             <Route path="/report" element={<Reportpage />} />
             <Route path="/my-jobs" element={<JobsPage />} />
             <Route path="/payment-report" element={<PaymentReportPage />} />
-            <Route path="/payment" element={<PaymentPage />} />
-            <Route path="/review" element={<ReviewPage />} />
+            <Route path="/payment/:jobId" element={<PaymentPage />} />
+            <Route path="/qr-payment/:paymentId" element={<QRPaymentPage />} />
+            <Route path="/review/:jobId" element={<ReviewPage />} />
+            <Route path="/reviews/view/:id" element={<ViewReviewPage/>}/>
             <Route path="/Interview-Schedule" element={<InterviewScheduling/>} />
             <Route path="/profile-v1" element={<ProfilePageV1 />} />
-            <Route path="/review-page" element={<ReviewPage />} />
+            <Route path="/student/:id/finance/summary" element={<FinancialReportPage />} />
+            <Route path="/my/finance/summary" element={<FinancialReportPage />} />
             <Route path="/worklog" element={<WorklogPage />} />
 
             {/* --- Feed Routes (now independent) --- */}
@@ -126,12 +132,6 @@ const MainRoutes: React.FC = () => {
 
         {/* โปรไฟล์เวอร์ชันเก่า ใช้ path ใหม่เพื่อไม่ชนกับ V2 */}
         <Route path="/profile-v1" element={<ProfilePageV1 />} />
-
-        {/* Review ที่ต้องมีพารามิเตอร์งาน */}
-        <Route path="/review/:id" element={<ReviewPage />} />
-        {/* เผื่อไว้ถ้าต้องการให้เปิดหน้าเปล่าได้ */}
-        <Route path="/review" element={<ReviewPage />} />
-
         {/* --- Feed Routes (independent) --- */}
         <Route path="/feed" element={<EmployerFeedPage />} />
         <Route path="/feed/create" element={<StudentPostForm />} />

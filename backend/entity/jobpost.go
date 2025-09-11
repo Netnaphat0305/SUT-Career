@@ -48,5 +48,5 @@ type Jobpost struct {
 	Applications []JobApplication `gorm:"foreignKey:JobPostID" json:"applications,omitempty"`
 
 	// เผื่อได้ Preload
-	BillableItem 	   *BillableItems 	`gorm:"foreignKey:OrderID;references:ID" json:"billable_item,omitempty"`
+	BillableItem *BillableItems `gorm:"foreignKey:JobpostID" json:"billable_item,omitempty"`
 }
