@@ -1,65 +1,100 @@
+// backend/controller/interview_scheduling.go
 package controller
 
 import (
 	"net/http"
-	//"time"
 
-	"github.com/KBook22/System-Analysis-and-Design/config"
-	"github.com/KBook22/System-Analysis-and-Design/entity"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+
+	"github.com/KBook22/System-Analysis-and-Design/entity"
 )
 
-// POST /interview-schedules
-// นายจ้างสร้างช่วงเวลาที่สะดวกสำหรับการสัมภาษณ์
-func CreateInterviewSchedule(c *gin.Context) {
+// GET /interview-schedules
+func GetInterviewSchedules(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	var schedules []entity.InterviewScheduling
+
+	if err := db.Preload("Employer").Preload("Interview").Find(&schedules).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, schedules)
+}
+
+// GET /interview-schedules/:id
+func GetInterviewSchedule(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
+
 	var schedule entity.InterviewScheduling
+	if err := db.Preload("Employer").Preload("Interview").First(&schedule, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Schedule not found"})
+		return
+	}
+	c.JSON(http.StatusOK, schedule)
+}
+
+// POST /interview-schedules
+func CreateInterviewSchedule(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	var schedule entity.InterviewScheduling
+
 	if err := c.ShouldBindJSON(&schedule); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// อาจจะมีการดึง EmployerID จาก token ในอนาคต
-	// schedule.EmployerID = ...
-
-	schedule.Status = "available" // สถานะเริ่มต้นคือ "ว่าง"
-
-	if err := config.DB().Create(&schedule).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create interview schedule"})
+	if err := db.Create(&schedule).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"data": schedule})
+	c.JSON(http.StatusCreated, schedule)
 }
 
-// GET /interview-schedules/employer/:employerId
-// ดูตารางเวลาทั้งหมดของนายจ้างคนนั้นๆ
-func GetSchedulesByEmployer(c *gin.Context) {
-	employerId := c.Param("employerId")
-	var schedules []entity.InterviewScheduling
+// PUT /interview-schedules/:id
+func UpdateInterviewSchedule(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
 
-	if err := config.DB().Where("employer_id = ?", employerId).Find(&schedules).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Schedules not found for this employer"})
+	var schedule entity.InterviewScheduling
+	if err := db.First(&schedule, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Schedule not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": schedules})
+	var input entity.InterviewScheduling
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	schedule.DateAndTime = input.DateAndTime
+	schedule.Status = input.Status
+	schedule.Detail = input.Detail
+	schedule.EmployerID = input.EmployerID
+
+	if err := db.Save(&schedule).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, schedule)
 }
 
 // DELETE /interview-schedules/:id
-// ลบช่วงเวลาที่ยังไม่มีการนัดหมาย
 func DeleteInterviewSchedule(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
 	id := c.Param("id")
+
 	var schedule entity.InterviewScheduling
-
-	// ค้นหา schedule ที่ต้องการลบ
-	if err := config.DB().Where("id = ? AND status = ?", id, "available").First(&schedule).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Schedule not found or is already booked"})
+	if err := db.First(&schedule, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Schedule not found"})
 		return
 	}
 
-	if err := config.DB().Delete(&schedule).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to delete schedule"})
+	if err := db.Delete(&schedule).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Schedule deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Deleted successfully"})
 }

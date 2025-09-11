@@ -172,6 +172,22 @@ func main() {
 			chat.POST("/rooms/:roomId/messages", controller.SendMessage)
 		}
 		// ===== Chat API =====
+
+		// ========= Interview & Interview Scheduling API =========
+		interviewScheduling := auth.Group("/interview-scheduling")
+		{
+			interviewScheduling.GET("", controller.GetInterviewSchedules)          // ดึงทั้งหมด
+			interviewScheduling.GET("/:id", controller.GetInterviewSchedule)       // ดึงตาม ID
+			interviewScheduling.POST("", controller.CreateInterviewSchedule)       // เพิ่มใหม่
+			interviewScheduling.PUT("/:id", controller.UpdateInterviewSchedule)    // แก้ไข
+			interviewScheduling.DELETE("/:id", controller.DeleteInterviewSchedule) // ลบ
+		}
+
+		interview := auth.Group("/interview")
+		{
+
+		}
+		// ========= Interview & Interview Scheduling API =========
 	}
 
 	// -------------------- 🛡️ Admin Routes --------------------

@@ -16,9 +16,9 @@ import (
 
 // GET /api/chat/rooms
 func ListMyChatRooms(c *gin.Context) {
-	userID, _ := c.Get("userID")
+	userID := c.MustGet("userID")
 
-	roleVal, _ := c.Get("role")
+	roleVal := c.MustGet("role")
 
 	role := string(roleVal.(entity.RoleEnum))
 
@@ -66,8 +66,8 @@ func ListMyChatRooms(c *gin.Context) {
 
 // POST /api/chat/rooms
 func CreateOrGetRoom(c *gin.Context) {
-	userID, _ := c.Get("userID")
-	role, _ := c.Get("role")
+	userID := c.MustGet("userID")
+	role := c.MustGet("role")
 
 	var req struct {
 		TargetID   uint   `json:"target_id"`
@@ -121,7 +121,7 @@ func ListRoomMessages(c *gin.Context) {
 
 // POST /api/chat/rooms/:roomId/messages
 func SendMessage(c *gin.Context) {
-	userID, _ := c.Get("userID")
+	userID := c.MustGet("userID")
 
 	roomId, _ := strconv.Atoi(c.Param("roomId"))
 	var req struct {

@@ -1,5 +1,4 @@
-"use client"
-
+// frontend/src/pages/InterviewScheduling/InterviewScheduling.tsx
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Button, Card, Typography, Space, Row, Col, Modal, TimePicker, Form, message, Input } from "antd"
