@@ -134,7 +134,7 @@ func main() {
 		auth.POST("/jobposts/upload-portfolio/:id", controller.UploadPortfolio)
 
 		// --- Employer: My Posts ---
-		// auth.GET("/employer/myposts", controller.GetEmployerPosts)
+		auth.GET("/employer/myposts", controller.GetEmployerPosts)
 
 		// --- Student Profile ---
 		auth.POST("/student-profile-posts", controller.CreateStudentProfilePost)

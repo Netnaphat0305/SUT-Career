@@ -17,7 +17,7 @@ import type {
   StudentFinance,
 } from "../../interfaces/payment";
 import { useAuth } from "../../context/AuthContext";
-import "./FinancialPage.css";
+import "./financialpage.css"
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
