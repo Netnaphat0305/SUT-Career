@@ -37,6 +37,7 @@ import ProfilePage2 from '../pages/profile2/ProfilePage2.tsx';
 import StudentProfileEditPage from '../pages/ProfileEditPage/ProfileEditPage.tsx';
 
 
+
 const MainRoutes: React.FC = () => {
     return (
       <Routes>
@@ -73,6 +74,8 @@ const MainRoutes: React.FC = () => {
 
         {/* --- Feed Routes --- */}
         <Route path="/feed" element={<StudentFeedPage />} />
+        
+        
         {/* โปรไฟล์เวอร์ชันเก่า ใช้ path ใหม่เพื่อไม่ชนกับ V2 */}
         <Route path="/profile-v1" element={<ProfilePageV1 />} />
         {/* --- Feed Routes (independent) --- */}
