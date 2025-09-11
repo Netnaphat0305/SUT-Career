@@ -48,6 +48,7 @@ func SetupDatabase() {
 		&entity.Orders{},
 		&entity.AddonServices{},
 		//=========================
+		
 		&entity.ReportStatus{},//by supanut
 		&entity.Report{},
 		&entity.Admin{},
@@ -67,5 +68,6 @@ func SeedDatabase() {
 	seed.SeedJobData(db)
 	seed.SeedUsersAndProfiles(db)
 	seed.SeedPaymentData(db)
+	seed.SeedReportData(db) 
 }
 

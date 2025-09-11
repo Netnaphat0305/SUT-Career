@@ -65,7 +65,7 @@ func GetReportByID(c *gin.Context) {
 	var result ResultByReportID
 	if err := config.DB().
 		Table("reports").
-		Select("reports.title, reports.datetime, reports.place, reports.discription, users.username, reprt,report_statuses.statusname, admins.email as admin_email").
+		Select("reports.title, reports.datetime, reports.place, reports.discription, users.username, reports.report_status_id, report_statuses.statusname, admins.email as admin_email").
 		Joins("left join users on users.id = reports.user_id").
 		Joins("left join report_statuses on report_statuses.id = reports.report_status_id").
 		Joins("left join admins on admins.id = reports.admin_id").
