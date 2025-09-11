@@ -5,6 +5,7 @@ import (
 	"github.com/KBook22/System-Analysis-and-Design/entity"
 	"gorm.io/gorm"
 	"time"
+    "fmt"
 )
 
 func SeedJobData(db *gorm.DB) {
@@ -34,9 +35,28 @@ func SeedJobData(db *gorm.DB) {
             Deadline: time.Now().AddDate(0, 0, 15), Status: entity.Open, Salary: 400, LocationJob: "มทส.",
             EmployerID: 4, JobCategoryID: 14, EmploymentTypeID: 3, SalaryTypeID: 3,
         },
+        {
+			Model:             gorm.Model{ID: 6},
+			Title:             "หาคนทำวิทยานิพนธ์ ป.เอก ให้น้องชาย",
+			Description:       "หาคนทำวิทยานิพนธ์ ป.เอก เกี่ยวกับด้านแบตเตอรี่รถ ev",
+			Deadline:          time.Date(2025, 9, 15, 0, 0, 0, 0, time.UTC),
+			Status:            entity.Open,
+			ImageURL:          nil,
+			PortfolioRequired: nil,
+			Salary:            2,
+			LocationJob:       "-",
+			EmployerID:        5,
+			JobCategoryID:     11,
+			EmploymentTypeID:  2,
+			SalaryTypeID:      2,
+		},
     }
     for _, jp := range jobposts {
-        db.FirstOrCreate(&jp, jp.ID)
+        key := entity.Jobpost{}
+		key.ID = jp.ID
+		if err := db.FirstOrCreate(&jp, key).Error; err != nil {
+			fmt.Printf("[SEED ERR] %+v\n", err)
+		}
     }
 
     // Create JobApplications (2 for each new post)
@@ -81,8 +101,13 @@ func SeedJobData(db *gorm.DB) {
             StudentID:         7, JobPostID: 5,
         },
     }
-    for _, ja := range jobApplications {
-        db.FirstOrCreate(&ja, ja.ID)
+    for _, jobApp := range jobApplications {
+        if err := db.FirstOrCreate(&jobApp, entity.JobApplication{
+			StudentID: jobApp.StudentID,
+			JobPostID: jobApp.JobPostID,
+		}).Error; err != nil {
+			fmt.Println("Seed error:", err)
+		}
     }
 }
 	

@@ -25,11 +25,14 @@ func SeedPaymentData(db *gorm.DB) {
 
 
 	// Payment Method
-	paymentMethod := entity.PaymentMethods{
-		Model:      gorm.Model{ID: 1},
-		Methodname: "คิวอาร์โค้ด พร้อมเพย์",
+	paymentMethods := []entity.PaymentMethods{
+		{Model: gorm.Model{ID: 1}, Methodname: "คิวอาร์โค้ด พร้อมเพย์"},
+		{Model: gorm.Model{ID: 2}, Methodname: "โอนผ่านบัญชีธนาคาร"},
 	}
-	db.FirstOrCreate(&paymentMethod, paymentMethod.ID)
+
+	for _, pm := range paymentMethods {
+		db.FirstOrCreate(&pm, pm.ID)
+	}
 
 	// Statuses
 	paymentStatuses := []entity.Statuses{
@@ -60,30 +63,24 @@ func SeedPaymentData(db *gorm.DB) {
 			ValidFrom:     time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC),
 			ValidUntil:    time.Date(2024, 9, 30, 0, 0, 0, 0, time.UTC),
 		},
+		{
+			Model:         gorm.Model{ID: 1},
+			DiscountName:  "ส่วนลดเดือนกันยายน",
+			DiscountValue: 5,
+			Discounttype:  "percentage",
+			ValidFrom:     time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC),
+			ValidUntil:    time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			Model:         gorm.Model{ID: 2},
+			DiscountName:  "ส่วนลดวันเกิด",
+			DiscountValue: 3,
+			Discounttype:  "percentage",
+			ValidFrom:     time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC),
+			ValidUntil:    time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC),
+		},
 	}
 	for _, d := range discounts {
 		db.FirstOrCreate(&d, d.ID)
 	}
-
-		// Billable Items
-	billableItems := []entity.BillableItems{
-		{Model: gorm.Model{ID: 1}, Description: "ค่าจ้างพาร์ทไทม์ร้านชาบู", Amount: 250},
-		{Model: gorm.Model{ID: 2}, Description: "ค่าบริการแพลตฟอร์ม", Amount: 50},
-	}
-	for _, bi := range billableItems {
-		db.FirstOrCreate(&bi, bi.ID)
-	}
-
-	// Payment
-	payment1 := entity.Payments{
-		Model:            gorm.Model{ID: 1},
-		Proof_of_Payment: "proof_01.jpg",
-		Amount:           billableItems[0].Amount,
-		Datetime:         time.Now().Add(-24 * time.Hour),
-		BillableItemID:   billableItems[0].ID,
-		PaymentMethodID:  paymentMethod.ID,
-		StatusID:         paymentStatuses[1].ID,
-	}
-	db.FirstOrCreate(&payment1, payment1.ID)
-
 }
