@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Button, Spin, message, Avatar, Empty, Tag } from "antd";
+import { Card, Button, Spin, message, Avatar, Empty } from "antd";
 import { jobApplicationAPI, jobPostAPI } from "../../services/https";
 import defaultProfile from "../../assets/profile.svg";
 import "./ManageApplicants.css";
 import type { JobApplication, JobPost } from "../../interfaces/jobApplication";
+import PageHeader from "../../components/PageHeader";
 
 const ManageApplicants: React.FC = () => {
   const { jobpost_id } = useParams<{ jobpost_id: string }>();
@@ -23,7 +24,6 @@ const ManageApplicants: React.FC = () => {
       const appRes = await jobApplicationAPI.getByJobPost(Number(jobpost_id));
       setApplicants(appRes?.data || []);
 
-      // ถ้ามี applicant ถูกเลือกอยู่ ให้ sync ข้อมูลล่าสุดด้วย
       if (selectedApplicant) {
         const updated = appRes?.data.find(
           (a: JobApplication) => a.ID === selectedApplicant.ID
@@ -66,7 +66,7 @@ const ManageApplicants: React.FC = () => {
     <div className="manage-applicants-container">
       {jobpost && (
         <div className="job-header">
-          <div>
+          <div className="job-header-info">
             <h2 className="job-title">{jobpost.title}</h2>
             <p className="job-company">
               {jobpost.Employer?.company_name || "ไม่ระบุบริษัท"}
@@ -80,7 +80,7 @@ const ManageApplicants: React.FC = () => {
         </div>
       )}
 
-      <h3 className="section-title">รายชื่อผู้สมัครงาน</h3>
+      <PageHeader title="รายชื่อผู้สมัครงาน" />
 
       {applicants.length === 0 ? (
         <Empty description="ยังไม่มีผู้สมัครงาน" />
@@ -97,38 +97,43 @@ const ManageApplicants: React.FC = () => {
                 onClick={() => setSelectedApplicant(app)}
               >
                 <div className="applicant-info">
+                  {/* Avatar */}
                   <Avatar
                     size={64}
                     src={defaultProfile}
-                    style={{ marginRight: 16 }}
+                    className="applicant-avatar"
                   />
-                  <div>
+
+                  {/* ข้อมูลผู้สมัคร */}
+                  <div className="applicant-content">
                     <h4 className="applicant-name">
                       {app.Student?.first_name} {app.Student?.last_name}
                     </h4>
                     <p className="applicant-details">
                       {app.Student?.user?.username} • {app.Student?.phone}
                     </p>
-                    <Tag
-                      color={
+
+                    {/* ป้ายสถานะ */}
+                    <span
+                      className={`tag ${
                         app.application_status === "Pending"
-                          ? "blue"
+                          ? "tag-pending"
                           : app.application_status === "InterviewPending"
-                          ? "orange"
+                          ? "tag-interview-pending"
                           : app.application_status === "InterviewScheduled"
-                          ? "gold"
+                          ? "tag-interview-scheduled"
                           : app.application_status === "Interviewed"
-                          ? "purple"
+                          ? "tag-interviewed"
                           : app.application_status === "Accepted"
-                          ? "green"
-                          : app.application_status === "Cancelled"
-                          ? "default"
-                          : "red"
-                      }
+                          ? "tag-accepted"
+                          : app.application_status === "Rejected"
+                          ? "tag-rejected"
+                          : "tag-cancelled"
+                      }`}
                     >
                       {app.application_status === "Pending" && "รอพิจารณา"}
                       {app.application_status === "InterviewPending" &&
-                        "รอเลือกวันสัมภาษณ์"}
+                        "รอนักศึกษาเลือกวันสัมภาษณ์"}
                       {app.application_status === "InterviewScheduled" &&
                         "รอสัมภาษณ์"}
                       {app.application_status === "Interviewed" &&
@@ -139,7 +144,7 @@ const ManageApplicants: React.FC = () => {
                         "ไม่ผ่านการคัดเลือก"}
                       {app.application_status === "Cancelled" &&
                         "นักศึกษายกเลิกการสมัคร"}
-                    </Tag>
+                    </span>
                   </div>
                 </div>
               </Card>
@@ -150,47 +155,90 @@ const ManageApplicants: React.FC = () => {
           <div className="applicant-detail-panel">
             {selectedApplicant ? (
               <>
-                <Avatar
-                  size={80}
-                  src={defaultProfile}
-                  style={{ marginBottom: 16 }}
-                />
-                <h3>
-                  {selectedApplicant.Student?.first_name}{" "}
-                  {selectedApplicant.Student?.last_name}
-                </h3>
-                <p>รหัสนักศึกษา: {selectedApplicant.Student?.user?.username}</p>
-                <p>เบอร์โทร: {selectedApplicant.Student?.phone}</p>
-                <p>
-                  ธนาคาร:{" "}
-                  {selectedApplicant.Student?.bank?.bank_name || "ไม่ได้ระบุ"}
-                </p>
-                <p>
-                  เหตุผลการสมัคร:{" "}
-                  {selectedApplicant.application_reason || "ไม่ได้ระบุเหตุผล"}
-                </p>
+                {/* ส่วนบน: Avatar และชื่อ */}
+                <div className="applicant-profile-header">
+                  <Avatar
+                    size={90}
+                    src={defaultProfile}
+                    className="applicant-profile-avatar"
+                  />
+                  <div>
+                    <h3 className="applicant-profile-name">
+                      {selectedApplicant.Student?.first_name}{" "}
+                      {selectedApplicant.Student?.last_name}
+                    </h3>
+                    <p className="applicant-profile-role">
+                      {selectedApplicant.Student?.faculty || "นักศึกษา"}
+                    </p>
+                  </div>
+                </div>
 
-                {/* แสดงวันสัมภาษณ์ ถ้ามี */}
-                {selectedApplicant.InterviewScheduling && (
+                {/* Divider */}
+                <div className="profile-divider" />
+
+                {/* ส่วนข้อมูลนักศึกษา */}
+                <div className="applicant-profile-info">
+                  <div className="info-row">
+                    <span className="info-label">รหัสนักศึกษา:</span>
+                    <span className="info-value">
+                      {selectedApplicant.Student?.user?.username || "-"}
+                    </span>
+                  </div>
+
+                  <div className="info-row">
+                    <span className="info-label">เบอร์โทรศัพท์:</span>
+                    <span className="info-value">
+                      {selectedApplicant.Student?.phone || "-"}
+                    </span>
+                  </div>
+
+                  <div className="info-row">
+                    <span className="info-label">อีเมล:</span>
+                    <span className="info-value">
+                      {selectedApplicant.Student?.email || "-"}
+                    </span>
+                  </div>
+
+                  <div className="info-row">
+                    <span className="info-label">ธนาคาร:</span>
+                    <span className="info-value">
+                      {selectedApplicant.Student?.bank?.bank_name ||
+                        "ไม่ได้ระบุ"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="profile-divider" />
+
+                {/* เหตุผลการสมัคร */}
+                <div className="applicant-profile-reason">
+                  <h4>เหตุผลในการสมัคร</h4>
                   <p>
-                    วันสัมภาษณ์:{" "}
-                    {new Date(
-                      selectedApplicant.InterviewScheduling.DateAndTime
-                    ).toLocaleString("th-TH")}
+                    {selectedApplicant.application_reason ||
+                      "นักศึกษาไม่ได้ระบุเหตุผลในการสมัคร"}
                   </p>
-                )}
+                </div>
 
+                {/* Divider */}
+                <div className="profile-divider" />
+
+                {/* วันสัมภาษณ์ */}
+                {selectedApplicant.InterviewScheduling && (
+                  <div className="interview-date">
+                    <span className="info-label">วันสัมภาษณ์:</span>
+                    <span className="info-value">
+                      {new Date(
+                        selectedApplicant.InterviewScheduling.DateAndTime
+                      ).toLocaleString("th-TH")}
+                    </span>
+                  </div>
+                )}
+                
                 {/* ปุ่มจัดการสถานะ */}
-                <div
-                  style={{
-                    marginTop: 16,
-                    display: "flex",
-                    gap: "10px",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <Button
-                    type="primary"
+                <div className="applicant-actions">
+                  <button
+                    className="btn-manageapp"
                     disabled={
                       selectedApplicant.application_status === "Cancelled" ||
                       selectedApplicant.application_status !== "Pending"
@@ -204,10 +252,10 @@ const ManageApplicants: React.FC = () => {
                     }
                   >
                     เลือกผู้สมัคร
-                  </Button>
+                  </button>
 
-                  <Button
-                    type="dashed"
+                  <button
+                    className="btn-interviewed"
                     disabled={
                       selectedApplicant.application_status !==
                       "InterviewScheduled"
@@ -221,10 +269,10 @@ const ManageApplicants: React.FC = () => {
                     }
                   >
                     สัมภาษณ์เสร็จ
-                  </Button>
+                  </button>
 
-                  <Button
-                    type="primary"
+                  <button
+                    className="btn-accept"
                     disabled={
                       selectedApplicant.application_status !== "Interviewed"
                     }
@@ -237,10 +285,10 @@ const ManageApplicants: React.FC = () => {
                     }
                   >
                     รับเข้าทำงาน
-                  </Button>
+                  </button>
 
-                  <Button
-                    danger
+                  <button
+                    className="btn-reject"
                     disabled={
                       selectedApplicant.application_status !== "Interviewed"
                     }
@@ -253,7 +301,7 @@ const ManageApplicants: React.FC = () => {
                     }
                   >
                     ไม่รับ
-                  </Button>
+                  </button>
                 </div>
               </>
             ) : (

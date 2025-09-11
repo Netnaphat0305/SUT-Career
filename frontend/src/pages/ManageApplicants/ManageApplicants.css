@@ -1,51 +1,63 @@
+/* Layout หลัก */
 .manage-applicants-container {
   max-width: 100%;
   margin: 0 auto;
   padding: 24px;
   display: flex;
-  background: #fff;
   flex-direction: column;
   gap: 16px;
-  padding: 20px;
+  background: #fff;
   border-radius: 12px;
   min-height: 100vh;
 }
 
+/* Header */
 .job-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #eaf4ff;
-  padding: 16px;
+  background: linear-gradient(135deg, #cce7ff, #fff);
+  padding: 20px 24px;
   border-radius: 10px;
   margin-bottom: 20px;
+  border: 1px solid #d1d6d9;
 }
+
+.job-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
 .job-title {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 28px;
+  font-weight: 600;
   margin: 0;
+  color: #2d2d2d;
 }
 
 .job-company {
+  font-size: 18px;
   color: #666;
-  margin-top: 4px;
+  margin: 0;
 }
 
 .job-logo {
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
   object-fit: cover;
 }
 
-/* Layout หลัก: ซ้าย + ขวา */
+/* Layout ซ้าย + ขวา */
 .manage-content {
   display: flex;
   gap: 24px;
   margin-top: 16px;
 }
 
-/* ฝั่งซ้าย: รายชื่อผู้สมัคร (กว้างกว่า) */
+/* ฝั่งซ้าย */
 .applicants-list {
   flex: 2.5;
   display: flex;
@@ -55,42 +67,112 @@
 
 /* การ์ดผู้สมัคร */
 .applicant-card {
+  position: relative;
   cursor: pointer;
   transition: all 0.3s ease;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
+  background: #fff;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  transition: all 0.25s ease;
 }
 
 .applicant-card:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-2px);
+  transition: box-shadow 0.2s;
+  border-color: #0088ff; /* เส้นขอบสีฟ้าเมื่อ hover */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .applicant-card.selected {
-  border-color: #1677ff;
-  box-shadow: 0 0 8px rgba(22, 119, 255, 0.4);
+  background-color: #f9fbff;
+  border-color: #e5e7eb;
 }
 
-/* ข้อมูลผู้สมัครใน list */
+.applicant-card.selected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  background: linear-gradient(180deg, #1976d3, #64b5f6);
+  border-radius: 4px;
+}
+
+/* เนื้อหาผู้สมัคร */
 .applicant-info {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
+/* Avatar */
+.applicant-avatar {
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ข้อมูลผู้สมัคร */
+.applicant-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start; /* ✅ ชิดซ้ายทั้งหมด */
+}
+
 .applicant-name {
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 22px;
+  font-weight: 500;
   margin: 0;
+  color: #2d2d2d;
 }
 
 .applicant-details {
   font-size: 14px;
-  color: #555;
+  color: #666;
   margin: 0;
 }
 
-/* ฝั่งขวา: รายละเอียดผู้สมัคร (แคบกว่า) */
+/* ป้ายสถานะ */
+.tag {
+  display: inline-block;
+  min-width: 200px; /* ✅ ทำให้กว้างเท่ากัน */
+  text-align: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #fff;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* สีของป้าย */
+.tag-pending {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+}
+.tag-interview-pending {
+  background: linear-gradient(135deg, #fdba74 0%, #fb923c 50%, #f97316 100%);
+}
+.tag-interview-scheduled {
+  background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 50%, #f59e0b 100%);
+  color: #111;
+}
+.tag-interviewed {
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%);
+}
+.tag-accepted {
+  background: linear-gradient(135deg, #6ee7b7 0%, #34d399 50%, #10b981 100%);
+}
+.tag-rejected {
+  background: linear-gradient(135deg, #fca5a5 0%, #f87171 50%, #ef4444 100%);
+}
+.tag-cancelled {
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 50%, #6b7280 100%);
+}
+
+/* Panel รายละเอียด */
 .applicant-detail-panel {
   flex: 1.5;
   padding: 20px;
@@ -104,17 +186,225 @@
 .applicant-detail-panel h3 {
   font-size: 20px;
   margin-bottom: 12px;
+  color: #222;
 }
 
-.applicant-detail-panel p {
-  font-size: 15px;
-  margin-bottom: 8px;
-  color: #333;
+/* Panel ขวา */
+.applicant-detail-panel {
+  flex: 1.5;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.3s ease;
 }
 
-/* ถ้ายังไม่ได้เลือกผู้สมัคร */
-.applicant-detail-panel p[style] {
-  text-align: center;
+/* Header */
+.applicant-profile-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.applicant-profile-avatar {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.applicant-profile-name {
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+  color: #2d2d2d;
+  text-align: left;
+}
+
+.applicant-profile-role {
   font-size: 14px;
-  color: #888;
+  color: #666;
+  margin: 0;
+  text-align: left;
+}
+
+/* Divider */
+.profile-divider {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 12px 0;
+  border: none;
+  width: 100%;
+}
+
+/* Info Section */
+.applicant-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.info-label {
+  font-weight: 500;
+  color: #2d2d2d;
+  font-size: 14px;
+}
+
+.info-value {
+  color: #666;
+  text-align: right;
+}
+
+/* เหตุผลการสมัคร */
+.applicant-profile-reason {
+  background-color: #f9fafb;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.applicant-profile-reason h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #2d2d2d;
+  font-weight: 500;
+}
+
+.applicant-profile-reason p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  align-items: flex-start;
+}
+
+/* ===== ปุ่มหลัก: เลือกผู้สมัคร ===== */
+.btn-manageapp {
+  background-color: #fff;
+  color: #0088ff;
+  border: 1px solid #0088ff;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.btn-manageapp:hover:not(:disabled) {
+  background-color: #f0f9ff;
+  border-color: #3b82f6;
+  color: #0066cc;
+  transform: translateY(-1px);
+}
+
+.btn-manageapp:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== ปุ่มสัมภาษณ์เสร็จ ===== */
+.btn-interviewed {
+  background-color: #fff;
+  color: #f97316;
+  border: 1px solid #f97316;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-interviewed:hover:not(:disabled) {
+  background-color: #fff7ed;
+  border-color: #fb923c;
+  color: #ea580c;
+  transform: translateY(-1px);
+}
+
+.btn-interviewed:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== ปุ่มรับเข้าทำงาน ===== */
+.btn-accept {
+  background-color: #fff;
+  color: #10b981;
+  border: 1px solid #10b981;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-accept:hover:not(:disabled) {
+  background-color: #ecfdf5;
+  border-color: #34d399;
+  color: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-accept:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== ปุ่มไม่รับ ===== */
+.btn-reject {
+  background-color: #fff;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-reject:hover:not(:disabled) {
+  background-color: #fef2f2;
+  border-color: #f87171;
+  color: #dc2626;
+  transform: translateY(-1px);
+}
+
+.btn-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== จัดเรียงปุ่มสวย ๆ ===== */
+.applicant-actions {
+  display: flex;
+  flex-wrap: wrap; /* ให้ปุ่มขึ้นบรรทัดใหม่ถ้าจอแคบ */
+  justify-content: center; /* ✅ จัดปุ่มให้อยู่ตรงกลาง */
+  align-items: center; /* จัดปุ่มให้อยู่กลางในแนวตั้งด้วย */
+  gap: 12px; /* ระยะห่างระหว่างปุ่ม */
+  margin-top: 16px; /* ระยะห่างด้านบน */
+  width: 100%; /* ให้กินเต็มพื้นที่ parent */
 }

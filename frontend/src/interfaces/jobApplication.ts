@@ -17,6 +17,8 @@ export interface Student {
   phone: string;
   user: User;
   bank: Bank;
+  faculty?: string; 
+  email?: string;
 }
 
 // ข้อมูลบริษัท
