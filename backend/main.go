@@ -483,7 +483,6 @@ func main() {
 		api.GET("/reportstatus", controller.GetReportstatus)
 
 		// Report status
-		api.GET("/reportstatus", controller.GetReportstatus)
 		api.GET("/reports", controller.GetAllReports)
 		api.GET("/reports/:id", controller.GetReportByID)
 		api.GET("/reports/user/:user_id", controller.GetReportByUserID)
@@ -554,7 +553,6 @@ func main() {
 
 		// --- JobPosts (สร้าง/แก้ไข/ลบ/ค้น) ---
 		// --- Profile Routes (ต้อง login) ---
-		auth.GET("/profile", controller.GetMyProfile) // โปรไฟล์ตัวเอง
 		auth.GET("/students/user/:userId", controller.GetStudentByUserID)
 		auth.PUT("/students/:id", controller.UpdateStudent) // อัพเดตโปรไฟล์
 

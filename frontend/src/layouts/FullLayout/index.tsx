@@ -1,6 +1,6 @@
 // src/layouts/FullLayout/index.tsx
 import React from "react";
-import { Link, useLocation, Outlet, useOutletContext, useNavigate } from "react-router-dom";
+import { Link, useLocation, Outlet, useOutletContext } from "react-router-dom";
 import { 
   Layout, 
   Menu, 
@@ -13,7 +13,6 @@ import {
 import { DownOutlined, UserOutlined, LogoutOutlined, ProfileOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import logoImage from '../../assets/logo.svg';
-import NotificationBell from '../../components/NotificationBell';
 // Import useAuth to get user and logout function
 import { useAuth } from "../../context/AuthContext"; 
 
@@ -50,7 +49,6 @@ const FullLayout: React.FC = () => {
   } = theme.useToken();
 
   const location = useLocation();
-  const navigate = useNavigate();
   const context = useOutletContext();
 
   // current selected key for top menu

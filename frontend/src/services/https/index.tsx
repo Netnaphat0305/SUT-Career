@@ -588,12 +588,12 @@ export const jobApplicationAPI = {
 
 // Student Post APIs (รวมจาก studentPostService.ts)
 export const studentPostAPI = {
-    getStudentPosts: () => get("/student-posts", false),
-    getStudentPostById: (id: number) => get(`/student-posts/${id}`, false),
-    getPostsByStudentId: (studentId: number) => get(`/student-posts/student/${studentId}`, false),
-    createStudentPost: (postData: any) => post("/student-posts", postData),
-    updateStudentPost: (postId: number, postData: any) => put(`/student-posts/${postId}`, postData),
-    deleteStudentPost: (postId: number) => del(`/student-posts/${postId}`),
+    getStudentPosts: () => get("/api/student-posts", false),
+    getStudentPostById: (id: number) => get(`/api/student-posts/${id}`, false),
+    getPostsByStudentId: (studentId: number) => get(`/api/student-posts/student/${studentId}`, false),
+    createStudentPost: (postData: any) => post("/api/student-posts", postData),
+    updateStudentPost: (postId: number, postData: any) => put(`/api/student-posts/${postId}`, postData),
+    deleteStudentPost: (postId: number) => del(`/api/student-posts/${postId}`),
     getMyStudentPosts: () => get("/my-posts"),
 };
 
@@ -605,23 +605,23 @@ export const skillAPI = {
 // Q&A and Help Center APIs
 export const qnaAPI = {
   // FAQ APIs
-  getFaqs: (): Promise<AxiosResponse<{ data: FAQ[] }>> => get("/faqs", false) as Promise<AxiosResponse<{ data: FAQ[] }>>,
-  getFaqById: (id: string): Promise<AxiosResponse<{ data: FAQ }>> => get(`/faqs/${id}`, false) as Promise<AxiosResponse<{ data: FAQ }>>,
-  createFaq: (data: { title: string; content: string; image_url?: string; comments_enabled: boolean }) => post("/admin/faqs", data),
-  updateFaq: (id: string, data: { title: string; content: string; image_url?: string; comments_enabled: boolean }) => put(`/admin/faqs/${id}`, data),
-  deleteFaq: (id: string) => del(`/admin/faqs/${id}`),
+  getFaqs: (): Promise<AxiosResponse<{ data: FAQ[] }>> => get("/api/faqs", false) as Promise<AxiosResponse<{ data: FAQ[] }>>,
+  getFaqById: (id: string): Promise<AxiosResponse<{ data: FAQ }>> => get(`/api/faqs/${id}`, false) as Promise<AxiosResponse<{ data: FAQ }>>,
+  createFaq: (data: { title: string; content: string; image_url?: string; comments_enabled: boolean }) => post("/api/admin/faqs", data),
+  updateFaq: (id: string, data: { title: string; content: string; image_url?: string; comments_enabled: boolean }) => put(`/api/admin/faqs/${id}`, data),
+  deleteFaq: (id: string) => del(`/api/admin/faqs/${id}`),
 
   // FAQ Comment APIs
-  getFaqComments: (faqId: string): Promise<AxiosResponse<{ data: FAQComment[] }>> => get(`/faqs/${faqId}/comments`, false) as Promise<AxiosResponse<{ data: FAQComment[] }>>,
-  createFaqComment: (faqId: string, data: { content: string }): Promise<AxiosResponse<{ data: FAQComment }>> => post(`/faqs/${faqId}/comments`, data) as Promise<AxiosResponse<{ data: FAQComment }>>,
+  getFaqComments: (faqId: string): Promise<AxiosResponse<{ data: FAQComment[] }>> => get(`/api/faqs/${faqId}/comments`, false) as Promise<AxiosResponse<{ data: FAQComment[] }>>,
+  createFaqComment: (faqId: string, data: { content: string }): Promise<AxiosResponse<{ data: FAQComment }>> => post(`/api/faqs/${faqId}/comments`, data) as Promise<AxiosResponse<{ data: FAQComment }>>,
 
   // Ticket APIs
-  createTicket: (data: { subject: string; initial_message: string; attachments?: any[] }) => post("/tickets", data),
-  getMyTickets: () => get("/tickets"),
-  getAllTicketsForAdmin: () => get("/admin/tickets"),
-  getTicketById: (ticketId: string) => get(`/tickets/${ticketId}`),
-  createTicketReply: (ticketId: string, data: { message: string; is_staff_reply: boolean; attachments?: Omit<TicketAttachment, 'ID'>[] }) => post(`/tickets/${ticketId}/replies`, data),
-  updateTicketStatus: (ticketId: string, status: string) => put(`/admin/tickets/${ticketId}/status`, { status }),
+  createTicket: (data: { subject: string; initial_message: string; attachments?: any[] }) => post("/api/tickets", data),
+  getMyTickets: () => get("/api/tickets"),
+  getAllTicketsForAdmin: () => get("/api/admin/tickets"),
+  getTicketById: (ticketId: string) => get(`/api/tickets/${ticketId}`),
+  createTicketReply: (ticketId: string, data: { message: string; is_staff_reply: boolean; attachments?: Omit<TicketAttachment, 'ID'>[] }) => post(`/api/tickets/${ticketId}/replies`, data),
+  updateTicketStatus: (ticketId: string, status: string) => put(`/api/admin/tickets/${ticketId}/status`, { status }),
 };
 
 // Profile API
