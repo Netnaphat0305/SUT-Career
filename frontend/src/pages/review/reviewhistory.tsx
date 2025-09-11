@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Spin, Result, Typography, Card, Tag, Descriptions, Button, Flex } from "antd";
+import { Spin, Result, Typography, Card, Tag, Descriptions, Button } from "antd";
 import { reviewAPI } from "../../services/https";
 import type { Review } from "../../interfaces/review";
 import './review.css';

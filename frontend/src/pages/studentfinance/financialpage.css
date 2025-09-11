@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap');
+
+.financial-report-container,
+.financial-report-container *:not(.anticon):not(.anticon *) {
+  font-family: 'Kanit', 'Noto Sans Thai', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+body.kanit-font,
+body.kanit-font *:not(.anticon):not(.anticon *) {
+  font-family: 'Kanit', 'Noto Sans Thai', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+/* Summary Section */
+.summary-container {
+  background-color: #007BFF;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  color: #fff;
+}
+
+/* Target internal elements of AntD's Statistic component */
+.summary-statistic-light .ant-statistic-title {
+  color: #fff;
+}
+
+.summary-statistic-light .ant-statistic-content-value {
+  color: #fff;
+  font-weight: bold;
+  font-size: 36px;
+}
+
+.summary-statistic-dark .ant-statistic-title {
+  color: rgba(0, 0, 0, 0.88); /* Default AntD title color */
+}
+
+.summary-statistic-dark .ant-statistic-content-value {
+  color: #007BFF;
+  font-weight: bold;
+  font-size: 32px;
+}
+
+.total-amount-card {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
+
+/* Transaction List */
+.transaction-item-flex {
+  width: 100%;
+}
+
+.transaction-amount {
+  color: #28a745;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Skeleton Loaders */
+.skeleton-container {
+  margin-top: 8px;
+}
+
+.skeleton-item {
+  margin-bottom: 10px;
+}

@@ -10,7 +10,7 @@ import type {
 } from "../../interfaces/review";
 import type { Discount } from "../../interfaces/discount";
 import type { Jobpost, CreateJobpost } from "../../interfaces/jobpost";
-import type { Payment, CreatePaymentPayload } from "../../interfaces/payment";
+import type { Payment, CreatePaymentPayload, StudentFinanceResponse, FinanceSummaryResponse } from "../../interfaces/payment";
 import type { Order } from "../../interfaces/order";
 import type { EmploymentType } from "../../interfaces/employment_type";
 import type { JobCategory } from "../../interfaces/job_category";
@@ -297,6 +297,141 @@ export const paymentReportAPI = {
         ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
       },
     }),
+};
+export const StudentFinanceAPI = {
+  // API ใหม่ที่ใช้ JWT token
+  getFinanceData: async (): Promise<StudentFinanceResponse> => {
+    console.log(`📊 Fetching my finance data (using JWT token)`);
+    
+    try {
+      const response = await Get<StudentFinanceResponse>(`/api/my/finance`);
+      
+      console.log("💰 My finance data response:", {
+        hasData: !!response?.data,
+        dataLength: response?.data?.length || 0,
+        data: response?.data
+      });
+      
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+      
+      if (!response.data) {
+        console.warn("⚠️ Response has no data property");
+        return { data: [] };
+      }
+      
+      if (!Array.isArray(response.data)) {
+        console.warn("⚠️ Response data is not an array:", typeof response.data);
+        return { data: [] };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("💥 Error fetching my finance data:", error);
+      throw error;
+    }
+  },
+
+  getFinanceSummary: async (): Promise<FinanceSummaryResponse> => {
+    console.log(`📈 Fetching my finance summary (using JWT token)`);
+    
+    try {
+      const response = await Get<FinanceSummaryResponse>(`/api/my/finance/summary`);
+      
+      console.log("📊 My finance summary response:", {
+        hasData: !!response?.data,
+        summary: response?.data
+      });
+      
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+      
+      if (!response.data) {
+        console.warn("⚠️ Summary response has no data property");
+        return { 
+          data: { 
+            monthlyJobCount: 0, 
+            totalJobCount: 0, 
+            totalEarnings: 0 
+          } 
+        };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("💥 Error fetching my finance summary:", error);
+      throw error;
+    }
+  },
+
+  // ✅ เพิ่ม missing functions ที่ Frontend ต้องการ
+  getFinanceDataByStudentId: async (studentId: number): Promise<StudentFinanceResponse> => {
+    console.log(`📊 Fetching finance data for student ID: ${studentId}`);
+    
+    try {
+      const response = await Get<StudentFinanceResponse>(`/api/student/${studentId}/finance`);
+      
+      console.log("💰 Finance data response:", {
+        hasData: !!response?.data,
+        dataLength: response?.data?.length || 0,
+        data: response?.data
+      });
+      
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+      
+      if (!response.data) {
+        console.warn("⚠️ Response has no data property");
+        return { data: [] };
+      }
+      
+      if (!Array.isArray(response.data)) {
+        console.warn("⚠️ Response data is not an array:", typeof response.data);
+        return { data: [] };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("💥 Error fetching finance data:", error);
+      throw error;
+    }
+  },
+
+  getFinanceSummaryByStudentId: async (studentId: number): Promise<FinanceSummaryResponse> => {
+    console.log(`📈 Fetching finance summary for student ID: ${studentId}`);
+    
+    try {
+      const response = await Get<FinanceSummaryResponse>(`/api/student/${studentId}/finance/summary`);
+      
+      console.log("📊 Finance summary response:", {
+        hasData: !!response?.data,
+        summary: response?.data
+      });
+      
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+      
+      if (!response.data) {
+        console.warn("⚠️ Summary response has no data property");
+        return { 
+          data: { 
+            monthlyJobCount: 0, 
+            totalJobCount: 0, 
+            totalEarnings: 0 
+          } 
+        };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("💥 Error fetching finance summary:", error);
+      throw error;
+    }
+  }
 };
 
 export const adminFinanceAPI = {
