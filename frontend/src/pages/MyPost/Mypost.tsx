@@ -13,7 +13,7 @@ import {
 import { jobPostAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
 import "./Mypost.css";
-import lahui from "../../assets/lahui.svg";
+import profile from "../../assets/profile.svg";
 import { useNavigate } from "react-router-dom";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
@@ -224,7 +224,7 @@ const MyPost: React.FC = () => {
                 ) : (
                   <div className="mypost-image-fallback">
                     <img
-                      src={lahui}
+                      src={profile}
                       alt="Default Logo"
                       className="mypost-image"
                     />

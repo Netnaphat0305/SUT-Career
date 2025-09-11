@@ -633,8 +633,8 @@ export const profileAPI = {
 
 // Job Category APIs
 export const jobCategoryAPI = {
-  getAll: () => get("/jobcategories", false),
-  getById: (id: number) => get(`/jobcategories/${id}`, false),
+  getAll: () => get("/api/jobcategories", false),
+  getById: (id: number) => get(`/api/jobcategories/${id}`, false),
 };
 
 // Job employmentType APIs
@@ -645,8 +645,8 @@ export const employmentTypeAPI = {
 
 // Salary Type APIs
 export const salaryTypeAPI = {
-  getAll: () => get("/salarytype", false),
-  getById: (id: number) => get(`/salarytype/${id}`, false),
+  getAll: () => get("/api/salarytype", false),
+  getById: (id: number) => get(`/api/salarytype/${id}`, false),
 };
 
 

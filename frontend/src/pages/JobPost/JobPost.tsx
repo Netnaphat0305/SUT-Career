@@ -53,8 +53,13 @@ const JobPost: React.FC = () => {
   useEffect(() => {
     jobCategoryAPI
       .getAll()
-      .then((data) => {
-        const mapped = (data.data || data).map((cat: any) => ({
+      .then((res: any) => {
+        const list = res?.data?.data || res?.data || [];
+        if (!Array.isArray(list)) {
+          console.error("Expected array for categories but got:", list);
+          return;
+        }
+        const mapped = list.map((cat: any) => ({
           id: cat.ID,
           category_name: cat.CategoryName || cat.category_name,
         }));
@@ -67,8 +72,13 @@ const JobPost: React.FC = () => {
   useEffect(() => {
     salaryTypeAPI
       .getAll()
-      .then((data) => {
-        const mapped = (data.data || data).map((s: any) => ({
+      .then((res: any) => {
+        const list = res?.data?.data || res?.data || [];
+        if (!Array.isArray(list)) {
+          console.error("Expected array for salary types but got:", list);
+          return;
+        }
+        const mapped = list.map((s: any) => ({
           id: s.ID,
           salary_type_name: s.SalaryTypeName || s.salary_type_name,
         }));
@@ -81,13 +91,17 @@ const JobPost: React.FC = () => {
   useEffect(() => {
     employmentTypeAPI
       .getAll()
-      .then((data) => {
-        const mapped = (data.data || data).map((emp: any) => ({
+      .then((res: any) => {
+        const list = res?.data?.data || res?.data || [];
+        if (!Array.isArray(list)) {
+          console.error("Expected array for employment types but got:", list);
+          return;
+        }
+        const mapped = list.map((emp: any) => ({
           id: emp.ID,
           employment_type_name:
             emp.EmploymentTypeName || emp.employment_type_name,
         }));
-
         setEmploymentTypes(mapped);
       })
       .catch((err) => console.error("Error fetching employment types:", err));
@@ -331,4 +345,3 @@ const JobPost: React.FC = () => {
 };
 
 export default JobPost;
-

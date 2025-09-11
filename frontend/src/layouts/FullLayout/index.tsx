@@ -110,6 +110,15 @@ const FullLayout: React.FC = () => {
         });
     }
 
+    //edit by netnaphat copy satang แก้้ให้ employer มีปุ่มโปรไฟล์
+    else if (userRole === 'employer' || userRole === 'emp') {
+        menuItems.push({
+            key: 'employer-profile',
+            label: <Link to="/employer/profile">ดูโปรไฟล์</Link>,
+            icon: <ProfileOutlined />,
+        });
+    }
+
     // Add logout option for all logged-in users
     menuItems.push({
         key: 'logout',

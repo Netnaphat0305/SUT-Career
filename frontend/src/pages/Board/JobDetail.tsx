@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button, Spin, message, Tag } from "antd";
-import lahui from "../../assets/lahui.svg";
+import profile from "../../assets/profile.svg";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import "./JobDetail.css";
 import "../../index.css";
@@ -159,7 +159,7 @@ const PostLayout: React.FC = () => {
                 <div className="post-image-wrapper">
                   <img
                     className="post-image-detail"
-                    src={post.image_url || lahui}
+                    src={post.image_url || profile}
                     alt={post.title}
                   />
                 </div>
@@ -176,7 +176,7 @@ const PostLayout: React.FC = () => {
               <div className="job-header-highlight">
                 <div className="job-header-left">
                   <img
-                    src={selectedPost.image_url || lahui}
+                    src={selectedPost.image_url || profile}
                     alt={selectedPost.title}
                     className="post-detail-image"
                   />
