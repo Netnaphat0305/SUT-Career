@@ -1,4 +1,4 @@
-// backend/controller/payment.go - แก้ไข Preload nested relationships
+// backend/controller/payment.go
 
 package controller
 
@@ -116,11 +116,11 @@ func ListPayments(c *gin.Context) {
 	var pays []entity.Payments
 	if err := db.
 		Preload("Status").
-		Preload("PaymentMethod").                      // ← แก้ไขจาก PaymentMethods
+		Preload("PaymentMethod").
 		Preload("Discount").
 		Preload("BillableItem").
-		Preload("BillableItem.Jobpost").              // ← เพิ่ม nested preload
-		Preload("BillableItem.Jobpost.Employer").     // ← เพิ่ม employer
+		Preload("BillableItem.Jobpost").
+		Preload("BillableItem.Jobpost.Employer").
 		Order("created_at DESC, id DESC").
 		Find(&pays).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -129,7 +129,7 @@ func ListPayments(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": pays})
 }
 
-// GET /api/payments/:id - แก้ไข Preload ให้ครบถ้วน
+// GET /api/payments/:id
 func GetPaymentByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
@@ -372,4 +372,195 @@ func FinanceSummary(c *gin.Context) {
 
 func safePaymentAmount(p entity.Payments) float32 {
 	return p.Amount
+}
+
+
+// ---------------------- Student -------------------------
+type StudentFinanceResponse struct {
+    StudentID uint      `json:"student_id"`
+    JobID     uint      `json:"job_id"`
+    JobTitle  string    `json:"jobTitle"`
+    Amount    float32   `json:"amount"`
+    Datetime  time.Time `json:"datetime"`
+}
+
+type StudentFinanceSummary struct {
+    MonthlyJobCount int     `json:"monthlyJobCount"`
+    TotalJobCount   int     `json:"totalJobCount"`
+    TotalEarnings   float32 `json:"totalEarnings"`
+}
+
+// GET /api/my/finance - ใช้ user_id จาก JWT token
+func GetMyFinance(c *gin.Context) {
+	userID, exists := c.Get("userID")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+        return
+    }
+
+    db := config.DB()
+    paidStatusID, err := statusIDByName(db, "ชำระแล้ว")
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "status 'ชำระแล้ว' not found"})
+        return
+    }
+
+    var results []StudentFinanceResponse
+    
+    err = db.
+        Table("payments p").
+        Select(`
+            s.id as student_id,
+            jp.id as job_id,
+            jp.title as job_title,
+            p.amount,
+            p.datetime
+        `).
+        Joins("JOIN billable_items bi ON bi.id = p.billable_item_id").
+        Joins("JOIN jobposts jp ON jp.id = bi.jobpost_id").
+        Joins("JOIN students s ON s.id = jp.student_id").
+        Joins("JOIN users u ON u.id = s.user_id").  // เชื่อมกับ users table
+        Where("u.id = ? AND p.status_id = ?", userID, paidStatusID).
+        Order("p.datetime DESC").
+        Find(&results).Error
+
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"data": results})
+}
+
+// GET /api/my/finance/summary - ใช้ user_id จาก JWT token
+func GetMyFinanceSummary(c *gin.Context) {
+    userID, exists := c.Get("userID")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+        return
+    }
+
+    db := config.DB()
+    paidStatusID, err := statusIDByName(db, "ชำระแล้ว")
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "status 'ชำระแล้ว' not found"})
+        return
+    }
+
+    // คำนวณเดือนปัจจุบัน
+    now := time.Now()
+    currentMonth := fmt.Sprintf("%02d", int(now.Month()))  // 01-12
+    currentYear := fmt.Sprintf("%d", now.Year())           // 2025
+    
+    var totalCount int64
+    var totalEarnings float32
+    var monthlyCount int64
+
+    // Total jobs and earnings
+    db.Table("payments p").
+        Joins("JOIN billable_items bi ON bi.id = p.billable_item_id").
+        Joins("JOIN jobposts jp ON jp.id = bi.jobpost_id").
+        Joins("JOIN students s ON s.id = jp.student_id").
+        Joins("JOIN users u ON u.id = s.user_id").
+        Where("u.id = ? AND p.status_id = ?", userID, paidStatusID).
+        Count(&totalCount).
+        Pluck("SUM(p.amount)", &totalEarnings)
+
+    // ใช้ strftime แทน MONTH/YEAR
+    db.Table("payments p").
+        Joins("JOIN billable_items bi ON bi.id = p.billable_item_id").
+        Joins("JOIN jobposts jp ON jp.id = bi.jobpost_id").
+        Joins("JOIN students s ON s.id = jp.student_id").
+        Joins("JOIN users u ON u.id = s.user_id").
+        Where("u.id = ? AND p.status_id = ? AND strftime('%m', p.datetime) = ? AND strftime('%Y', p.datetime) = ?",
+            userID, paidStatusID, currentMonth, currentYear).
+        Count(&monthlyCount)
+
+    summary := StudentFinanceSummary{
+        MonthlyJobCount: int(monthlyCount),
+        TotalJobCount:   int(totalCount),
+        TotalEarnings:   totalEarnings,
+    }
+
+    c.JSON(http.StatusOK, gin.H{"data": summary})
+}
+
+// GET /api/student/:id/finance - legacy endpoint
+func GetStudentFinance(c *gin.Context) {
+    studentID := c.Param("id")
+    db := config.DB()
+    
+    paidStatusID, err := statusIDByName(db, "ชำระแล้ว")
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "status 'ชำระแล้ว' not found"})
+        return
+    }
+
+    var results []StudentFinanceResponse
+    err = db.
+        Table("payments p").
+        Select(`
+            jp.student_id,
+            jp.id as job_id,
+            jp.title as job_title,
+            p.amount,
+            p.datetime
+        `).
+        Joins("JOIN billable_items bi ON bi.id = p.billable_item_id").
+        Joins("JOIN jobposts jp ON jp.id = bi.jobpost_id").
+        Where("jp.student_id = ? AND p.status_id = ?", studentID, paidStatusID).
+        Order("p.datetime DESC").
+        Find(&results).Error
+
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"data": results})
+}
+
+// GetStudentFinanceSummary (legacy endpoint) เหมือนกัน
+func GetStudentFinanceSummary(c *gin.Context) {
+    studentID := c.Param("id")
+    db := config.DB()
+    
+    paidStatusID, err := statusIDByName(db, "ชำระแล้ว")
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "status 'ชำระแล้ว' not found"})
+        return
+    }
+
+    // คำนวณเดือนปัจจุบัน
+    now := time.Now()
+    currentMonth := fmt.Sprintf("%02d", int(now.Month()))
+    currentYear := fmt.Sprintf("%d", now.Year())
+    
+    var totalCount int64
+    var totalEarnings float32
+    var monthlyCount int64
+
+    // Total jobs and earnings
+    db.Table("payments p").
+        Joins("JOIN billable_items bi ON bi.id = p.billable_item_id").
+        Joins("JOIN jobposts jp ON jp.id = bi.jobpost_id").
+        Where("jp.student_id = ? AND p.status_id = ?", studentID, paidStatusID).
+        Count(&totalCount).
+        Pluck("SUM(p.amount)", &totalEarnings)
+
+    // ใช้ strftime แทน MONTH/YEAR
+    db.Table("payments p").
+        Joins("JOIN billable_items bi ON bi.id = p.billable_item_id").
+        Joins("JOIN jobposts jp ON jp.id = bi.jobpost_id").
+        Where("jp.student_id = ? AND p.status_id = ? AND strftime('%m', p.datetime) = ? AND strftime('%Y', p.datetime) = ?",
+            studentID, paidStatusID, currentMonth, currentYear).
+        Count(&monthlyCount)
+
+    summary := StudentFinanceSummary{
+        MonthlyJobCount: int(monthlyCount),
+        TotalJobCount:   int(totalCount),
+        TotalEarnings:   totalEarnings,
+    }
+
+    c.JSON(http.StatusOK, gin.H{"data": summary})
 }

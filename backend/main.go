@@ -161,6 +161,12 @@ func main() {
 		auth.GET("/payment-reports/me", controller.ListMyPaymentReports)
 		auth.GET("/payment-reports/employer/:id", controller.ListPaymentReportsByEmployerID)
 		auth.POST("/payment-reports/upload", controller.UploadPaymentReport)
+
+		// --- Student Finance ---
+		auth.GET("/my/finance", controller.GetMyFinance)
+		auth.GET("/my/finance/summary", controller.GetMyFinanceSummary)
+		auth.GET("/student/:id/finance", controller.GetStudentFinance)
+		auth.GET("/student/:id/finance/summary", controller.GetStudentFinanceSummary)
 	}
 
 	// -------------------- 🛡️ Admin Routes --------------------
