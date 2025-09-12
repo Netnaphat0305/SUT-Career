@@ -451,7 +451,6 @@ func main() {
 		log.Fatal(err)
 	}
 	r.Static("/static", "./static")
-
 	// Seed ข้อมูลนักศึกษา 30 คน
 	db := config.DB()
 	seed.SeedStudents(db)

@@ -1,16 +1,37 @@
 package controller
 
 import (
-	"net/http"
-	"strconv"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"net/http"
+	"path/filepath"
+	"strconv"
+	"time"
 
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/entity"
 )
+
+// upload
+func UploadFile(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no file provided"})
+		return
+	}
+
+	// เก็บไฟล์ลงโฟลเดอร์ uploads/
+	dst := filepath.Join("uploads", filepath.Base(file.Filename))
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
+		return
+	}
+
+	// สร้าง URL (เช่น http://localhost:8080/uploads/filename.png)
+	url := "/uploads/" + filepath.Base(file.Filename)
+
+	c.JSON(http.StatusOK, gin.H{"url": url})
+}
 
 // ===== Chat API =====
 
@@ -39,7 +60,7 @@ func ListMyChatRooms(c *gin.Context) {
 		q = q.Where("student_id = ?", quserid)
 	} else if role == "employer" {
 
-        var employer entity.Employer
+		var employer entity.Employer
 		if err := db.Where("user_id = ?", userID).Find(&employer).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "employer not found"})
 			return
@@ -125,10 +146,14 @@ func SendMessage(c *gin.Context) {
 
 	roomId, _ := strconv.Atoi(c.Param("roomId"))
 	var req struct {
-		Message string `json:"message"`
+		Message     string `json:"message"`
+		ImageURL    string `json:"image_url"`
+		MessageType string `json:"message_type"` // "text" หรือ "image"
 	}
-	if err := c.ShouldBindJSON(&req); err != nil || req.Message == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "message required"})
+
+	// ถ้าไม่มีทั้งข้อความและรูป → error
+	if err := c.ShouldBindJSON(&req); err != nil || (req.Message == "" && req.ImageURL == "") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "message or image required"})
 		return
 	}
 
@@ -140,7 +165,9 @@ func SendMessage(c *gin.Context) {
 		ChatRoomID:    uint(roomId),
 		UserSenderID:  userID.(uint),
 		Message:       req.Message,
-		TimeStampSend: now,
+		ImageURL:      req.ImageURL, // << เก็บ URL จริง
+		MessageType:   req.MessageType,
+		TimeStampSend: time.Now(),
 	}
 
 	if err := db.Create(&msg).Error; err != nil {
@@ -148,18 +175,29 @@ func SendMessage(c *gin.Context) {
 		return
 	}
 
-	// 2. อัปเดต ChatRoom
+	// 2. อัปเดต ChatRoom (บันทึกข้อความล่าสุด/เวลา)
+	lastMessage := req.Message
+	if req.MessageType == "image" && req.ImageURL != "" {
+		lastMessage = "[รูปภาพ]" // ใช้เป็น placeholder เวลาดึง list แชท
+	}
+
 	if err := db.Model(&entity.ChatRoom{}).
 		Where("id = ?", roomId).
 		Updates(map[string]interface{}{
-			"Lastmessage":    req.Message,
-			"LastMessageAt": now, // บันทึกเป็น time.Time
+			"Lastmessage":   lastMessage,
+			"LastMessageAt": now,
 		}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update chat room"})
 		return
 	}
 
-	// 3. ส่ง response กลับ
+	// 3. preload User ด้วย (เพื่อให้ frontend ใช้ได้เลย)
+	if err := db.Preload("User").First(&msg, msg.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load user info"})
+		return
+	}
+
+	// 4. ส่ง response กลับ
 	c.JSON(http.StatusOK, msg)
 }
 
