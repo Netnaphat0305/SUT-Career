@@ -11,7 +11,7 @@ import {
   EnvironmentOutlined,
   MessageOutlined, // add by book
 } from "@ant-design/icons";
-import { jobPostAPI } from "../../services/https";
+import { jobPostAPI, chatAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
 
 
@@ -105,6 +105,27 @@ const PostLayout: React.FC = () => {
       </div>
     );
   }
+
+  // edit by book
+  // ฟังก์ชันเมื่อกด Contact
+  const handleCreateChat = async () => {
+    if (!selectedPost?.employer_id) return;
+
+    try {
+      // นักศึกษา → สร้างห้องกับ employer
+      const room = await chatAPI.createOrGetRoom(
+        selectedPost.employer_id,   // targetId
+        "employer"                  // targetRole
+      );
+
+      // ✅ เมื่อสร้างเสร็จ → ไปหน้า Chat
+      navigate("/Chat", { state: { roomId: room.ID } });
+    } catch (err) {
+      console.error("Failed to create chat room:", err);
+      messageApi.error("ไม่สามารถสร้างห้องแชทได้");
+    }
+  };
+  // edit by book
 
   return (
     <>
@@ -276,7 +297,7 @@ const PostLayout: React.FC = () => {
                 <p>{selectedPost.description || "ไม่มีรายละเอียดเพิ่มเติม"}</p>
               </div>
               {/* edit By Book */}
-              <div className="chat-fab">
+              <div className="chat-fab" onClick={handleCreateChat}>
                 <span className="chat-label">Contact</span>
                 <MessageOutlined className="create-chat-button" />
               </div>

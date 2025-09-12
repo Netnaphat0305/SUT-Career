@@ -87,8 +87,9 @@ func ListMyChatRooms(c *gin.Context) {
 
 // POST /api/chat/rooms
 func CreateOrGetRoom(c *gin.Context) {
-	userID := c.MustGet("userID")
-	role := c.MustGet("role")
+	userID := c.MustGet("userID").(uint)
+	roleVal := c.MustGet("role").(entity.RoleEnum) // ได้ค่าเป็น RoleEnum
+	role := string(roleVal)                        // แปลงเป็น string
 
 	var req struct {
 		TargetID   uint   `json:"target_id"`
@@ -100,35 +101,60 @@ func CreateOrGetRoom(c *gin.Context) {
 	}
 
 	db := config.DB()
-	var room entity.ChatRoom
 
-	var studentID uint
-	var employerID uint
+	// --- ดึง userRoleID จากตารางลูก ---
+	var userRoleID uint
+	if role == "student" {
+		var s entity.Student
+		if err := db.Where("user_id = ?", userID).First(&s).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "student not found"})
+			return
+		}
+		userRoleID = s.ID
+	} else if role == "employer" {
+		var e entity.Employer
+		if err := db.Where("user_id = ?", userID).First(&e).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "employer not found"})
+			return
+		}
+		userRoleID = e.ID
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid role"})
+		return
+	}
 
+	// --- จัดคู่ student / employer ---
+	var studentID, employerID uint
 	if role == "student" && req.TargetRole == "employer" {
-		id := userID.(uint)
-		studentID = id
+		studentID = userRoleID
 		employerID = req.TargetID
 	} else if role == "employer" && req.TargetRole == "student" {
-		id := userID.(uint)
 		studentID = req.TargetID
-		employerID = id
+		employerID = userRoleID
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid role combination"})
 		return
 	}
 
-	err := db.Where("student_id = ? AND employer_id = ?", studentID, employerID).First(&room).Error
-	if err == gorm.ErrRecordNotFound {
-		room = entity.ChatRoom{StudentID: studentID, EmployerID: employerID}
-		db.Create(&room)
-	} else if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	// --- หา/สร้างห้อง ---
+	var room entity.ChatRoom
+	if err := db.Where("student_id = ? AND employer_id = ?", studentID, employerID).
+		First(&room).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			room = entity.ChatRoom{StudentID: studentID, EmployerID: employerID}
+			if err := db.Create(&room).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, room)
 }
+
 
 // GET /api/chat/rooms/:roomId/messages
 func ListRoomMessages(c *gin.Context) {

@@ -1,7 +1,7 @@
 //services/https/index.tsx
 import axios from "axios";
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-import type { ChatRoom, ChatHistory, UserRole } from "../../interfaces/Chat";
+import type { ChatRoom, ChatHistory } from "../../interfaces/Chat";
 
 
 import type { Employer, SignInEmployer } from "../../interfaces/employer";
@@ -671,7 +671,7 @@ export const chatAPI = {
   listMyRooms: (): Promise<ChatRoom[]> =>
     Get("/api/chat/rooms"),
 
-  createOrGetRoom: (targetId: number, targetRole: UserRole): Promise<ChatRoom> =>
+  createOrGetRoom: (targetId: number, targetRole: string): Promise<ChatRoom> =>
     Post("/api/chat/rooms", { target_id: targetId, target_role: targetRole }),
 
   listMessages: (roomId: number): Promise<ChatHistory[]> =>

@@ -1,6 +1,7 @@
 //Chat.tsx
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
+import { useLocation } from "react-router-dom";
 import { Layout, List, Avatar, Input, Button, Space, Typography, Row, Col, Modal } from "antd"
 import { PictureOutlined, UserOutlined } from "@ant-design/icons"
 import { type ChatHistory, type ChatRoom } from "../../interfaces/Chat"
@@ -12,15 +13,17 @@ import "./Chat.css" // <-- import ไฟล์ CSS ที่สร้างข�
 
 const { Text } = Typography
 const Chat: React.FC = () => {
+  const location = useLocation();
+  const { roomId } = location.state || {};
   // Define Data
-  const [selectedUser, setSelectedUser] = useState<number | null>(null)
-  const [newMessage, setNewMessage] = useState<string>("")
-  const [chatRooms, setChatRooms] = useState<ChatRoom[]>([])
-  const [currentMessages, setCurrentMessages] = useState<ChatHistory[]>([])
+  const [selectedUser, setSelectedUser] = useState<number | null>(roomId || null);
+  const [newMessage, setNewMessage] = useState<string>("");
+  const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
+  const [currentMessages, setCurrentMessages] = useState<ChatHistory[]>([]);
   //preview image
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   //to go bottom if send new message
-  const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   // state บอกว่า user อยู่ใกล้ bottom ไหม
   const [isAtBottom, setIsAtBottom] = useState(true);
 
@@ -94,16 +97,26 @@ const Chat: React.FC = () => {
   const handleSendMessage = async () => {
     if (newMessage.trim() && selectedUser) {
       try {
-        // เรียก API จริง → ส่งข้อความไป DB
         const savedMessage = await chatAPI.sendMessage(selectedUser, {
           message: newMessage,
           message_type: "text",
         });
 
-        // อัปเดต state messages ด้วยข้อความที่เพิ่งส่ง
         setCurrentMessages((prev) => [...prev, savedMessage]);
 
-        // ล้างช่อง input
+        // อัปเดตห้องใน sidebar
+        setChatRooms((prev) =>
+          prev.map((room) =>
+            room.ID === selectedUser
+              ? {
+                ...room,
+                Last_Message: savedMessage.Message,
+                last_message_at: savedMessage.Time_Stamp_Send,
+              }
+              : room
+          )
+        );
+
         setNewMessage("");
       } catch (error) {
         console.error("Failed to send message:", error);
@@ -230,14 +243,9 @@ const Chat: React.FC = () => {
                         {/* Sender name */}
                         {!isOwn && (
                           <div className="message-sender-name">
-                            {chatRooms.map((rooms) =>
-                              (() => {
-                                if (role === "student") {
-                                  return `${rooms.Employer.first_name} ${rooms.Employer.last_name}`;
-                                } else {
-                                  return `${rooms.Student.first_name} ${rooms.Student.last_name}`;
-                                }
-                              })())}
+                            {message.User?.Role === "student"
+                              ? `${selectedUserData?.Student?.first_name ?? ""} ${selectedUserData?.Student?.last_name ?? ""}`
+                              : `${selectedUserData?.Employer?.first_name ?? ""} ${selectedUserData?.Employer?.last_name ?? ""}`}
                           </div>
                         )}
                         {isOwn && (
@@ -245,7 +253,6 @@ const Chat: React.FC = () => {
                             คุณ
                           </div>
                         )}
-
                         {/* Message bubble */}
                         <div
                           className={`message-bubble ${message.Message_Type === "image"
