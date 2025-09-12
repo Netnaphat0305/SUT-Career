@@ -7,7 +7,8 @@ import (
 )
 type InterviewScheduling struct {
 	gorm.Model
-	DateAndTime time.Time `json:"Date_And_Time"`
+	DateAndTimeStart time.Time `json:"DateAndTimeStart"`
+	DateAndTimeEnd time.Time `json:"DateAndTimeEnd"`
 	Status string `json:"Status"`
 	Detail string `gorm:"type:text" json:"Detail"`
 

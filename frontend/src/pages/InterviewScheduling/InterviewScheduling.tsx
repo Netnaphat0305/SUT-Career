@@ -7,98 +7,100 @@ import type { Dayjs } from "dayjs"
 import dayjs from "dayjs"
 import "dayjs/locale/th"
 
-// Import the regular CSS file
 import "./InterviewScheduling.css"
+
+import type { InterviewScheduling } from "../../interfaces/InterviewScheduling"
+import { interviewSchedulingAPI } from "../../services/https"
+
+dayjs.locale("th")
 
 const { Title, Text } = Typography
 const { RangePicker } = TimePicker
-const { TextArea } = Input;
-
-interface InterviewSlot {
-  id: string
-  startTime: string
-  endTime: string
-  status: "available" | "booked" | "unavailable"
-  intervieweeId?: string
-}
+const { TextArea } = Input
 
 type DateStatus = "available" | "booked" | "selected" | "default"
 
-const fetchTimeSlots = async (): Promise<Record<string, InterviewSlot[]>> => {
-  return Promise.resolve({
-    "2024-12-08": [
-      { id: "slot1", startTime: "09:00", endTime: "10:00", status: "available" },
-      { id: "slot2", startTime: "10:00", endTime: "11:00", status: "booked", intervieweeId: "std1" },
-      { id: "slot3", startTime: "13:00", endTime: "14:00", status: "available" },
-      { id: "slot4", startTime: "15:00", endTime: "16:00", status: "booked", intervieweeId: "std2" },
-    ],
-  })
-}
-
-const updateTimeSlots = async (newSlots: Record<string, InterviewSlot[]>) => {
-  console.log("Saving to database...", newSlots)
-  return Promise.resolve(newSlots)
-}
-
-const InterviewScheduling: React.FC = () => {
+const InterviewSchedulingPage: React.FC = () => {
   const [interviewDetails, setInterviewDetails] = useState<string>("")
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null)
-  const [currentMonth, setCurrentMonth] = useState<Dayjs>(dayjs("2024-12-01"))
+  const [currentMonth, setCurrentMonth] = useState<Dayjs>(dayjs())
   const [showAddTimeModal, setShowAddTimeModal] = useState<boolean>(false)
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false)
   const [selectedTimeRange, setSelectedTimeRange] = useState<[Dayjs, Dayjs] | null>(null)
   const [form] = Form.useForm()
-  const [selectedTimeSlotForDeletion, setSelectedTimeSlotForDeletion] = useState<string | null>(null)
+  const [selectedTimeSlotForDeletion, setSelectedTimeSlotForDeletion] = useState<number | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
-  const [timeSlots, setTimeSlots] = useState<Record<string, InterviewSlot[]>>({})
+  const [timeSlots, setTimeSlots] = useState<InterviewScheduling[]>([])
+  const [lastActionSlot, setLastActionSlot] = useState<InterviewScheduling | null>(null)
 
   useEffect(() => {
     const loadSlots = async () => {
-      const slots = await fetchTimeSlots()
-      setTimeSlots(slots)
+      try {
+        const slots = await interviewSchedulingAPI.getByEmployerId()
+        setTimeSlots(slots)
+      } catch (error) {
+        message.error("โหลดข้อมูลไม่สำเร็จ")
+      }
     }
     loadSlots()
   }, [])
 
-  const getDateStatus = (date: Dayjs): DateStatus => {
-    const dateKey = date.format("YYYY-MM-DD")
-    const isCurrentMonth = date.month() === currentMonth.month()
+  // รวม “วันที่จากปฏิทิน” + “เวลา จาก RangePicker”
+  const mergeDateAndTime = (date: Dayjs, time: Dayjs) =>
+    date
+      .hour(time.hour())
+      .minute(time.minute())
+      .second(0)
+      .millisecond(0)
 
+  const getSlotsByDate = (date: Dayjs): InterviewScheduling[] => {
+    // เทียบแบบ isSame('day') เพื่อกันปัญหา timezone/UTC ทำให้วันคลาดเคลื่อน
+    return timeSlots.filter((slot) => dayjs(slot.DateAndTimeStart).isSame(date, "day"))
+  }
+
+  const getDateStatus = (date: Dayjs): DateStatus => {
+    const isCurrentMonth = date.month() === currentMonth.month()
     if (!isCurrentMonth) return "default"
     if (selectedDate && date.isSame(selectedDate, "day")) return "selected"
 
-    const daySlots = timeSlots[dateKey]
-    if (daySlots && daySlots.length > 0) {
-      const hasBooked = daySlots.some((slot) => slot.status === "booked")
-      const hasAvailable = daySlots.some((slot) => slot.status === "available")
+    const slots = getSlotsByDate(date)
+    if (slots.length > 0) {
+      const hasBooked = slots.some((slot) => slot.Status === "booked")
+      const hasAvailable = slots.some((slot) => slot.Status === "available")
 
       if (hasBooked && !hasAvailable) return "booked"
       if (hasAvailable) return "available"
     }
-
     return "default"
   }
 
   const handleDateClick = (date: Dayjs) => {
     if (date.month() === currentMonth.month()) {
       setSelectedDate(date)
+      // เมื่อเลือกวันใหม่ ให้ยกเลิกการเลือกลบ slot เพื่อกันสับสน
+      setSelectedTimeSlotForDeletion(null)
     }
   }
 
   const handleAddTimeSlot = async () => {
     if (selectedDate && selectedTimeRange) {
-      const dateKey = selectedDate.format("YYYY-MM-DD")
-      const newSlot: InterviewSlot = {
-        id: `slot-${Date.now()}`,
-        startTime: selectedTimeRange[0].format("HH:mm"),
-        endTime: selectedTimeRange[1].format("HH:mm"),
-        status: "available",
+      // ผูกเวลาเข้ากับ “วันที่ที่เลือกในปฏิทิน”
+      const start = mergeDateAndTime(selectedDate, selectedTimeRange[0])
+      const end = mergeDateAndTime(selectedDate, selectedTimeRange[1])
+
+      const newSlot = {
+        // ส่งเป็น ISO แบบมี timezone offset ชัดเจน (RFC3339) เช่น 2025-09-12T14:30:00+07:00
+        DateAndTimeStart: start.format("YYYY-MM-DD[T]HH:mm:ssZ"),
+        DateAndTimeEnd: end.format("YYYY-MM-DD[T]HH:mm:ssZ"),
+        Status: "available" as const,
+        Detail: interviewDetails,
+        EmployerID: 1, // TODO: แทนที่ด้วยค่าจริงจาก auth context
       }
-      const updatedSlots = { ...timeSlots, [dateKey]: [...(timeSlots[dateKey] || []), newSlot] }
 
       try {
-        await updateTimeSlots(updatedSlots)
-        setTimeSlots(updatedSlots)
+        const created = await interviewSchedulingAPI.create(newSlot)
+        setTimeSlots((prev) => [...prev, created])
+        setLastActionSlot(created)
         setShowAddTimeModal(false)
         setShowSuccessModal(true)
         setSelectedTimeRange(null)
@@ -110,37 +112,29 @@ const InterviewScheduling: React.FC = () => {
   }
 
   const handleDeleteTimeSlot = async () => {
-    if (selectedDate && selectedTimeSlotForDeletion) {
-      const dateKey = selectedDate.format("YYYY-MM-DD")
-      const updatedSlotsForDay = timeSlots[dateKey]?.filter((slot) => slot.id !== selectedTimeSlotForDeletion)
-      const updatedSlots = { ...timeSlots, [dateKey]: updatedSlotsForDay || [] }
-
+    if (selectedTimeSlotForDeletion !== null) {
       try {
-        await updateTimeSlots(updatedSlots)
-        setTimeSlots(updatedSlots)
+        await interviewSchedulingAPI.delete(selectedTimeSlotForDeletion)
+        const slotToDelete = timeSlots.find((s) => s.ID === selectedTimeSlotForDeletion) || null
+        setTimeSlots((prev) => prev.filter((s) => s.ID !== selectedTimeSlotForDeletion))
+        setLastActionSlot(slotToDelete)
         setShowDeleteModal(false)
+        setShowSuccessModal(true)
         setSelectedTimeSlotForDeletion(null)
-        message.success("ลบช่วงเวลาสำเร็จ")
       } catch (error) {
         message.error("Failed to delete time slot.")
       }
     }
   }
 
-  const getCurrentDateSlots = () => {
-    if (!selectedDate) return []
-    return timeSlots[selectedDate.format("YYYY-MM-DD")] || []
-  }
-
   const dateCellRender = (date: Dayjs) => {
     if (date.month() !== currentMonth.month()) return null
-
     let statusClassName = ""
     switch (getDateStatus(date)) {
       case "selected": statusClassName = "date-cell-selected"; break
       case "available": statusClassName = "date-cell-available"; break
       case "booked": statusClassName = "date-cell-booked"; break
-      default: statusClassName = "date-cell-default";
+      default: statusClassName = "date-cell-default"
     }
 
     return (
@@ -151,12 +145,9 @@ const InterviewScheduling: React.FC = () => {
   }
 
   const onMonthChange = (direction: "prev" | "next") => {
-    setCurrentMonth(currentMonth[direction === "prev" ? "subtract" : "add"](1, "month"))
+    setCurrentMonth((prev) => prev[direction === "prev" ? "subtract" : "add"](1, "month"))
     setSelectedDate(null)
-  }
-
-  const handleTimeSlotClick = (slotId: string) => {
-    setSelectedTimeSlotForDeletion(slotId === selectedTimeSlotForDeletion ? null : slotId)
+    setSelectedTimeSlotForDeletion(null)
   }
 
   return (
@@ -166,13 +157,15 @@ const InterviewScheduling: React.FC = () => {
           <Col span={16}>
             <Card>
               <div className="month-navigation">
-                <Button type="text" icon={<LeftOutlined />} onClick={() => onMonthChange("prev")} className="month-nav-button" />
+                <Button type="text" icon={<LeftOutlined />} onClick={() => onMonthChange("prev")} />
                 <div className="month-display">{currentMonth.format("MMMM YYYY")}</div>
-                <Button type="text" icon={<RightOutlined />} onClick={() => onMonthChange("next")} className="month-nav-button" />
+                <Button type="text" icon={<RightOutlined />} onClick={() => onMonthChange("next")} />
               </div>
 
               <div className="calendar-header">
-                {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (<div key={day} className="day-header">{day}</div>))}
+                {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (
+                  <div key={day} className="day-header">{day}</div>
+                ))}
               </div>
 
               <div className="calendar-grid">
@@ -181,7 +174,9 @@ const InterviewScheduling: React.FC = () => {
                   const isCurrentMonth = currentDate.month() === currentMonth.month()
                   return (
                     <div key={index} className={`date-cell-wrapper ${!isCurrentMonth ? "date-cell-wrapper-inactive" : ""}`}>
-                      {isCurrentMonth ? dateCellRender(currentDate) : <div className="inactive-date-number">{currentDate.date()}</div>}
+                      {isCurrentMonth
+                        ? dateCellRender(currentDate)
+                        : <div className="inactive-date-number">{currentDate.date()}</div>}
                     </div>
                   )
                 })}
@@ -200,61 +195,83 @@ const InterviewScheduling: React.FC = () => {
               </Card>
 
               {selectedDate && (
-                <Card title={<Title level={4} style={{ margin: 0 }}>{selectedDate.date()} {selectedDate.format("ddd").toUpperCase()}</Title>} className="time-slots-card">
+                <Card
+                  title={<Title level={4} style={{ margin: 0 }}>{selectedDate.date()} {selectedDate.format("ddd").toUpperCase()}</Title>}
+                  className="time-slots-card"
+                >
                   <Space direction="vertical" size="small" style={{ width: "100%" }}>
-                    {getCurrentDateSlots().map((slot) => {
-                      const isSelected = selectedTimeSlotForDeletion === slot.id
+                    {getSlotsByDate(selectedDate).map((slot) => {
+                      const isSelected = selectedTimeSlotForDeletion === slot.ID
                       let pillClassName = "time-slot-pill"
-                      // ตรรกะของ pillClassName ยังคงเหมือนเดิม เพื่อให้ pill ที่ถูกเลือกเปลี่ยนสีได้
                       if (isSelected) pillClassName += " time-slot-pill-selected"
-                      else if (slot.status === "available") pillClassName += " time-slot-pill-available"
+                      else if (slot.Status === "available") pillClassName += " time-slot-pill-available"
                       else pillClassName += " time-slot-pill-booked"
 
                       return (
-                        <div key={slot.id} className="time-slot-item">
-                          <Text strong>{slot.startTime} - {slot.endTime}</Text>
-
-                          {/* เพิ่มส่วนนี้เข้ามา: จะแสดงไอคอนและ pill คู่กัน */}
+                        <div key={slot.ID} className="time-slot-item">
+                          <Text strong>
+                            {dayjs(slot.DateAndTimeStart).format("HH:mm")} - {dayjs(slot.DateAndTimeEnd).format("HH:mm")}
+                          </Text>
                           <div className="time-slot-actions">
-                            {/* เงื่อนไข: จะแสดงไอคอนถังขยะก็ต่อเมื่อ status ไม่ใช่ "booked" */}
-                            {slot.status !== "booked" && (
+                            {slot.Status !== "booked" && (
                               <DeleteOutlined
-                                className="delete-icon" // เพิ่ม class ไว้สำหรับ styling
-                                onClick={() => handleTimeSlotClick(slot.id)} // ย้าย onClick มาไว้ที่นี่
+                                className="delete-icon"
+                                onClick={() => setSelectedTimeSlotForDeletion(slot.ID)}
                               />
                             )}
-
-                            {/* Pill จะทำหน้าที่แค่แสดงสถานะ ไม่มี onClick แล้ว */}
                             <div className={pillClassName} />
                           </div>
                         </div>
                       )
                     })}
-                    {getCurrentDateSlots().length === 0 && <Text className="no-slots-text">ยังไม่มีช่วงเวลาที่กำหนด</Text>}
+                    {getSlotsByDate(selectedDate).length === 0 && <Text className="no-slots-text">ยังไม่มีช่วงเวลาที่กำหนด</Text>}
                   </Space>
                 </Card>
               )}
 
-              <Button type="primary" size="large" block disabled={!selectedDate} className="main-action-button" onClick={() => { if (selectedDate) { selectedTimeSlotForDeletion ? setShowDeleteModal(true) : setShowAddTimeModal(true) } }}>
-                {selectedTimeSlotForDeletion ? "ลบช่วงเวลา" : "เพิ่มช่วงเวลา"}
+              <Button
+                type="primary"
+                size="large"
+                block
+                disabled={!selectedDate}
+                onClick={() => {
+                  if (selectedDate) {
+                    selectedTimeSlotForDeletion !== null
+                      ? setShowDeleteModal(true)
+                      : setShowAddTimeModal(true)
+                  }
+                }}
+              >
+                {selectedTimeSlotForDeletion !== null ? "ลบช่วงเวลา" : "เพิ่มช่วงเวลา"}
               </Button>
             </Space>
           </Col>
         </Row>
       </div>
 
-      <Modal open={showAddTimeModal} footer={null} closable={false} centered width={500} styles={{ body: { padding: 0 } }}>
+      {/* Add Modal */}
+      <Modal open={showAddTimeModal} footer={null} closable={false} centered width={500}>
         <div className="modal-centered-content">
           <div className="modal-inner-content">
-            <CloseOutlined className="modal-close-button" onClick={() => { setShowAddTimeModal(false); setSelectedTimeRange(null); form.resetFields() }} />
-            <Title level={3} className="modal-title">{selectedDate?.format("dddd D MMMM YYYY")}</Title>
-            <Form form={form} className="modal-form">
-              <Form.Item name="timeRange" className="modal-form-item">
-                <RangePicker format="HH:mm" placeholder={["เวลาเริ่ม", "เวลาสิ้นสุด"]} className="modal-time-picker" onChange={(times) => setSelectedTimeRange(times as [Dayjs, Dayjs])} />
+            <CloseOutlined
+              className="modal-close-button"
+              onClick={() => {
+                setShowAddTimeModal(false)
+                setSelectedTimeRange(null)
+                form.resetFields()
+              }}
+            />
+            <Title level={3}>{selectedDate?.format("dddd D MMMM YYYY")}</Title>
+            <Form form={form}>
+              <Form.Item name="timeRange">
+                <RangePicker
+                  format="HH:mm"
+                  placeholder={["เวลาเริ่ม", "เวลาสิ้นสุด"]}
+                  onChange={(times) => setSelectedTimeRange(times as [Dayjs, Dayjs])}
+                  minuteStep={5}
+                />
               </Form.Item>
-              <Title level={5}>
-                รายละเอียดการนัดสัมภาษณ์
-              </Title>
+              <Title level={5}>รายละเอียดการนัดสัมภาษณ์</Title>
               <TextArea
                 rows={4}
                 placeholder="เช่น Online: Zoom"
@@ -263,66 +280,82 @@ const InterviewScheduling: React.FC = () => {
               />
             </Form>
             <div className="modal-action-buttons">
-              <Button size="large" className="modal-cancel-button" onClick={() => { setShowAddTimeModal(false); setSelectedTimeRange(null); form.resetFields() }}>ยกเลิก</Button>
-              <Button type="primary" size="large" disabled={!selectedTimeRange} className="modal-confirm-button" onClick={handleAddTimeSlot}>ยืนยัน</Button>
+              <Button
+                onClick={() => {
+                  setShowAddTimeModal(false)
+                  setSelectedTimeRange(null)
+                  form.resetFields()
+                }}
+              >
+                ยกเลิก
+              </Button>
+              <Button type="primary" disabled={!selectedTimeRange} onClick={handleAddTimeSlot}>
+                ยืนยัน
+              </Button>
             </div>
           </div>
         </div>
       </Modal>
 
-      <Modal open={showDeleteModal} footer={null} closable={false} centered width={500} styles={{ body: { padding: 0 } }}>
+      {/* Delete Modal */}
+      <Modal open={showDeleteModal} footer={null} closable={false} centered width={500}>
         <div className="modal-centered-content">
           <div className="modal-inner-content">
-            <CloseOutlined className="modal-close-button" onClick={() => { setShowDeleteModal(false); setSelectedTimeSlotForDeletion(null) }} />
-            <Title level={4} className="modal-title">{selectedDate?.format("dddd ที่ D MMMM YYYY")}</Title>
-            <Text className="delete-modal-info-text">เป็นช่วงเวลาที่คุณได้เพิ่มการนัดสัมภาษณ์ไว้แล้ว</Text>
-            <Text className="delete-modal-warning-text">คุณต้องการลบช่วงเวลา</Text>
-            <Text className="delete-modal-question-text">นัดสัมภาษณ์หรือไม่ ?</Text>
+            <CloseOutlined
+              className="modal-close-button"
+              onClick={() => {
+                setShowDeleteModal(false)
+                setSelectedTimeSlotForDeletion(null)
+              }}
+            />
+            <Title level={4}>{selectedDate?.format("dddd ที่ D MMMM YYYY")}</Title>
+            <Text>คุณต้องการลบช่วงเวลานัดสัมภาษณ์หรือไม่?</Text>
             <div className="modal-action-buttons">
-              <Button size="large" className="modal-cancel-button" onClick={() => { setShowDeleteModal(false); setSelectedTimeSlotForDeletion(null) }}>ยกเลิก</Button>
-              <Button type="primary" size="large" className="modal-confirm-button" onClick={handleDeleteTimeSlot}>ยืนยัน</Button>
+              <Button
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setSelectedTimeSlotForDeletion(null)
+                }}
+              >
+                ยกเลิก
+              </Button>
+              <Button type="primary" onClick={handleDeleteTimeSlot}>
+                ยืนยัน
+              </Button>
             </div>
           </div>
         </div>
       </Modal>
 
-      <Modal open={showSuccessModal} footer={null} closable={false} centered width={400} styles={{ body: { padding: 0 } }}>
+      {/* Success Modal */}
+      <Modal open={showSuccessModal} footer={null} closable={false} centered width={400}>
         <div className="modal-centered-content">
           <div className="success-modal-inner-content">
             <CloseOutlined
               className="modal-close-button"
               onClick={() => {
-                setShowSuccessModal(false);
-                setSelectedTimeSlotForDeletion(null);
-                setInterviewDetails(""); // รีเซ็ตด้วย
+                setShowSuccessModal(false)
+                setInterviewDetails("")
+                setLastActionSlot(null)
+                setSelectedTimeSlotForDeletion(null)
               }}
             />
             <CheckCircleOutlined className="success-modal-check-icon" />
-
-            {/* เงื่อนไข Title แยกออกมา */}
-            {selectedTimeSlotForDeletion ? (
+            {lastActionSlot && (
               <>
-                <Title level={4} className="success-modal-title">ลบช่วงเวลานัดสัมภาษณ์</Title>
-                <Text className="success-modal-details-text">
-                  {selectedDate?.format("ddddที่ D MMMM")} เวลา {/* ใส่เวลาที่ลบออก */}
+                <Title level={4}>
+                  {selectedTimeSlotForDeletion !== null ? "ลบช่วงเวลานัดสัมภาษณ์" : "เพิ่มช่วงเวลานัดสัมภาษณ์"}
+                </Title>
+                <Text>
+                  {dayjs(lastActionSlot.DateAndTimeStart).format("dddd ที่ D MMMM")} เวลา{" "}
+                  {dayjs(lastActionSlot.DateAndTimeStart).format("HH:mm")} - {dayjs(lastActionSlot.DateAndTimeEnd).format("HH:mm")}
                 </Text>
-              </>
-            ) : (
-              <>
-                <Title level={4} className="success-modal-title">เพิ่มช่วงเวลานัดสัมภาษณ์</Title>
-                <Text className="success-modal-details-text">
-                  {selectedDate?.format("dddd ที่ D MMMM")} เวลา {selectedTimeRange?.[0].format("HH:mm")} - {selectedTimeRange?.[1].format("HH:mm")}
-                </Text>
-
-                {/* แสดงรายละเอียดที่ผู้ใช้กรอก */}
-                {interviewDetails && (
-                  <Text className="success-modal-extra-details">
-                    รายละเอียด: {interviewDetails}
-                  </Text>
+                {selectedTimeSlotForDeletion === null && interviewDetails && (
+                  <Text>รายละเอียด: {interviewDetails}</Text>
                 )}
               </>
             )}
-            <Text className="success-modal-status-text">สำเร็จ</Text>
+            <Text>สำเร็จ</Text>
           </div>
         </div>
       </Modal>
@@ -330,4 +363,4 @@ const InterviewScheduling: React.FC = () => {
   )
 }
 
-export default InterviewScheduling
+export default InterviewSchedulingPage
