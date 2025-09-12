@@ -48,7 +48,7 @@ func GetSchedulesByEmployerID(c *gin.Context) {
 	}
 
 	// Debug log
-	log.Printf("Set employerID %d for user_id %v", employer.ID, userID)
+	// log.Printf("Set employerID %d for user_id %v", employer.ID, userID)
 
 	// ดึง schedules ที่ belong กับ employer.ID
 	var schedules []entity.InterviewScheduling

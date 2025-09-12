@@ -690,6 +690,20 @@ export const interviewSchedulingAPI = {
     Delete(`/api/interview-schedules/delete/${id}`),
 }
 
+// ===== Interview APIs =====
+export const interviewAPI = {
+  book: (payload: {
+    job_application_id: number;
+    schedule_id: number;
+  }) => Post("/api/interviews/book", payload),
+
+  getByStudent: (studentId: number) =>
+    Get(`/api/interviews/student/${studentId}`),
+
+  getByEmployer: (employerId: number) =>
+    Get(`/api/interviews/employer/${employerId}`),
+};
+
 
 export const chatAPI = {
   listMyRooms: (): Promise<ChatRoom[]> =>
@@ -724,6 +738,7 @@ export const uploadAPI = {
     return res.data.url; // ได้ URL กลับมา เช่น http://localhost:8080/uploads/xxx.png
   },
 };
+
 
 //==================== edit by book ===========================
 export const worklogAPI = {

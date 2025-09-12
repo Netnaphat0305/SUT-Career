@@ -591,12 +591,6 @@ func main() {
 		auth.POST("/jobapplications/:id/upload-resume", controller.UploadResume)
 
 		// ======================================= Interview by looktao =======================================
-		// Interviews
-		// ชั้นขออุญาติเพิ่มนะแกชั้นต้องใช้ TT 😭😭😭
-		// --- Interview Schedules ---
-		// auth.POST("/interview-schedules", controller.CreateInterviewSchedule)                    // สร้างช่วงเวลา
-		// auth.GET("/interview-schedules/:id", controller.GetInterviewScheduleByID) // ดูทั้งหมด
-		// auth.DELETE("/interview-schedules/:id", controller.DeleteInterviewSchedule)              // ลบช่วงเวลา
 
 		// Interviews
 		auth.POST("/interviews/book", controller.BookInterview) //สร้างเรคคอร์ด Interview จริง ๆ หลังจากนักศึกษาจองวันสัมภาษณ์ ก็คือผูกกับตารางนั่นแหละ

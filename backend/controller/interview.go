@@ -13,11 +13,17 @@ import (
 // นักศึกษทำการจองตารางสัมภาษณ์
 // ขอเปลี่ยนเงื่อนไขนะเพื่อน ให้มันเลือกจองคนอื่นไม่ได้
 func BookInterview(c *gin.Context) {
+    db := config.DB()
+    uid := c.MustGet("userID");
+    
+    var student entity.Student
+	if err := db.Where("user_id = ?", uid).First(&student).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "employer not found"})
+		return
+	}
     var input struct {
         ScheduleID       uint   `json:"schedule_id" binding:"required"`
-        StudentID        uint   `json:"student_id" binding:"required"`
         JobApplicationID uint   `json:"job_application_id" binding:"required"`
-        Description      string `json:"description"`
     }
 
     if err := c.ShouldBindJSON(&input); err != nil {
@@ -56,7 +62,7 @@ func BookInterview(c *gin.Context) {
     // สร้าง Interview
     interview := entity.Interview{
         InterviewSchedulingID: input.ScheduleID,
-        StudentID:             input.StudentID,
+        StudentID:             student.ID,
         JobApplicationID:      input.JobApplicationID, // เพิ่มตรงนี้
         Status:                "booked",
     }
