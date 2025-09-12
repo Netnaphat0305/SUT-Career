@@ -1,4 +1,4 @@
-
+//services/https/index.tsx
 import axios from "axios";
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import type { ChatRoom, ChatHistory, UserRole } from "../../interfaces/Chat";
@@ -677,9 +677,30 @@ export const chatAPI = {
   listMessages: (roomId: number): Promise<ChatHistory[]> =>
     Get(`/api/chat/rooms/${roomId}/messages`),
 
-  sendMessage: (roomId: number, message: string): Promise<ChatHistory> =>
-    Post(`/api/chat/rooms/${roomId}/messages`, { message }),
+  // ✅ รองรับข้อความ + รูปภาพ
+  sendMessage: (
+    roomId: number,
+    payload: { message?: string; image_url?: string; message_type: string }
+  ): Promise<ChatHistory> =>
+    Post(`/api/chat/rooms/${roomId}/messages`, payload),
 };
+
+export const uploadAPI = {
+  uploadFile: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await axios.post(`${API_URL}/api/upload`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    return res.data.url; // ได้ URL กลับมา เช่น http://localhost:8080/uploads/xxx.png
+  },
+};
+
 //==================== edit by book ===========================
 export const worklogAPI = {
   create: (data: any) => Post("api/worklogs", data),
