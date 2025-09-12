@@ -11,7 +11,7 @@ import {
   Dropdown,
   
 } from "antd";
-import { DownOutlined, UserOutlined, LogoutOutlined, ProfileOutlined,FormOutlined} from "@ant-design/icons";
+import { DownOutlined, UserOutlined, LogoutOutlined, ProfileOutlined,FormOutlined,EditOutlined} from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import logoImage from '../../assets/logo.svg';
 // Import useAuth to get user and logout function
@@ -128,6 +128,14 @@ const FullLayout: React.FC = () => {
             label: <Link to="/employer/profile">ดูโปรไฟล์</Link>,
             icon: <ProfileOutlined />,
         });
+
+        // add by netnaphat เพิ่ม mypost==============//
+        menuItems.push({
+        key: 'JobMyPost',
+        label: <Link to="/Job/Mypost-job">โพสต์ของฉัน</Link>,
+        icon: <EditOutlined />
+        
+    });
     }
     
 

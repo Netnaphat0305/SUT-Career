@@ -65,7 +65,7 @@
   height: 48px;             /* ความสูงเท่ากันทุกช่อง */
   border-radius: 10px;      /* มุมโค้ง */
   border: 1px solid #d1d5db;
-  background: #f9fafb;      /* เทาอ่อน */
+  background: #fff;      /* เทาอ่อน */
   padding: 0 14px;          /* padding ด้านข้าง */
   font-size: 15px;
   transition: all 0.2s ease;
@@ -101,7 +101,7 @@
   height: 48px !important;     /* ✅ เท่ากับ Input */
   border-radius: 10px !important;
   border: 1px solid #d1d5db !important;
-  background: #f9fafb !important;
+  background: #fff !important;
   padding: 0 14px !important;
   font-size: 15px !important;
   display: flex;

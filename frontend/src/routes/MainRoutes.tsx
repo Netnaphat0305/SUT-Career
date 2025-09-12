@@ -43,7 +43,7 @@ const MainRoutes: React.FC = () => {
         <Route element={<FullLayout />}>
             {/* --- General Routes --- */}
             <Route path="/employer/profile" element={<EmployerProfile />} />
-            <Route path="/" element={<Homepage />} />
+            <Route path="/" element={<Board />} />
             <Route path="/home" element={<Homepage />} />
             <Route path="/Job/Board" element={<Board />} />
             <Route path="/Job/post-detail/:id" element={<JobDetail />} />
