@@ -8,6 +8,7 @@ import {
   chatAPI
 } from "../../services/https/"
 import "./Chat.css" // <-- import ไฟล์ CSS ที่สร้างขึ้นมา
+import PageHeader from "../../components/PageHeader";
 
 const { Text } = Typography
 const Chat: React.FC = () => {
@@ -145,6 +146,8 @@ const Chat: React.FC = () => {
         <div className="chat-conversation-header">
 
           <Text className="chat-conversation-title">{selectedUserData ? getPartnerName(selectedUserData) : "เลือกห้องแชท"}</Text>
+          {/* <PageHeader title="เลือกห้องแชท" /> */}
+          
 
         </div>
 

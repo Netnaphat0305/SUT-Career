@@ -1,4 +1,5 @@
-.login-page-container {
+  /* ========================อันนี้ของเพื่อน============================== */
+/* .login-page-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -38,4 +39,183 @@
   .login-register-link {
     text-align: center;
     margin-top: 16px;
+  } */
+
+
+  /* ========================อันนี้อันใหม่============================== */
+.login-page-container {
+  position: relative;
+  display: flex;
+  justify-content: flex-end; /* ดัน login card ไปทางขวา */
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  margin-right: 120px;
+  font-family: "Poppins", "Kanit", sans-serif;
+  overflow: hidden;
+} /* วงกลม gradient ด้านหลัง */
+.login-page-container::before {
+  content: "";
+  position: absolute;
+  height: 2000px;
+  width: 2000px;
+  top: -10%;
+  right: 40%;
+  transform: translateY(-50%);
+  background-image: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f0f9ff 50%,
+    #dbeafe 100%
+  );
+
+  border-radius: 50%;
+  z-index: 0;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.1), 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+/* กล่อง login */
+.login-card {
+  position: relative;
+  z-index: 5;
+  flex: 1;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  animation: fadeInUp 0.6s ease;
+}
+
+/* Tabs */
+.login-card .ant-tabs-nav {
+  margin-bottom: 24px;
+}
+
+.login-card .ant-tabs-tab {
+  flex: 1;
+  justify-content: center;
+  font-size: 16px;
+  padding: 12px 0;
+}
+
+/* Side Panel */
+.login-side-panel {
+  flex: 1;
+  z-index: 6;
+  text-align: left;
+  color: #1f2937;
+  padding-right: 5%;
+}
+
+.side-title {
+  font-size: 44px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  margin-left: 30px;
+}
+
+.side-logo {
+  height: 70px;
+}
+
+.side-subtitle {
+  font-size: 22px;
+  margin-bottom: 32px;
+  line-height: 36px;
+  opacity: 0.9;
+  color: #374151;
+    margin-left: 30px;
+}
+
+.side-image {
+  width: 360px;
+  max-width: 100%;
+  transition: transform 0.8s ease;
+  margin-left: 50px;
+}
+
+.side-image:hover {
+  transform: scale(1.05);
+}
+
+/* ลิงก์ */
+.login-form-forgot {
+  float: right;
+  font-size: 14px;
+  color: #4481eb;
+}
+
+.login-form-forgot:hover {
+  color: #04befe;
+}
+
+.login-form-button {
+  width: 100%;
+  height: 46px;
+  font-size: 16px;
+  background-color: #5995fd;
+  border: none;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.login-form-button:hover {
+  background-color: #4d84e2;
+}
+
+.login-register-link {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+/* Effect */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .login-page-container {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+  }
+
+  .login-side-panel {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 0;
+  }
+
+  .side-title {
+    justify-content: center;
+    font-size: 32px;
+  }
+
+  .side-logo {
+    height: 40px;
+  }
+
+  .side-subtitle {
+    font-size: 18px;
+    line-height: 28px;
+  }
+
+  .side-image {
+    width: 240px;
+    margin: 0 auto;
+  }
+}

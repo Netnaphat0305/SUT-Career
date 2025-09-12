@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Empty, Spin, message, Tag } from "antd";
+import { Button, Empty, Spin, message, Tag, Modal } from "antd";
 import {
   ClockCircleOutlined,
   DollarCircleOutlined,
@@ -52,13 +52,14 @@ const MyPost: React.FC = () => {
   }, []);
 
   const handleDelete = async (id: number) => {
+    if (window.confirm("คุณต้องหารจะลบจริงๆใช่ไหม")){
     try {
       await jobPostAPI.delete(id);
       message.success("ลบโพสต์เรียบร้อยแล้ว");
       fetchMyPosts();
     } catch (err) {
       message.error("ลบโพสต์ไม่สำเร็จ");
-    }
+    }}
   };
 
   const handleToggleStatus = async (id: number, currentStatus: string) => {

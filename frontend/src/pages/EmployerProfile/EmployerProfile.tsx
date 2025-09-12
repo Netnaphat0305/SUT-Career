@@ -1,22 +1,18 @@
 // import React, { useEffect, useState } from "react";
-// import { Avatar, Upload, message, Spin, Card, Descriptions, Button } from "antd";
-// import { EditOutlined, UploadOutlined, UserOutlined } from "@ant-design/icons";
+// import { Avatar, Upload, message, Spin, Card, Descriptions } from "antd";
+// import { EditOutlined, UserOutlined } from "@ant-design/icons";
 // import { employerProfileAPI } from "../../services/https";
-
-// const BASE_URL = import.meta.env.VITE_API_KEY || "http://localhost:8080";
 
 // const EmployerProfile: React.FC = () => {
 //   const [loading, setLoading] = useState(true);
 //   const [uploading, setUploading] = useState(false);
 //   const [emp, setEmp] = useState<any>(null);
-//   const [cacheBust, setCacheBust] = useState(Date.now()); // กันแคชรูป
 
 //   const fetchProfile = async () => {
 //     try {
 //       setLoading(true);
 //       const res = await employerProfileAPI.getMe();
 //       setEmp(res.data?.data || res.data);
-//       setCacheBust(Date.now());
 //     } catch (err) {
 //       console.error(err);
 //       message.error("โหลดโปรไฟล์ไม่สำเร็จ");
@@ -29,13 +25,31 @@
 //     fetchProfile();
 //   }, []);
 
-//   // อัปโหลดด้วย beforeUpload (ไม่อัปโหลดอัตโนมัติของ antd)
+//   // file -> base64 data URL
+//   const toBase64 = (file: File): Promise<string> =>
+//     new Promise((resolve, reject) => {
+//       const reader = new FileReader();
+//       reader.readAsDataURL(file);
+//       reader.onload = () => resolve(reader.result as string);
+//       reader.onerror = reject;
+//     });
+
+//   const validateImage = (file: File) => {
+//     const okType = ["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(file.type);
+//     if (!okType) message.error("รองรับเฉพาะ PNG / JPG / JPEG / WEBP");
+//     const okSize = file.size / 1024 / 1024 < 2; // < 2MB
+//     if (!okSize) message.error("รูปต้องเล็กกว่า 2MB");
+//     return okType && okSize;
+//   };
+
 //   const handleBeforeUpload = async (file: File) => {
+//     if (!validateImage(file)) return Upload.LIST_IGNORE;
 //     try {
 //       setUploading(true);
-//       await employerProfileAPI.uploadAvatar(file);
+//       const base64 = await toBase64(file);
+//       // ส่งเป็น JSON: { avatar_url: "data:image/...;base64,..." }
+//       await employerProfileAPI.uploadAvatar({ avatar_url: base64 });
 //       message.success("อัปโหลดรูปสำเร็จ");
-//       // โหลดโปรไฟล์ใหม่ หรืออัปเดตเฉพาะรูปก็ได้
 //       await fetchProfile();
 //     } catch (err) {
 //       console.error(err);
@@ -43,7 +57,7 @@
 //     } finally {
 //       setUploading(false);
 //     }
-//     return false; // กัน default upload ของ antd
+//     return false; // ปิดอัปโหลดอัตโนมัติของ antd
 //   };
 
 //   if (loading) {
@@ -54,10 +68,8 @@
 //     );
 //   }
 
-//   // ประกอบ URL เต็ม + กันแคช
-//   const avatarUrl = emp?.avatar_url
-//     ? `${BASE_URL}${emp.avatar_url}?t=${cacheBust}`
-//     : undefined;
+//   // ใช้ base64 ตรงๆ
+//   const avatarSrc = emp?.avatar_url || undefined;
 
 //   return (
 //     <div style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
@@ -67,12 +79,13 @@
 //             showUploadList={false}
 //             beforeUpload={handleBeforeUpload}
 //             accept="image/png,image/jpeg,image/jpg,image/webp"
+//             disabled={uploading}
 //           >
 //             <div className="relative group cursor-pointer" style={{ position: "relative" }}>
 //               <Avatar
 //                 size={96}
-//                 src={avatarUrl}
-//                 icon={!avatarUrl ? <UserOutlined /> : undefined}
+//                 src={avatarSrc}
+//                 icon={!avatarSrc ? <UserOutlined /> : undefined}
 //                 style={{ backgroundColor: "#d1d5db", color: "#4b5563", fontSize: 24 }}
 //               />
 //               <div
@@ -84,18 +97,13 @@
 //                   borderRadius: "9999px",
 //                   padding: 6,
 //                   boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+//                   opacity: uploading ? 0.6 : 1,
 //                 }}
+//                 title="เปลี่ยนรูปโปรไฟล์"
 //               >
 //                 <EditOutlined style={{ color: "#666" }} />
 //               </div>
 //             </div>
-//           </Upload>
-
-//           <Upload
-//             showUploadList={false}
-//             beforeUpload={handleBeforeUpload}
-//             accept="image/png,image/jpeg,image/jpg,image/webp"
-//           >
 //           </Upload>
 //         </div>
 
@@ -115,10 +123,12 @@
 
 // export default EmployerProfile;
 
+
 import React, { useEffect, useState } from "react";
 import { Avatar, Upload, message, Spin, Card, Descriptions } from "antd";
 import { EditOutlined, UserOutlined } from "@ant-design/icons";
 import { employerProfileAPI } from "../../services/https";
+import "./EmployerProfile.css"; // ✅ import CSS
 
 const EmployerProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -164,7 +174,6 @@ const EmployerProfile: React.FC = () => {
     try {
       setUploading(true);
       const base64 = await toBase64(file);
-      // ส่งเป็น JSON: { avatar_url: "data:image/...;base64,..." }
       await employerProfileAPI.uploadAvatar({ avatar_url: base64 });
       message.success("อัปโหลดรูปสำเร็จ");
       await fetchProfile();
@@ -174,57 +183,45 @@ const EmployerProfile: React.FC = () => {
     } finally {
       setUploading(false);
     }
-    return false; // ปิดอัปโหลดอัตโนมัติของ antd
+    return false;
   };
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: 40 }}>
+      <div className="profile-loading">
         <Spin size="large" />
       </div>
     );
   }
 
-  // ใช้ base64 ตรงๆ
   const avatarSrc = emp?.avatar_url || undefined;
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
+    <div style={{ background: "#fff", padding: 24, minHeight: "85vh" }}>
+    <div className="employer-profile-container">
       <Card title="โปรไฟล์ผู้ว่าจ้าง" bordered>
-        <div style={{ display: "flex", gap: 24, alignItems: "center", marginBottom: 24 }}>
+        <div className="profile-avatar-wrapper">
           <Upload
             showUploadList={false}
             beforeUpload={handleBeforeUpload}
             accept="image/png,image/jpeg,image/jpg,image/webp"
             disabled={uploading}
           >
-            <div className="relative group cursor-pointer" style={{ position: "relative" }}>
+            <div className="profile-avatar-group" title="เปลี่ยนรูปโปรไฟล์">
               <Avatar
                 size={96}
                 src={avatarSrc}
                 icon={!avatarSrc ? <UserOutlined /> : undefined}
-                style={{ backgroundColor: "#d1d5db", color: "#4b5563", fontSize: 24 }}
+                className="profile-avatar"
               />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: -4,
-                  right: -4,
-                  background: "#fff",
-                  borderRadius: "9999px",
-                  padding: 6,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                  opacity: uploading ? 0.6 : 1,
-                }}
-                title="เปลี่ยนรูปโปรไฟล์"
-              >
-                <EditOutlined style={{ color: "#666" }} />
+              <div className={`profile-avatar-edit ${uploading ? "disabled" : ""}`}>
+                <EditOutlined />
               </div>
             </div>
           </Upload>
         </div>
 
-        <Descriptions column={1} bordered>
+        <Descriptions column={1} bordered className="profile-descriptions">
           <Descriptions.Item label="บริษัท">{emp?.company_name || "-"}</Descriptions.Item>
           <Descriptions.Item label="ผู้ติดต่อ">{emp?.contact_person || "-"}</Descriptions.Item>
           <Descriptions.Item label="อีเมล">{emp?.email || "-"}</Descriptions.Item>
@@ -234,6 +231,7 @@ const EmployerProfile: React.FC = () => {
           <Descriptions.Item label="ชื่อผู้ใช้ (ระบบ)">{emp?.user?.username || "-"}</Descriptions.Item>
         </Descriptions>
       </Card>
+    </div>
     </div>
   );
 };

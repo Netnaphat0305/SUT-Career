@@ -1,25 +1,42 @@
 // src/pages/LoginPage2/LoginPage.tsx
-import React, { useContext } from 'react';
-import { Card, Form, Input, Button, Tabs, Typography, Space, message } from 'antd';
-import { UserOutlined, SearchOutlined, LockOutlined } from '@ant-design/icons';
-import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
-import './LoginPage.css';
+import React, { useContext } from "react";
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Tabs,
+  Typography,
+  Space,
+  message,
+} from "antd";
+import { UserOutlined, SearchOutlined, LockOutlined } from "@ant-design/icons";
+import { useNavigate, Link } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
+import "./LoginPage.css";
+import RegisterImg from "../../assets/register.svg"; //เพิ่ม
+import logo from "../../assets/logo.svg"; //เพิ่ม
 
 const { Title, Text } = Typography;
 
 // ✨ 1. สร้าง Component สำหรับฟอร์ม Login เพื่อนำไปใช้ซ้ำ
-const LoginForm = ({ onFinishHandler, formName }: { onFinishHandler: (values: any) => void, formName: string }) => (
+const LoginForm = ({
+  onFinishHandler,
+  formName,
+}: {
+  onFinishHandler: (values: any) => void;
+  formName: string;
+}) => (
   <Form name={formName} onFinish={onFinishHandler}>
     <Form.Item
       name="username"
-      rules={[{ required: true, message: 'กรุณากรอกชื่อผู้ใช้!' }]}
+      rules={[{ required: true, message: "กรุณากรอกชื่อผู้ใช้!" }]}
     >
       <Input prefix={<UserOutlined />} placeholder="ชื่อผู้ใช้" />
     </Form.Item>
     <Form.Item
       name="password"
-      rules={[{ required: true, message: 'กรุณากรอกรหัสผ่าน!' }]}
+      rules={[{ required: true, message: "กรุณากรอกรหัสผ่าน!" }]}
     >
       <Input.Password prefix={<LockOutlined />} placeholder="รหัสผ่าน" />
     </Form.Item>
@@ -47,9 +64,9 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("http://localhost:8080/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: values.username,
           password: values.password,
@@ -59,26 +76,26 @@ const LoginPage: React.FC = () => {
       const data = await response.json();
 
       // ================== เพิ่มบรรทัดนี้เข้าไป ==================
-      console.log('Response data from server:', data);
-      console.log('Token string from server:', data.token);
+      console.log("Response data from server:", data);
+      console.log("Token string from server:", data.token);
       // =======================================================
-      
+
       if (response.ok) {
-        message.success('เข้าสู่ระบบสำเร็จ!');
+        message.success("เข้าสู่ระบบสำเร็จ!");
         authContext.login(data.user, data.token);
 
-        if (data.user.role === 'admin') {
-            navigate('/admin');
-        } else if (data.user.role === 'employer') {
-            navigate('/home'); // หรือหน้า dashboard ของนายจ้าง
+        if (data.user.role === "admin") {
+          navigate("/admin");
+        } else if (data.user.role === "employer") {
+          navigate("/Job/Board"); // หรือหน้า dashboard ของนายจ้าง
         } else {
-            navigate('/home'); // หน้าของนักศึกษา
+          navigate("/Job/Board"); // หน้าของนักศึกษา
         }
       } else {
-        message.error(data.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+        message.error(data.error || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
       }
     } catch (error) {
-      message.error('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+      message.error("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
     }
   };
 
@@ -90,10 +107,10 @@ const LoginPage: React.FC = () => {
           หางาน
         </Space>
       ),
-      key: 'jobseeker',
+      key: "jobseeker",
       children: (
         <>
-          <Title level={4} style={{ textAlign: 'center', marginBottom: 24 }}>
+          <Title level={4} style={{ textAlign: "center", marginBottom: 24 }}>
             เข้าสู่ระบบสำหรับนักศึกษา
           </Title>
           {/* ✨ 2. เรียกใช้ LoginForm และกำหนด name ที่ไม่ซ้ำกัน */}
@@ -112,10 +129,10 @@ const LoginPage: React.FC = () => {
           หาคน
         </Space>
       ),
-      key: 'employer',
+      key: "employer",
       children: (
         <>
-          <Title level={4} style={{ textAlign: 'center', marginBottom: 24 }}>
+          <Title level={4} style={{ textAlign: "center", marginBottom: 24 }}>
             เข้าสู่ระบบสำหรับผู้ประกอบการ
           </Title>
           {/* ✨ 3. เรียกใช้ LoginForm และกำหนด name ที่ไม่ซ้ำกัน */}
@@ -130,7 +147,18 @@ const LoginPage: React.FC = () => {
   ];
 
   return (
+  //=========================เพิ่มตรงนี้============================
     <div className="login-page-container">
+      {/* side panel */}
+      <div className="login-side-panel">
+        <h3 className="side-title">
+          Hire through <img src={logo} alt="logo" className="side-logo" />
+        </h3>
+        <p className="side-subtitle">Secure payment, guaranteed work</p>
+        <img src={RegisterImg} alt="register" className="side-image" />
+      </div>
+
+      {/* กล่อง login */}
       <Card className="login-card">
         <Tabs defaultActiveKey="jobseeker" items={items} centered />
       </Card>

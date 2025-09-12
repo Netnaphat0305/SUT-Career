@@ -26,6 +26,7 @@ import {
 } from "../../services/https";
 import type { CreateJobpost } from "../../interfaces/jobpost";
 import defaultLogo from "../../assets/profile.svg";
+import { useNavigate } from "react-router-dom";
 
 const { TextArea } = Input;
 
@@ -35,6 +36,8 @@ const JobPost: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
+  const navigate = useNavigate();
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   console.log(user);
 
@@ -110,6 +113,7 @@ const JobPost: React.FC = () => {
   // ส่งฟอร์ม สร้าง payload ที่ตรงกับ interface CreateJobpost
   const handleFinish = async (values: any) => {
     try {
+      setConfirmLoading(true); // ✅ เริ่มโหลด
       const payload: CreateJobpost = {
         title: values.Name,
         description: values.jobDetails,
@@ -135,9 +139,13 @@ const JobPost: React.FC = () => {
       //  ถ้าสำเร็จ เปิด Modal success
       //  ถ้า error แสดงข้อความ error
       setOpen(true);
+      // ✅ ไปหน้า board
+      navigate("/Job/Board");
+      window.location.reload(); // โหลดใหม่ให้ข้อมูล update
     } catch (error: any) {
       console.error("Error:", error.response?.data || error.message);
       message.error("บันทึกงานไม่สำเร็จ!");
+      setConfirmLoading(false);
     }
   };
 
@@ -206,13 +214,19 @@ const JobPost: React.FC = () => {
         name="employmentTypeId"
         rules={[{ required: true, message: "กรุณาเลือกประเภทงาน" }]}
       >
-        <Radio.Group onChange={onChange} value={value}>
-          <div style={{ display: "grid", gap: 12 }}>
+        <Radio.Group>
+          <div className="employment-grid">
             {employmenttype.map((emp) => (
               <Card
                 key={emp.id}
-                onClick={() => onChange({ target: { value: emp.id } } as any)}
-                className={value === emp.id ? "custom-card-selected" : ""}
+                onClick={() =>
+                  form.setFieldsValue({ employmentTypeId: emp.id })
+                }
+                className={`custom-card ${
+                  form.getFieldValue("employmentTypeId") === emp.id
+                    ? "custom-card-selected"
+                    : ""
+                }`}
               >
                 <Radio value={emp.id}>{emp.employment_type_name}</Radio>
               </Card>
@@ -294,17 +308,64 @@ const JobPost: React.FC = () => {
 
           <Form.Item label="แนบผลงาน (Portfolio)">
             <input
+              id="portfolio-upload"
               type="file"
               accept=".pdf,.doc,.docx,.jpg,.png"
+              style={{ display: "none" }} // ✅ ซ่อน input
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) setPortfolioFile(file);
               }}
             />
+            <Button
+              type="primary"
+              onClick={() =>
+                document.getElementById("portfolio-upload")?.click()
+              }
+            >
+              อัปโหลด Portfolio
+            </Button>
+            {portfolioFile && (
+              <span
+                style={{
+                  marginTop: 10,
+                  width: 80,
+                  height: 80,
+                  objectFit: "cover",
+                  borderRadius: 8,
+                }}
+              >
+                {portfolioFile.name}
+              </span>
+            )}
           </Form.Item>
 
           <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
-            <input type="file" accept="image/*" onChange={handleImageChange} />
+            <input
+              id="logo-upload"
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }} // ✅ ซ่อน input
+              onChange={handleImageChange}
+            />
+            <Button
+              onClick={() => document.getElementById("logo-upload")?.click()}
+            >
+              เลือกรูปโลโก้
+            </Button>
+            {imagePreview && (
+              <img
+                src={imagePreview}
+                alt="preview"
+                style={{
+                  marginTop: 10,
+                  width: 80,
+                  height: 80,
+                  objectFit: "cover",
+                  borderRadius: 8,
+                }}
+              />
+            )}
           </Form.Item>
 
           <Alert
@@ -320,6 +381,7 @@ const JobPost: React.FC = () => {
               size="large"
               htmlType="submit"
               className="submit-button"
+              loading={confirmLoading} // ✅ ใช้ loading state
             >
               ยืนยัน
             </Button>
