@@ -68,7 +68,7 @@ const MainRoutes: React.FC = () => {
             <Route path="/student/:id/finance/summary" element={<FinancialReportPage />} />
             <Route path="/my/finance/summary" element={<FinancialReportPage />} />
             <Route path="/worklog" element={<WorklogPage />} />
-            <Route path="/edit-report" element={<IncidentReportList />} />
+            <Route path="/list-report" element={<IncidentReportList />} />
 
 
         {/* --- Feed Routes --- */}

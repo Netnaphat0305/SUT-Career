@@ -103,8 +103,7 @@ func SeedJobData(db *gorm.DB) {
     }
     for _, jobApp := range jobApplications {
         if err := db.FirstOrCreate(&jobApp, entity.JobApplication{
-			StudentID: jobApp.StudentID,
-			JobPostID: jobApp.JobPostID,
+            Model: gorm.Model{ID: jobApp.ID},
 		}).Error; err != nil {
 			fmt.Println("Seed error:", err)
 		}

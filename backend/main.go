@@ -496,11 +496,10 @@ func main() {
 		api.GET("/worklogs/student/:id", controller.GetWorklogStudent)
 		api.PUT("/worklogs/:id", controller.UpdateWorklogByID)
 		api.DELETE("/worklogs/:id", controller.DeleteWorklogID)
-
 		api.GET("/jobposts/employer/:id", controller.GetJobpostByEmployerID)
-		api.GET("/worklogs/user/:id", controller.GetJobpostByUserID) 
-
+		api.GET("/worklogs/getjobpost/user/:id", controller.GetJobpostByUserID) 
 		api.GET("/jobapplications/:id", controller.GetstudentByjobpostID)
+		api.GET("/worklogs/user/:id", controller.GetWorklogsByUserID)
 		// // Extra
 		// api.GET("/jobposts/:id/students", controller.GetStudentInJobpost)
 		// api.GET("/users/:id", controller.GetUserByEmployerID)
