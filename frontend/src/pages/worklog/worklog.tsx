@@ -4,7 +4,7 @@ import { worklogAPI } from "../../services/https/index"; // 2. Import service �
 import message from "antd/es/message";
 import { AuthContext } from "../../context/AuthContext"; // 2. Import AuthContext เพื่อเข้าถึงข้อมูล user
 import PageHeader from "../../components/PageHeader";
-import { Button, Modal } from "antd";
+import {  Modal } from "antd";
 // 3. กำหนด Type สำหรับข้อมูล JobPost ที่จะรับมาจาก API
 interface JobPost {
   ID: number;
@@ -49,7 +49,7 @@ const Worklog = () => {
   const [error, setError] = useState<string | null>(null); // State สำหรับเก็บ Error
   const [worklogs, setWorklogs] = useState<WorklogItem[]>([]); //  สำหรับเก็บรายการ worklog
   const [isStudentsLoading, setIsStudentsLoading] = useState(false); // State โหลดนักเรียน
-  const [expandedDescriptions, setExpandedDescriptions] = useState<number[]>([]); //  เก็บ ID ของ worklog ที่ขยายรายละเอียด
+  const [expandedDescriptions] = useState<number[]>([]); //  เก็บ ID ของ worklog ที่ขยายรายละเอียด
   
   //================ควบคุม Modal=======================
   const [isModalOpen, setIsModalOpen] = useState(false); //  ควบคุม Modal

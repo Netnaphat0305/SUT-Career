@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes, useOutletContext } from "react-router-dom";
+import { Route, Routes, } from "react-router-dom";
 import EmployerProfile from "../pages/EmployerProfile/EmployerProfile";
 import FullLayout from '../layouts/FullLayout';
 import HelpCenterPage from '../pages/HelpCenter/HelpCenterPage';
