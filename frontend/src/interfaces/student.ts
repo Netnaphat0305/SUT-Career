@@ -128,3 +128,57 @@ export interface Student {
        ]
      }
   */
+
+
+
+// interfaces/student.ts
+//add by netnaphat
+// User ของ Student
+export interface User {
+  ID: number;
+  username: string;
+}
+
+// ข้อมูลเพศ
+export interface Gender {
+  ID: number;
+  gender_name: string;
+}
+
+// ข้อมูลธนาคาร
+export interface Bank {
+  ID: number;
+  bank_name: string;
+}
+
+// Student
+export interface Student {
+  ID: number;
+  id?: number; // backward compatibility
+  user_id: number; 
+  UserID?: number; 
+
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  faculty: string;
+  year: number;
+
+  profile_image_url?: string;
+  skills?: string;
+  birthday?: string;
+  age?: number;
+  gpa?: number;
+
+  gender_id?: number;
+  bank_account?: string;
+  bank_id?: number;
+  created_at?: string;
+  updated_at?: string;
+
+  // Relations
+  user?: User;
+  gender?: Gender;
+  bank?: Bank;
+}

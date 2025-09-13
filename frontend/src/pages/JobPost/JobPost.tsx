@@ -15,7 +15,7 @@ import {
   Col,
 } from "antd";
 import { useAuth } from "../../context/AuthContext";
-import type { RadioChangeEvent } from "antd";
+// import type { RadioChangeEvent } from "antd";
 import "./JobPost.css";
 import PageHeader from "../../components/PageHeader";
 import {

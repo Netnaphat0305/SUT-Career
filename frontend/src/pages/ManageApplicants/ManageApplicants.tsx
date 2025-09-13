@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Button, Spin, message, Avatar, Empty } from "antd";
+import { Card, Spin, message, Avatar, Empty } from "antd";
 import { jobApplicationAPI, jobPostAPI } from "../../services/https";
 import defaultProfile from "../../assets/profile.svg";
 import "./ManageApplicants.css";
 import type { JobApplication, JobPost } from "../../interfaces/jobApplication";
 import PageHeader from "../../components/PageHeader";
 import { API_BASE } from "../../config";
+// import type { Student } from "../../interfaces/student";
 
 const ManageApplicants: React.FC = () => {
   const { jobpost_id } = useParams<{ jobpost_id: string }>();
@@ -105,7 +106,13 @@ const ManageApplicants: React.FC = () => {
                   {/* Avatar */}
                   <Avatar
                     size={64}
-                    src={defaultProfile}
+                    src={
+                      app.Student?.profile_image_url
+                        ? app.Student.profile_image_url.startsWith("http")
+                          ? app.Student.profile_image_url
+                          : `${API_BASE}${app.Student.profile_image_url}`
+                        : defaultProfile
+                    }
                     className="applicant-avatar"
                   />
 
@@ -164,9 +171,18 @@ const ManageApplicants: React.FC = () => {
                 <div className="applicant-profile-header">
                   <Avatar
                     size={90}
-                    src={defaultProfile}
+                    src={
+                      selectedApplicant?.Student?.profile_image_url
+                        ? selectedApplicant.Student.profile_image_url.startsWith(
+                            "http"
+                          )
+                          ? selectedApplicant.Student.profile_image_url
+                          : `${API_BASE}${selectedApplicant.Student.profile_image_url}`
+                        : defaultProfile
+                    }
                     className="applicant-profile-avatar"
                   />
+
                   <div>
                     <h3 className="applicant-profile-name">
                       {selectedApplicant.Student?.first_name}{" "}

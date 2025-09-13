@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import defaultLogo from "../../assets/profile.svg";
 import "./MyApplications.css";
 import PageHeader from "../../components/PageHeader";
+import { API_BASE } from "../../config";
 
 const MyApplications: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -158,7 +159,7 @@ const MyApplications: React.FC = () => {
               <div className="my-application-right">
                 {app.JobPost?.image_url ? (
                   <img
-                    src={app.JobPost.image_url}
+                    src={`${API_BASE}${app.JobPost.image_url}`}
                     alt={app.JobPost.title}
                     className="my-application-image"
                   />
@@ -254,7 +255,7 @@ const MyApplications: React.FC = () => {
                     {selectedApp.JobPost?.image_url && (
                       <div className="modal-image">
                         <img
-                          src={selectedApp.JobPost.image_url}
+                          src={`${API_BASE}${selectedApp.JobPost.image_url}`}
                           alt={selectedApp.JobPost.title}
                         />
                       </div>

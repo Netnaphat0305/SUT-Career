@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button, Spin, message, Tag } from "antd";
+import { Button, Spin, message} from "antd";
 import profile from "../../assets/profile.svg";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import "./JobDetail.css";
