@@ -1,15 +1,15 @@
 package controller
 
 import (
-	"net/http"
-	"gorm.io/gorm"
-    "math"
-	"strconv"
 	"errors"
-    "strings"
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/entity"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+	"math"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 type CreateBillableForAppReq struct {
@@ -62,24 +62,27 @@ func CreateOrUpdateBillableForApplication(c *gin.Context) {
 	st := jobDetails.SalaryTypeName
 	amount := jobDetails.Salary
 
+	var hours float64
+	var err error
+
 	switch {
 	case strings.Contains(st, "ชั่วโมง") || strings.Contains(st, "hour"):
-    hours, err := computeWorkedHoursGORM(db, jobID)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to sum worked hours"})
-        return
-    }
-    amount = round2(hours * jobDetails.Salary)
+		hours, err = computeWorkedHoursGORM(db, jobID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to sum worked hours"})
+			return
+		}
+		amount = round2(hours * jobDetails.Salary)
 
 	case strings.Contains(st, "วัน") || strings.Contains(st, "day") ||
-		strings.Contains(st, "project") || strings.Contains(st, "โปรเจ"):
+		strings.Contains(st, "project") || strings.Contains(st, "โปรเจค"):
 		amount = round2(jobDetails.Salary)
 
 	case strings.Contains(st, "เดือน") || strings.Contains(st, "month"):
 		amount = round2(jobDetails.Salary)
 	}
 	var bi entity.BillableItems
-	err := db.Where("job_application_id = ?", req.JobApplicationID).First(&bi).Error
+	err = db.Where("job_application_id = ?", req.JobApplicationID).First(&bi).Error
 	if err == gorm.ErrRecordNotFound {
 		// Create new billable item
 		bi = entity.BillableItems{
@@ -104,19 +107,25 @@ func CreateOrUpdateBillableForApplication(c *gin.Context) {
 			return
 		}
 	}
+	response := gin.H{
+		"data": bi,
+	}
+	if strings.Contains(st, "ชั่วโมง") || strings.Contains(st, "hour") {
+		response["hours_worked"] = hours
+	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": bi})
+	c.JSON(http.StatusCreated, response)
 }
 
 func computeWorkedHoursGORM(db *gorm.DB, jobID uint) (float64, error) {
-    var total struct{ Sum float64 }
-    if err := db.Model(&entity.Worklog{}).
-        Select("COALESCE(SUM(hours),0) AS sum").
-        Where("jobpost_id = ?", jobID).
-        Scan(&total).Error; err != nil {
-        return 0, err
-    }
-    return math.Max(0, total.Sum), nil
+	var total struct{ Sum float64 }
+	if err := db.Model(&entity.Worklog{}).
+		Select("COALESCE(SUM(hours),0) AS sum").
+		Where("jobpost_id = ?", jobID).
+		Scan(&total).Error; err != nil {
+		return 0, err
+	}
+	return math.Max(0, total.Sum), nil
 }
 
 func round2(x float64) float64 { return math.Round(x*100) / 100 }
