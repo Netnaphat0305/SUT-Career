@@ -16,6 +16,7 @@ type StudentInfo struct {
         Name string `json:"name"`
     }
 
+// Create Worklog
 func CreateWorklog(c *gin.Context) {
 var worklog entity.Worklog
 	if err := c.ShouldBindJSON(&worklog); err != nil {
@@ -151,6 +152,7 @@ func GetstudentByjobpostID(c *gin.Context) {
     c.JSON(http.StatusOK, students)
 }
 
+// Get worlog by user ID
 func GetWorklogsByUserID(c *gin.Context) {
     // 1. รับ User ID จาก URL parameter
     userID := c.Param("id")

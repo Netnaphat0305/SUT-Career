@@ -142,7 +142,7 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
     /* ทำให้ scroll ได้ */
-    max-height: 600px;   /* กำหนดความสูงสูงสุดเท่ากับฟอร์ม */
+    max-height: 500px;   /* กำหนดความสูงสูงสุดเท่ากับฟอร์ม */
     overflow-y: auto;
 }
 .history-section {

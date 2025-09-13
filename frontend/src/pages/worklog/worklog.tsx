@@ -130,7 +130,16 @@ const Worklog = () => {
 
       const data = await worklogAPI.getWorklogByUserID(userId);
       if (data) {
-        setWorklogs(data);
+        const normalized = data.map((w: any) => ({
+        id: w.id || w.ID,   // 👈 แก้ตรงนี้
+        description: w.description,
+        time: w.time,
+        hours: w.hours,
+        student: w.student,
+        jobpost: w.jobpost,
+      }));
+
+      setWorklogs(normalized);
       }
       console.log("Fetched Worklogs eee:", data);
     } catch (err) {
@@ -156,6 +165,9 @@ const Worklog = () => {
     }
     // ตรวจสอบค่า selectedJobPostId
   }, [JobPostId]);
+
+
+
 
   // useEffect(() => {
   //   console.log("Selected Student ID changed:", student);
@@ -206,6 +218,23 @@ const Worklog = () => {
       message.error("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
     }
   };
+
+  const handleDelete = async (id: number) => {
+  try {
+    console.log("Delete worklog with ID:", id);
+    const confirmDelete = window.confirm("คุณต้องการลบข้อมูลนี้หรือไม่?");
+    if (!confirmDelete) return;
+
+    await worklogAPI.delete(id); // เรียก API เพื่อลบ
+    message.success("ลบข้อมูลสำเร็จ");
+
+    // โหลด worklogs ใหม่หลังลบ
+    await fetchWorklogs();
+  } catch (error) {
+    console.error("Error deleting worklog:", error);
+    message.error("ไม่สามารถลบข้อมูลได้");
+   }
+};
 
   // Add this function to toggle description expansion
 
@@ -366,9 +395,9 @@ const Worklog = () => {
                     </small>
                   </div>
                   <div className="actions">
-                    <button onClick={fetchWorklogs}>แก้ไข</button>{" "}
+                    <button onClick={fetchJobPosts}>แก้ไข</button>{" "}
                     {/*() => handleEdit(log) */}
-                    <button onClick={fetchJobPosts}>ลบ</button>{" "}
+                    <button onClick={() => handleDelete(log.id)}>ลบ</button>{" "}
                     {/*() => handleDelete(log.id)*/}
                   </div>
                 </li>
@@ -382,5 +411,3 @@ const Worklog = () => {
 };
 
 export default Worklog;
-
-

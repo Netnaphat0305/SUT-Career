@@ -11,7 +11,6 @@ import JobDetail from "../pages/Board/JobDetail";
 import ApplyJob from "../pages/ApplyJob/ApplyJob";
 import Interview from '../pages/Interview/Interview';
 import Chat from '../pages/Chat/Chat';
-import StudentListPage from "../pages/StudentListpage/StudentListPage";
 import Reportpage from '../pages/Reportpage/reportpage/report';
 import JobsPage from '../pages/myjob';
 import PaymentReportPage from '../pages/paymentreport';
@@ -55,7 +54,6 @@ const MainRoutes: React.FC = () => {
             <Route path="/jobpost/edit/:id" element={<EditJobPost />} />
             <Route path="/interview" element={<Interview />} />
             <Route path="/chat" element={<Chat />} />
-            <Route path="/students" element={<StudentListPage />} />
             <Route path="/report" element={<Reportpage />} />
             <Route path="/my-jobs" element={<JobsPage />} />
             <Route path="/payment-report" element={<PaymentReportPage />} />
