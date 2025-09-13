@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes, useOutletContext } from "react-router-dom";
+import { Route, Routes, } from "react-router-dom";
 import EmployerProfile from "../pages/EmployerProfile/EmployerProfile";
 import FullLayout from '../layouts/FullLayout';
 import HelpCenterPage from '../pages/HelpCenter/HelpCenterPage';
@@ -11,7 +11,6 @@ import JobDetail from "../pages/Board/JobDetail";
 import ApplyJob from "../pages/ApplyJob/ApplyJob";
 import Interview from '../pages/Interview/Interview';
 import Chat from '../pages/Chat/Chat';
-import StudentListPage from "../pages/StudentListpage/StudentListPage";
 import Reportpage from '../pages/Reportpage/reportpage/report';
 import JobsPage from '../pages/myjob';
 import PaymentReportPage from '../pages/paymentreport';
@@ -55,7 +54,6 @@ const MainRoutes: React.FC = () => {
             <Route path="/jobpost/edit/:id" element={<EditJobPost />} />
             <Route path="/interview" element={<Interview />} />
             <Route path="/chat" element={<Chat />} />
-            <Route path="/students" element={<StudentListPage />} />
             <Route path="/report" element={<Reportpage />} />
             <Route path="/my-jobs" element={<JobsPage />} />
             <Route path="/payment-report" element={<PaymentReportPage />} />
@@ -68,7 +66,7 @@ const MainRoutes: React.FC = () => {
             <Route path="/student/:id/finance/summary" element={<FinancialReportPage />} />
             <Route path="/my/finance/summary" element={<FinancialReportPage />} />
             <Route path="/worklog" element={<WorklogPage />} />
-            <Route path="/edit-report" element={<IncidentReportList />} />
+            <Route path="/list-report" element={<IncidentReportList />} />
 
 
         {/* --- Feed Routes --- */}

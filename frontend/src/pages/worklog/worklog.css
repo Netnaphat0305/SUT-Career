@@ -12,13 +12,13 @@ body {
     padding: 20px;
 }
 
-/* .header {
+.header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding-bottom: 20px;
     border-bottom: 1px solid #ddd;
-} */
+}
 
 .header h1 {
     font-size: 24px;
@@ -47,7 +47,7 @@ body {
 
 .form-section p, .history-section p {
     color: #666;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
 }
 
 .form-row {
@@ -93,7 +93,10 @@ body {
 
 .form-group textarea {
     resize: vertical;
+    height: 150px;
     min-height: 100px;
+    max-height: 200px;
+    
 }
 
 .form-group small {
@@ -133,11 +136,17 @@ body {
 
 /* History section specific styling */
 .history-section {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    /* ทำให้ scroll ได้ */
+    max-height: 500px;   /* กำหนดความสูงสูงสุดเท่ากับฟอร์ม */
+    overflow-y: auto;
+}
+.history-section {
+    scroll-behavior: smooth;
 }
 
 .history-section svg {
@@ -183,4 +192,23 @@ body {
 .worklog-item .actions button:last-child {
   background-color: #dc3545;
   color: #fff;
+}
+
+.description {
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.toggle-description {
+  background: none;
+  border: none;
+  color: #1890ff;
+  padding: 0;
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.toggle-description:hover {
+  text-decoration: underline;
 }

@@ -11,7 +11,7 @@ import {
   Dropdown,
   
 } from "antd";
-import { DownOutlined, UserOutlined, LogoutOutlined, ProfileOutlined,FormOutlined,EditOutlined} from "@ant-design/icons";
+import { DownOutlined, UserOutlined, LogoutOutlined, ProfileOutlined , ExclamationCircleOutlined, FormOutlined,EditOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import logoImage from '../../assets/logo.svg';
 // Import useAuth to get user and logout function
@@ -41,7 +41,7 @@ const navItems: MenuItem[] = [
   createMenuItem("help", "Help"),
   createMenuItem("chat", "Chat"),
   createMenuItem("interview","Interview Table"),
-  createMenuItem("students","Students List"),
+  createMenuItem("worklog","Worklog"),
   createMenuItem("report","Report"),
   createMenuItem("feed", "Feed"),
   createMenuItem("Interview-Schedule", "Interview Schedule"),
@@ -137,9 +137,11 @@ const FullLayout: React.FC = () => {
         
     });
     }
-    
-
-
+    menuItems.push({
+        key: 'logout',
+        label: <Link to="/list-report">ดูรายงานของฉัน</Link>,
+        icon: <ExclamationCircleOutlined />,
+    });
     // Add logout option for all logged-in users
     menuItems.push({
         key: 'logout',
@@ -148,9 +150,6 @@ const FullLayout: React.FC = () => {
         onClick: logout, // Call logout function on click
         danger: true,
     });
-
-
-
   }
 
 

@@ -841,10 +841,9 @@ export const worklogAPI = {
   getById: (id: number) => Get(`/worklogs/${id}`),
   getByUserId: (userId: number) => Get(`/worklogs/user/${userId}`),
   update: (id: number, data: Partial<any>) => Update(`/worklogs/${id}`, data),
-  delete: (id: number) => Delete(`/worklogs/${id}`),
-  getByEmployerID: (employerId: number) =>
-    Get(`/api/worklogs/employer/${employerId}`),
-  getJobpostByUserID: (userId: number) => Get(`/api/worklogs/user/${userId}`),
-  getJobApplicationByJobpostID: (jobpostID: number) =>
-    Get(`/api/jobapplications/${jobpostID}`),
+  delete: (id: number) => Delete(`/api/worklogs/${id}`),
+  getByEmployerID: (employerId: number) => Get(`/api/worklogs/employer/${employerId}`),
+  getJobpostByUserID: (userId: number) => Get(`/api/worklogs/getjobpost/user/${userId}`),
+  getJobApplicationByJobpostID: (jobpostID: number) => Get(`/api/jobapplications/${jobpostID}`),
+  getWorklogByUserID: (userID: number) => Get(`/api/worklogs/user/${userID}`),
 };
