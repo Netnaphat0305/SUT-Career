@@ -7,13 +7,14 @@ import (
 )
 type InterviewScheduling struct {
 	gorm.Model
-	DateAndTime time.Time `json:"Date_And_Time"`
+	DateAndTimeStart time.Time `json:"DateAndTimeStart"`
+	DateAndTimeEnd time.Time `json:"DateAndTimeEnd"`
 	Status string `json:"Status"`
 	Detail string `gorm:"type:text" json:"Detail"`
 
 	//FK
 
-	EmployerID uint
+	EmployerID uint `json:"employer_id"`
 	Employer *Employer `gorm:"foreignKey:EmployerID" json:"Employer"`
 
 	Interview []Interview `gorm:"foreignKey:InterviewSchedulingID"`

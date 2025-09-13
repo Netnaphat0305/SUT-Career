@@ -5,13 +5,11 @@
 
 // 	"github.com/KBook22/System-Analysis-and-Design/config"
 // 	"github.com/KBook22/System-Analysis-and-Design/controller"
-	
+
 // 	"github.com/KBook22/System-Analysis-and-Design/middleware"
 // 	"github.com/KBook22/System-Analysis-and-Design/seed"
 // 	"github.com/gin-gonic/gin"
 // )
-
-
 
 // func CORSMiddleware() gin.HandlerFunc {
 // 	return func(c *gin.Context) {
@@ -116,7 +114,7 @@
 // 		////////////////////////////////////เเก้ไขโดยพรศิริ ////////////////////////////
 // 		api.GET("/student-posts", controller.GetStudentPosts)
 // 		api.GET("/student-posts/:id", controller.GetStudentPostByID)
-		
+
 // 		////////////สิ้นสุดการเพิ่มของพรศิริ//////////////////////////////
 // 	}
 
@@ -403,18 +401,18 @@
 // 	// ให้เข้าถึงโฟลเดอร์ uploads โดยตรง
 // 	r.Static("/uploads", "./uploads")
 
-// 	// Run server
-// 	r.Run(":8080")
-// }
+//		// Run server
+//		r.Run(":8080")
+//	}
 package main
 
 import (
-	"net/http"
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/controller"
 	"github.com/KBook22/System-Analysis-and-Design/middleware"
 	"github.com/KBook22/System-Analysis-and-Design/seed"
 	"github.com/gin-gonic/gin"
+	"net/http"
 
 	"log"
 	"os"
@@ -451,7 +449,6 @@ func main() {
 		log.Fatal(err)
 	}
 	r.Static("/static", "./static")
-
 	// Seed ข้อมูลนักศึกษา 30 คน
 	db := config.DB()
 	seed.SeedStudents(db)
@@ -498,7 +495,7 @@ func main() {
 		api.DELETE("/worklogs/:id", controller.DeleteWorklogID)
 
 		api.GET("/jobposts/employer/:id", controller.GetJobpostByEmployerID)
-		api.GET("/worklogs/user/:id", controller.GetJobpostByUserID) 
+		api.GET("/worklogs/user/:id", controller.GetJobpostByUserID)
 
 		api.GET("/jobapplications/:id", controller.GetstudentByjobpostID)
 		// // Extra
@@ -546,7 +543,6 @@ func main() {
 	auth.Use(middleware.AuthMiddleware())
 	{
 
-
 		// --- Employer Profile (me) ---
 		auth.GET("/employer/me", controller.GetEmployerProfile)
 		auth.PUT("/employer/me/avatar", controller.UpdateMyEmployerAvatar)
@@ -572,7 +568,6 @@ func main() {
 		// --- Employer: My Posts ---
 		auth.GET("/employer/myposts", controller.GetEmployerPosts)
 
-
 		// --- Student Profile ---
 		// auth.POST("/student-profile-posts", controller.) หาfunction
 		auth.GET("/profile", controller.GetMyProfile)
@@ -585,7 +580,6 @@ func main() {
 		auth.GET("/skills", controller.ListSkills)
 		auth.POST("/upload", controller.UploadToSupabase)
 
-
 		// --- Job Applications ---
 		auth.GET("/jobapplications/init/:id", controller.InitJobApplication)
 		auth.POST("/jobapplications", controller.CreateJobApplication)
@@ -596,22 +590,6 @@ func main() {
 		auth.PUT("/jobapplications/:id/interview", controller.UpdateInterviewSchedule) //นักศึกษาเลือก วันสัมภาษณ์ โดยตรง จากตารางเวลาที่นายจ้างสร้างไว้
 		auth.POST("/jobapplications/:id/upload-resume", controller.UploadResume)
 
-
-
-		// ======================================= Interview by looktao =======================================
-		// Interviews
-		// ชั้นขออุญาติเพิ่มนะแกชั้นต้องใช้ TT 😭😭😭
-		// --- Interview Schedules ---
-		auth.POST("/interview-schedules", controller.CreateInterviewSchedule)                    // สร้างช่วงเวลา
-		auth.GET("/interview-schedules/employer/:employerId", controller.GetSchedulesByEmployer) // ดูทั้งหมด
-		auth.DELETE("/interview-schedules/:id", controller.DeleteInterviewSchedule)              // ลบช่วงเวลา
-
-		// Interviews
-		auth.POST("/interviews/book", controller.BookInterview) //สร้างเรคคอร์ด Interview จริง ๆ หลังจากนักศึกษาจองวันสัมภาษณ์ ก็คือผูกกับตารางนั่นแหละ
-		auth.GET("/interviews/student/:studentId", controller.GetInterviewsByStudent)
-		auth.GET("/interviews/employer/:employerId", controller.GetInterviewsByEmployer)
-		// ======================================= Interview by looktao =======================================
-
 		// --- Tickets ---
 		auth.POST("/tickets", controller.CreateRequestTicket)
 		auth.GET("/tickets", controller.GetMyRequestTickets)
@@ -620,7 +598,7 @@ func main() {
 		auth.POST("/faqs/:id/comments", controller.CreateFAQComment)
 
 		// --- myjob ---
-        auth.GET("/my-jobs/accepted", controller.GetEmployerPostsWithAcceptedApplications)
+		auth.GET("/my-jobs/accepted", controller.GetEmployerPostsWithAcceptedApplications)
 		auth.GET("/my-jobs/:id", controller.GetMyJobpostByID)
 
 		// --- Reviews ---
@@ -664,19 +642,22 @@ func main() {
 		// ===== Chat API =====
 
 		// ========= Interview & Interview Scheduling API =========
-		interviewScheduling := auth.Group("/interview-scheduling")
+		interviewScheduling := auth.Group("/interview-schedules")
 		{
-			interviewScheduling.GET("", controller.GetInterviewSchedules)          // ดึงทั้งหมด
-			interviewScheduling.GET("/:id", controller.GetInterviewSchedule)       // ดึงตาม ID
-			interviewScheduling.POST("", controller.CreateInterviewSchedule)       // เพิ่มใหม่
-			interviewScheduling.PUT("/:id", controller.UpdateInterviewSchedule)    // แก้ไข
-			interviewScheduling.DELETE("/:id", controller.DeleteInterviewSchedule) // ลบ
+			interviewScheduling.POST("/create", controller.CreateInterviewSchedule)       // สร้างช่วงเวลา
+			interviewScheduling.GET("/get", controller.GetAllInterviewSchedules)          // ดูทั้งหมด
+			interviewScheduling.GET("/get/employer/", controller.GetSchedulesByEmployerID) //ดูจาก ID ผู้ว่าจ้าง
+			interviewScheduling.GET("/get/:id", controller.GetInterviewScheduleByID)      // ดึงตาม ID
+			interviewScheduling.DELETE("/delete/:id", controller.DeleteInterviewSchedule) // ลบช่วงเวลา
 		}
 
-		// interview := auth.Group("/interview")
-		// {
-
-		// }
+		interview := auth.Group("/interviews")
+		{
+			interview.POST("/book", controller.BookInterview) //สร้างเรคคอร์ด Interview จริง ๆ หลังจากนักศึกษาจองวันสัมภาษณ์ ก็คือผูกกับตารางนั่นแหละ
+			interview.GET("/student/:studentId", controller.GetInterviewsByStudent)
+			interview.GET("/employer/:employerId", controller.GetInterviewsByEmployer)
+			interview.GET("/application/:applicationID", controller.GetInterviewsTableByApplication)
+		}
 		// ========= Interview & Interview Scheduling API =========
 	}
 
@@ -689,7 +670,7 @@ func main() {
 		admin.POST("/faqs", controller.CreateFAQ)
 		admin.PUT("/faqs/:id", controller.UpdateFAQ)
 		admin.DELETE("/faqs/:id", controller.DeleteFAQ)
-		admin.GET("/finance/summary", controller.FinanceSummary)	
+		admin.GET("/finance/summary", controller.FinanceSummary)
 	}
 
 	// -------------------- 📂 Static & Files --------------------

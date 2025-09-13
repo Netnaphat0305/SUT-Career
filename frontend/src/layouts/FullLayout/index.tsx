@@ -231,7 +231,8 @@ const FullLayout: React.FC = () => {
                     <Button type="primary">เข้าสู่ระบบ</Button>
                 </Link>
 
-            )};
+            )}
+            {/* delete ";" for bug */}
           </Space>
         </Flex>
       </Header>

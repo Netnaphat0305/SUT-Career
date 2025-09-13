@@ -1,6 +1,12 @@
+// frontend/src/interfaces/InterviewScheduling.ts
 export interface InterviewScheduling {
   ID: number;
-  DateAndTime: string; // ใช้ string เพราะ backend ส่งเป็น ISO เช่น "2025-09-08T10:00:00Z"
+  DateAndTimeStart: string;   // <-- ใช้ชื่อเดียวกับ backend (เป็น ISO string)
+  DateAndTimeEnd: string;
   Status: string;
-  Description?: string;
+  Detail: string;
+  EmployerID: number;
+  Employer: {
+    ID: number;
+  }
 }

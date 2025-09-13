@@ -9,8 +9,9 @@ import {
   ClockCircleOutlined,
   DollarCircleOutlined,
   EnvironmentOutlined,
+  MessageOutlined, // add by book
 } from "@ant-design/icons";
-import { jobPostAPI } from "../../services/https";
+import { jobPostAPI, chatAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
 
 
@@ -105,6 +106,28 @@ const PostLayout: React.FC = () => {
     );
   }
 
+  // edit by book
+
+  // ฟังก์ชันเมื่อกด Contact
+  const handleCreateChat = async () => {
+    if (!selectedPost?.employer_id) return;
+
+    try {
+      // นักศึกษา → สร้างห้องกับ employer
+      const room = await chatAPI.createOrGetRoom(
+        selectedPost.employer_id,   // targetId
+        "employer"                  // targetRole
+      );
+
+      // ✅ เมื่อสร้างเสร็จ → ไปหน้า Chat
+      navigate("/Chat", { state: { roomId: room.ID } });
+    } catch (err) {
+      console.error("Failed to create chat room:", err);
+      messageApi.error("ไม่สามารถสร้างห้องแชทได้");
+    }
+  };
+  // edit by book
+
   return (
     <>
       {contextHolder}
@@ -116,9 +139,8 @@ const PostLayout: React.FC = () => {
             <div
               key={post.ID}
               id={`post-${post.ID}`}
-              className={`post-preview ${
-                selectedPost?.ID === post.ID ? "selected" : ""
-              }`}
+              className={`post-preview ${selectedPost?.ID === post.ID ? "selected" : ""
+                }`}
               onClick={() => {
                 setSelectedPost(post);
                 window.history.replaceState(
@@ -233,8 +255,8 @@ const PostLayout: React.FC = () => {
                   <span>
                     {selectedPost.deadline
                       ? new Date(selectedPost.deadline).toLocaleDateString(
-                          "th-TH"
-                        )
+                        "th-TH"
+                      )
                       : "วันนี้ - จนกว่าจะปิดรับสมัคร"}
                   </span>
                 </div>
@@ -275,6 +297,14 @@ const PostLayout: React.FC = () => {
                 <h3>รายละเอียดงาน</h3>
                 <p>{selectedPost.description || "ไม่มีรายละเอียดเพิ่มเติม"}</p>
               </div>
+              {/* edit By Book */}
+              {role === "student" && (
+                <div className="chat-fab" onClick={handleCreateChat}>
+                  <span className="chat-label">Contact</span>
+                  <MessageOutlined className="create-chat-button" />
+                </div>
+              )}
+              {/* edit By Book */}
             </>
           )}
         </div>

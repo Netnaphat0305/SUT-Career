@@ -14,7 +14,7 @@ func Seedchat(db *gorm.DB){
 		// สร้างห้องแชทระหว่าง student กับ employer
 		room := entity.ChatRoom{
 			Model:      gorm.Model{ID: 1},
-			StudentID:  8,
+			StudentID:  2,
 			EmployerID: 1,
 			Lastmessage: "ได้เลยครับ ขอบคุณครับ",
 			LastMessageAt: time.Now().Add(-1 * time.Minute),
@@ -26,7 +26,7 @@ func Seedchat(db *gorm.DB){
 			{
 				Model:         gorm.Model{ID: 1},
 				ChatRoomID:    room.ID,
-				UserSenderID:  9,
+				UserSenderID:  6,
 				Message:       "สวัสดีครับ ผมสนใจงานนักพัฒนา Server ครับ",
 				TimeStampSend: time.Now().Add(-5 * time.Minute),
 			},
@@ -40,7 +40,7 @@ func Seedchat(db *gorm.DB){
 			{
 				Model:         gorm.Model{ID: 3},
 				ChatRoomID:    room.ID,
-				UserSenderID:  9,
+				UserSenderID:  6,
 				Message:       "ได้เลยครับ ขอบคุณครับ",
 				TimeStampSend: time.Now().Add(-1 * time.Minute),
 			},
