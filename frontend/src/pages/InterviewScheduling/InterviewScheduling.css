@@ -278,23 +278,16 @@
 }
 
 .success-modal-details-text {
+  font-size: 18px;
   display: block;
-  margin-bottom: 8px;
 }
-
-.success-modal-status-text {
-  font-weight: bold;
-}
-
-.success-modal-extra-details {}
 
 .success-modal-status-text {
     display: block;
     margin-top: 1%;
-    font-weight: bold;
     unicode-bidi: isolate;
     margin-bottom: 0.5em;
-    font-weight: 600;
+    font-weight: 400;
     font-size: 20px;
     line-height: 1.4;
     color: rgb(98, 225, 0);

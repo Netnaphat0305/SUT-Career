@@ -351,11 +351,18 @@ const InterviewSchedulingPage: React.FC = () => {
                   {dayjs(lastActionSlot.DateAndTimeStart).format("HH:mm")} - {dayjs(lastActionSlot.DateAndTimeEnd).format("HH:mm")}
                 </Text>
                 {selectedTimeSlotForDeletion === null && interviewDetails && (
-                  <Text>รายละเอียด: {interviewDetails}</Text>
+                  <div>
+                    <div className="success-modal-details-text">
+                      รายละเอียด:
+                    </div>
+                    <Text>
+                      {interviewDetails}
+                    </Text>
+                  </div>
                 )}
               </>
             )}
-            <Text>สำเร็จ</Text>
+            <div className="success-modal-status-text">สำเร็จ</div>
           </div>
         </div>
       </Modal>
