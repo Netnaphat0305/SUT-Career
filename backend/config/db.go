@@ -85,7 +85,6 @@ func SeedDatabase() {
 	seed.SeedUsersAndProfiles(db)
 	seed.SeedPaymentData(db)
 	seed.SeedReportData(db)
-	seed.Seedchat(db)
 	seed.SeedInterviewScheduling(db)
 }
 
