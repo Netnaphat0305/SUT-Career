@@ -1204,7 +1204,6 @@ const StudentFeedPage: React.FC = () => {
               return (
                 <Col xs={24} sm={12} md={8} lg={6} key={post.ID}>
                   <Card
-                    hoverable
                     style={{ borderRadius: "12px", overflow: "hidden", height: "100%", display: 'flex', flexDirection: 'column' }}
                     bodyStyle={{ flexGrow: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}
                     cover={

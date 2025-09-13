@@ -1,13 +1,10 @@
 import React from 'react';
 import { Layout, Menu, Typography, Avatar, Dropdown, Space } from 'antd';
 import {
-  DashboardOutlined,
   QuestionCircleOutlined,
-  FlagOutlined,
   LogoutOutlined,
   UserOutlined,
   BookOutlined,
-  TeamOutlined,
   SettingOutlined,
   MoneyCollectFilled
 } from '@ant-design/icons';
@@ -22,10 +19,7 @@ const AdminLayout: React.FC = () => {
 
   // ✅ เพิ่มเมนู "จัดการ FAQ" เข้าไปในรายการ
   const menuItems = [
-    { key: '/admin', icon: <DashboardOutlined />, label: <Link to="/admin">Dashboard</Link> },
-    { key: '/admin/users', icon: <TeamOutlined />, label: <Link to="/admin/users">จัดการผู้ใช้งาน</Link> },
-    { key: '/admin/requests', icon: <QuestionCircleOutlined />, label: <Link to="/admin/requests">จัดการคำร้อง</Link> },
-    { key: '/admin/reports', icon: <FlagOutlined />, label: <Link to="/admin/reports">โพสต์ที่ถูกรายงาน</Link> },
+    { key: '/admin', icon: <QuestionCircleOutlined />, label: <Link to="/admin">จัดการคำร้อง</Link> },
     { key: '/admin/manage-faq', icon: <BookOutlined />, label: <Link to="/admin/manage-faq">จัดการ FAQ</Link> },
     { key: '/admin/finance/summary', icon: <MoneyCollectFilled/>, label: <Link to="/admin/finance/summary">สรุปยอด</Link>}
   ];

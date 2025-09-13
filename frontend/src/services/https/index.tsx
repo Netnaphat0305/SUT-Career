@@ -573,7 +573,7 @@ export const studentPostAPI = {
 // Skill API
 export const skillAPI = {
   getAllSkills: (): Promise<AxiosResponse<Skill[]>> =>
-    get("/skills") as Promise<AxiosResponse<Skill[]>>,
+    get("/api/skills") as Promise<AxiosResponse<Skill[]>>,
 };
 
 // Q&A and Help Center APIs
