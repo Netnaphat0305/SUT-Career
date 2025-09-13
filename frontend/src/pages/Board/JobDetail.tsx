@@ -119,7 +119,7 @@ const PostLayout: React.FC = () => {
         "employer"                  // targetRole
       );
 
-      // ✅ เมื่อสร้างเสร็จ → ไปหน้า Chat
+      //  เมื่อสร้างเสร็จ → ไปหน้า Chat
       navigate("/Chat", { state: { roomId: room.ID } });
     } catch (err) {
       console.error("Failed to create chat room:", err);
@@ -171,7 +171,7 @@ const PostLayout: React.FC = () => {
                       <span>
                         {post.salary.toLocaleString()}
                         {post.SalaryType?.salary_type_name
-                          ? `/${post.SalaryType.salary_type_name}`
+                          ? ` บาท/${post.SalaryType.salary_type_name}`
                           : ""}
                       </span>
                     </div>
@@ -277,7 +277,7 @@ const PostLayout: React.FC = () => {
                   <span>
                     {selectedPost.salary.toLocaleString()}{" "}
                     {selectedPost.SalaryType?.salary_type_name
-                      ? `/${selectedPost.SalaryType.salary_type_name}`
+                      ? ` บาท/${selectedPost.SalaryType.salary_type_name}`
                       : ""}
                   </span>
                 </div>

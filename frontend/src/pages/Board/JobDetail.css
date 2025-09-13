@@ -233,9 +233,10 @@
 /* ===== Meta Info ===== */
 .job-meta-detail {
   display: flex;
-  justify-content: center; 
-  align-items: center; 
-  gap: 40px; 
+  flex-direction: column;
+  /* justify-content: center;  */
+  align-items: flex-start; 
+  gap: 8px; 
   margin: 16px 0 20px;
   font-size: 0.95rem;
   color: #475569;
