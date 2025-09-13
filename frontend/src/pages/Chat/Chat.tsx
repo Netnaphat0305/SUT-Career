@@ -44,6 +44,7 @@ const Chat: React.FC = () => {
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
+  
   // effect: scroll ลงล่างเฉพาะตอนอยู่ที่ bottom หรือเปลี่ยนห้องใหม่
   useEffect(() => {
     if (isAtBottom && messagesEndRef.current) {
@@ -169,8 +170,6 @@ const Chat: React.FC = () => {
         : `Student`;
     }
   };
-
-
 
   const selectedUserData = chatRooms.find((user) => user.ID === selectedUser)
 
