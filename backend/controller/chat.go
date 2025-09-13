@@ -191,7 +191,7 @@ func SendMessage(c *gin.Context) {
 		ChatRoomID:    uint(roomId),
 		UserSenderID:  userID.(uint),
 		Message:       req.Message,
-		ImageURL:      req.ImageURL, // << เก็บ URL จริง
+		ImageURL:      req.ImageURL, // << Keep URL From supabase
 		MessageType:   req.MessageType,
 		TimeStampSend: time.Now(),
 	}

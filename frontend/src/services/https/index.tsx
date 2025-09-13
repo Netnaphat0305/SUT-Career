@@ -634,8 +634,8 @@ export const profileAPI = {
 
 // Job Category APIs
 export const jobCategoryAPI = {
-  getAll: () => get("/jobcategories", false),
-  getById: (id: number) => get(`/jobcategories/${id}`, false),
+  getAll: () => get("/api/jobcategories", false),
+  getById: (id: number) => get(`/api/jobcategories/${id}`, false),
 };
 
 // Job employmentType APIs
@@ -646,8 +646,8 @@ export const employmentTypeAPI = {
 
 // Salary Type APIs
 export const salaryTypeAPI = {
-  getAll: () => get("/salarytype", false),
-  getById: (id: number) => get(`/salarytype/${id}`, false),
+  getAll: () => get("/api/salarytype", false),
+  getById: (id: number) => get(`/api/salarytype/${id}`, false),
 };
 
 
@@ -675,14 +675,13 @@ export const interviewSchedulingAPI = {
     Get(`/api/interview-schedules/get/${id}`),
 
   getByEmployerId: (): Promise<InterviewScheduling[]> =>
-    Get(`/api/interview-schedules/get/employer`),
+    Get(`/api/interview-schedules/get/employer/`),
 
   create: (data: {
     DateAndTimeStart: string;
     DateAndTimeEnd: string;
     Status: string;
     Detail: string;
-    EmployerID: number;
   }): Promise<InterviewScheduling> =>
     Post("/api/interview-schedules/create", data),
 
@@ -702,6 +701,9 @@ export const interviewAPI = {
 
   getByEmployer: (employerId: number) =>
     Get(`/api/interviews/employer/${employerId}`),
+
+  GetInterviewsTableByApplication: (applicationID: number) =>
+    Get(`/api/interviews/application/${applicationID}`),
 };
 
 
@@ -723,7 +725,7 @@ export const chatAPI = {
     Post(`/api/chat/rooms/${roomId}/messages`, payload),
 };
 
-export const uploadAPI = {
+export const ChatUploadAPI = {
   uploadFile: async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append("file", file);

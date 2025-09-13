@@ -67,6 +67,17 @@ func AuthMiddleware() gin.HandlerFunc {
 				log.Printf("Set employerID %d for user_id %d", employer.ID, userID)
 			}
 		}
+		// give student ID to context
+		if role == entity.Stu {
+			var student entity.Student
+			err := config.DB().Where("user_id = ?", userID).First(&student).Error
+			if err != nil {
+				log.Printf("student not found for user_id %d: %v", userID, err)
+			} else {
+				c.Set("studentID", student.ID)
+				log.Printf("Set studentID %d for user_id %d", student.ID, userID)
+			}
+		}
 		//  ถ้าเป็น student → preload studentID ลง context
 		if role == entity.Stu {
 			var student entity.Student

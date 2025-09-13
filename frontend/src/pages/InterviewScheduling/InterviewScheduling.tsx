@@ -36,7 +36,7 @@ const InterviewSchedulingPage: React.FC = () => {
   useEffect(() => {
     const loadSlots = async () => {
       try {
-        const slots = await interviewSchedulingAPI.getByEmployerId()
+        const slots = await interviewSchedulingAPI.getByEmployerId() // ID ในที่นี้ไม่ได้ต้องส่งไป แต่จะให้ backend ดึงเอาจาก middlewares
         setTimeSlots(slots)
       } catch (error) {
         message.error("โหลดข้อมูลไม่สำเร็จ")

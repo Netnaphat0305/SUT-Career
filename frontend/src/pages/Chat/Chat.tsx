@@ -7,7 +7,7 @@ import { PictureOutlined, UserOutlined } from "@ant-design/icons"
 import { type ChatHistory, type ChatRoom } from "../../interfaces/Chat"
 import {
   chatAPI,
-  uploadAPI
+  ChatUploadAPI
 } from "../../services/https/"
 import "./Chat.css" // <-- import ไฟล์ CSS ที่สร้างขึ้นมา
 
@@ -126,8 +126,6 @@ const Chat: React.FC = () => {
 
 
   // Chat.tsx
-
-  // อัพโหลดรูป (แค่ mock ใช้ input type="file")
   const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedUser || !e.target.files?.length) return;
 
@@ -135,7 +133,7 @@ const Chat: React.FC = () => {
 
     try {
       // อัปโหลดจริงไป backend
-      const url = await uploadAPI.uploadFile(file);
+      const url = await ChatUploadAPI.uploadFile(file);
 
       // ส่ง message เป็น image
       const savedMessage = await chatAPI.sendMessage(selectedUser, {
@@ -228,6 +226,7 @@ const Chat: React.FC = () => {
                 "th-TH",
                 { hour: "2-digit", minute: "2-digit" }
               );
+              console.log("role = ",message.User?.role);
               return (
                 <Row key={message.ID} justify={isOwn ? "end" : "start"}>
                   <Col>
@@ -243,7 +242,7 @@ const Chat: React.FC = () => {
                         {/* Sender name */}
                         {!isOwn && (
                           <div className="message-sender-name">
-                            {message.User?.Role === "student"
+                            {message.User?.role === "student"
                               ? `${selectedUserData?.Student?.first_name ?? ""} ${selectedUserData?.Student?.last_name ?? ""}`
                               : `${selectedUserData?.Employer?.first_name ?? ""} ${selectedUserData?.Employer?.last_name ?? ""}`}
                           </div>

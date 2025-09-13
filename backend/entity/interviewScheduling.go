@@ -14,7 +14,7 @@ type InterviewScheduling struct {
 
 	//FK
 
-	EmployerID uint
+	EmployerID uint `json:"employer_id"`
 	Employer *Employer `gorm:"foreignKey:EmployerID" json:"Employer"`
 
 	Interview []Interview `gorm:"foreignKey:InterviewSchedulingID"`

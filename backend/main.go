@@ -590,14 +590,6 @@ func main() {
 		auth.PUT("/jobapplications/:id/interview", controller.UpdateInterviewSchedule) //นักศึกษาเลือก วันสัมภาษณ์ โดยตรง จากตารางเวลาที่นายจ้างสร้างไว้
 		auth.POST("/jobapplications/:id/upload-resume", controller.UploadResume)
 
-		// ======================================= Interview by looktao =======================================
-
-		// Interviews
-		auth.POST("/interviews/book", controller.BookInterview) //สร้างเรคคอร์ด Interview จริง ๆ หลังจากนักศึกษาจองวันสัมภาษณ์ ก็คือผูกกับตารางนั่นแหละ
-		auth.GET("/interviews/student/:studentId", controller.GetInterviewsByStudent)
-		auth.GET("/interviews/employer/:employerId", controller.GetInterviewsByEmployer)
-		// ======================================= Interview by looktao =======================================
-
 		// --- Tickets ---
 		auth.POST("/tickets", controller.CreateRequestTicket)
 		auth.GET("/tickets", controller.GetMyRequestTickets)
@@ -654,15 +646,18 @@ func main() {
 		{
 			interviewScheduling.POST("/create", controller.CreateInterviewSchedule)       // สร้างช่วงเวลา
 			interviewScheduling.GET("/get", controller.GetAllInterviewSchedules)          // ดูทั้งหมด
-			interviewScheduling.GET("/get/employer", controller.GetSchedulesByEmployerID) //ดูจาก ID ผู้ว่าจ้าง
+			interviewScheduling.GET("/get/employer/", controller.GetSchedulesByEmployerID) //ดูจาก ID ผู้ว่าจ้าง
 			interviewScheduling.GET("/get/:id", controller.GetInterviewScheduleByID)      // ดึงตาม ID
 			interviewScheduling.DELETE("/delete/:id", controller.DeleteInterviewSchedule) // ลบช่วงเวลา
 		}
 
-		// interview := auth.Group("/interview")
-		// {
-
-		// }
+		interview := auth.Group("/interviews")
+		{
+			interview.POST("/book", controller.BookInterview) //สร้างเรคคอร์ด Interview จริง ๆ หลังจากนักศึกษาจองวันสัมภาษณ์ ก็คือผูกกับตารางนั่นแหละ
+			interview.GET("/student/:studentId", controller.GetInterviewsByStudent)
+			interview.GET("/employer/:employerId", controller.GetInterviewsByEmployer)
+			interview.GET("/application/:applicationID", controller.GetInterviewsTableByApplication)
+		}
 		// ========= Interview & Interview Scheduling API =========
 	}
 

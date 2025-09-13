@@ -38,21 +38,11 @@ func GetInterviewScheduleByID(c *gin.Context) {
 // GET /api/interview-schedules/get/employer
 func GetSchedulesByEmployerID(c *gin.Context) {
 	db := config.DB()
-	userID := c.MustGet("userID")
-
-	// หา employer ที่ผูกกับ userID
-	var employer entity.Employer
-	if err := db.Where("user_id = ?", userID).First(&employer).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "employer not found"})
-		return
-	}
-
-	// Debug log
-	// log.Printf("Set employerID %d for user_id %v", employer.ID, userID)
+	employerID := c.MustGet("employerID")
 
 	// ดึง schedules ที่ belong กับ employer.ID
 	var schedules []entity.InterviewScheduling
-	if err := db.Where("employer_id = ?", employer.ID).
+	if err := db.Where("employer_id = ?", employerID).
 		Preload("Employer.User").
 		Find(&schedules).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -60,18 +50,17 @@ func GetSchedulesByEmployerID(c *gin.Context) {
 	}
 
 	// Debug log
-	log.Printf("Found %d schedules for employerID %d", len(schedules), employer.ID)
+	log.Printf("Found %d schedules for employerID %d", len(schedules), employerID)
 
 	c.JSON(http.StatusOK, schedules)
 }
 
-
-
-// POST /api/interview-scheduling
 func CreateInterviewSchedule(c *gin.Context) {
 	db := config.DB()
-
+	employerID, _ := c.Get("employerID")
 	var input entity.InterviewScheduling
+
+	input.EmployerID = employerID.(uint)
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

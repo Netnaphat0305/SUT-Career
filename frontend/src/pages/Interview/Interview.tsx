@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import { Button, Card, Typography, Space, Row, Col, Modal, message } from 'antd';
 import {
   LeftOutlined,
@@ -11,26 +12,12 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/th';
 import './Interview.css';
-
-import { interviewSchedulingAPI, interviewAPI } from '../../services/https';
+import type { InterviewScheduling } from '../../interfaces/InterviewScheduling';
+import { interviewAPI } from '../../services/https';
 
 const { Title, Text } = Typography;
 
 type DateStatus = 'available' | 'busy' | 'selected' | 'default';
-
-interface Schedule {
-  ID: number;
-  DateAndTimeStart: string;
-  DateAndTimeEnd: string;
-  Status: string;
-}
-
-interface Slot {
-  id: number;
-  startTime: string;
-  endTime: string;
-  status: string;
-}
 
 const Interview: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
@@ -38,9 +25,9 @@ const Interview: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState<Dayjs>(dayjs());
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
-
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-
+  const [interview, setInterview] = useState<any | null>(null);
+  const [schedules, setSchedules] = useState<InterviewScheduling[]>([]);
+  const navigate = useNavigate();
   // ✅ อ่าน applicationId จาก query string
   const params = new URLSearchParams(window.location.search);
   const jobApplicationId = Number(params.get('applicationId'));
@@ -49,32 +36,41 @@ const Interview: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await interviewSchedulingAPI.list();
-        setSchedules(res);
+        const res = await interviewAPI.GetInterviewsTableByApplication(jobApplicationId);
+        if (Array.isArray(res)) {
+          setSchedules(res);
+        } else if (Array.isArray(res.data)) {
+          setSchedules(res.data);
+        } else {
+          setSchedules([]);
+        }
+
+        // ✅ interview (เช็กว่า backend ส่งค่ามาหรือไม่)
+        if (res.interview) {
+          setInterview(res.interview); // <-- state ใหม่ไว้เก็บ Interview
+        } else if (res.data?.interview) {
+          setInterview(res.data.interview);
+        } else {
+          setInterview(null);
+        }
+
       } catch {
-        message.error('โหลดตารางสัมภาษณ์ไม่สำเร็จ');
+        message.error("โหลดตารางสัมภาษณ์ไม่สำเร็จ");
       }
     };
     fetchData();
-  }, []);
+  }, [jobApplicationId]);
 
-  // ดึง slots ของวันที่
-  const getSlotsForDate = (date: Dayjs): Slot[] => {
-    return schedules
-      .filter(s => dayjs(s.DateAndTimeStart).isSame(date, 'day'))
-      .map(s => ({
-        id: s.ID,
-        startTime: dayjs(s.DateAndTimeStart).format('HH:mm'),
-        endTime: dayjs(s.DateAndTimeEnd).format('HH:mm'),
-        status: s.Status,
-      }));
+  // ดึง schedules ของ "วัน" ที่เลือกโดยตรง (ไม่สร้าง interface ใหม่)
+  const getSchedulesForDate = (date: Dayjs): InterviewScheduling[] => {
+    return schedules.filter(s => dayjs(s.DateAndTimeStart).isSame(date, 'day'));
   };
 
   const getDateStatus = (date: Dayjs): DateStatus => {
-    const slots = getSlotsForDate(date);
+    const daySchedules = getSchedulesForDate(date);
     if (selectedDate && date.isSame(selectedDate, 'day')) return 'selected';
-    if (slots.length === 0) return 'default';
-    if (slots.every(s => s.status !== 'available')) return 'busy';
+    if (daySchedules.length === 0) return 'default';
+    if (daySchedules.every(s => s.Status !== 'available')) return 'busy';
     return 'available';
   };
 
@@ -93,11 +89,6 @@ const Interview: React.FC = () => {
       message.error('ไม่พบ Application ID');
       return;
     }
-    // debug
-    console.log("📤 ส่งไป backend:", {
-        schedule_id: selectedTimeSlot,
-        job_application_id: jobApplicationId,
-      });
     try {
       await interviewAPI.book({
         schedule_id: selectedTimeSlot,
@@ -142,94 +133,108 @@ const Interview: React.FC = () => {
     );
   };
 
-  const getCurrentSlots = () => {
+  const getCurrentDaySchedules = (): InterviewScheduling[] => {
     if (!selectedDate) return [];
-    return getSlotsForDate(selectedDate);
+    return getSchedulesForDate(selectedDate);
   };
+
+  const selectedSlot = selectedTimeSlot
+    ? getCurrentDaySchedules().find(s => s.ID === selectedTimeSlot)
+    : undefined;
 
   return (
     <div className="interview-container">
-      <div className="interview-header">
-        <Row gutter={24}>
-          <Col span={16}>
-            <Card>
-              {/* Month Navigation */}
-              <div className="month-nav">
-                <Button type="text" icon={<LeftOutlined />} onClick={() => setCurrentMonth(currentMonth.subtract(1, 'month'))} />
-                <div className="month-display">{currentMonth.format('MMMM YYYY')}</div>
-                <Button type="text" icon={<RightOutlined />} onClick={() => setCurrentMonth(currentMonth.add(1, 'month'))} />
-              </div>
+      {interview ? (
+        <Card
+          title="คุณได้เลือกนัดสัมภาษณ์แล้ว"
+          extra={<CloseOutlined onClick={() => navigate("/my-applications")} />}
+        >
+          <p>คุณไม่สามารถจองใหม่ได้</p>
+        </Card>
+      ) : (
+        <div className="interview-header">
+          <Row gutter={24}>
+            <Col span={16}>
+              <Card>
+                {/* Month Navigation */}
+                <div className="month-nav">
+                  <Button type="text" icon={<LeftOutlined />} onClick={() => setCurrentMonth(currentMonth.subtract(1, 'month'))} />
+                  <div className="month-display">{currentMonth.format('MMMM YYYY')}</div>
+                  <Button type="text" icon={<RightOutlined />} onClick={() => setCurrentMonth(currentMonth.add(1, 'month'))} />
+                </div>
 
-              {/* Calendar Header */}
-              <div className="calendar-header">
-                {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(d => <div key={d} className="calendar-header-cell">{d}</div>)}
-              </div>
+                {/* Calendar Header */}
+                <div className="calendar-header">
+                  {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(d => <div key={d} className="calendar-header-cell">{d}</div>)}
+                </div>
 
-              {/* Calendar Grid */}
-              <div className="calendar-grid">
-                {Array.from({ length: 42 }, (_, i) => {
-                  const startOfMonth = currentMonth.startOf('month').startOf('week');
-                  const currentDate = startOfMonth.add(i, 'day');
-                  const isCurrentMonth = currentDate.month() === currentMonth.month();
-                  return (
-                    <div key={i} className={`calendar-cell ${!isCurrentMonth ? 'cell-other-month' : ''}`}>
-                      {isCurrentMonth
-                        ? dateCellRender(currentDate)
-                        : <div className="cell-disabled">{currentDate.date()}</div>}
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
-          </Col>
-
-          <Col span={8}>
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
-              {/* Legend */}
-              <Card size="small">
-                <Space direction="vertical" size="small">
-                  <div className="legend-item"><div className="legend-dot selected" /> <Text>วันที่เลือก</Text></div>
-                  <div className="legend-item"><div className="legend-dot busy" /> <Text>เต็ม</Text></div>
-                  <div className="legend-item"><div className="legend-dot available" /> <Text>ว่าง</Text></div>
-                </Space>
-              </Card>
-
-              {/* Time Slots */}
-              {selectedDate && (
-                <Card
-                  title={<Title level={4} style={{ margin: 0 }}>{selectedDate.date()} {selectedDate.format('ddd').toUpperCase()}</Title>}
-                  className="time-slot-card"
-                >
-                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    {getCurrentSlots().map(slot => (
-                      <div key={slot.id} className="time-slot-row">
-                        <Text strong>{slot.startTime} - {slot.endTime}</Text>
-                        <div
-                          className={`time-slot-btn ${slot.status} ${selectedTimeSlot === slot.id ? 'selected' : ''}`}
-                          onClick={() => setSelectedTimeSlot(slot.id)}
-                        />
+                {/* Calendar Grid */}
+                <div className="calendar-grid">
+                  {Array.from({ length: 42 }, (_, i) => {
+                    const startOfMonth = currentMonth.startOf('month').startOf('week');
+                    const currentDate = startOfMonth.add(i, 'day');
+                    const isCurrentMonth = currentDate.month() === currentMonth.month();
+                    return (
+                      <div key={i} className={`calendar-cell ${!isCurrentMonth ? 'cell-other-month' : ''}`}>
+                        {isCurrentMonth
+                          ? dateCellRender(currentDate)
+                          : <div className="cell-disabled">{currentDate.date()}</div>}
                       </div>
-                    ))}
+                    );
+                  })}
+                </div>
+              </Card>
+            </Col>
+
+            <Col span={8}>
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                {/* Legend */}
+                <Card size="small">
+                  <Space direction="vertical" size="small">
+                    <div className="legend-item"><div className="legend-dot selected" /> <Text>วันที่เลือก</Text></div>
+                    <div className="legend-item"><div className="legend-dot busy" /> <Text>เต็ม</Text></div>
+                    <div className="legend-item"><div className="legend-dot available" /> <Text>ว่าง</Text></div>
                   </Space>
                 </Card>
-              )}
 
-              {/* Schedule Button */}
-              <Button
-                type="primary"
-                size="large"
-                block
-                disabled={!selectedTimeSlot}
-                className={`schedule-btn ${selectedTimeSlot ? 'enabled' : 'disabled'}`}
-                onClick={() => setShowConfirmModal(true)}
-              >
-                นัดสัมภาษณ์
-              </Button>
-            </Space>
-          </Col>
-        </Row>
-      </div>
+                {/* Time Slots */}
+                {selectedDate && (
+                  <Card
+                    title={<Title level={4} style={{ margin: 0 }}>{selectedDate.date()} {selectedDate.format('ddd').toUpperCase()}</Title>}
+                    className="time-slot-card"
+                  >
+                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                      {getCurrentDaySchedules().map(s => (
+                        <div key={s.ID} className="time-slot-row">
+                          <Text strong>
+                            {dayjs(s.DateAndTimeStart).format('HH:mm')} - {dayjs(s.DateAndTimeEnd).format('HH:mm')}
+                          </Text>
+                          <div
+                            className={`time-slot-btn ${String(s.Status).toLowerCase()} ${selectedTimeSlot === s.ID ? 'selected' : ''}`}
+                            onClick={() => setSelectedTimeSlot(s.ID)}
+                          />
+                        </div>
+                      ))}
+                    </Space>
+                  </Card>
+                )}
 
+                {/* Schedule Button */}
+                <Button
+                  type="primary"
+                  size="large"
+                  block
+                  disabled={!selectedTimeSlot}
+                  className={`schedule-btn ${selectedTimeSlot ? 'enabled' : 'disabled'}`}
+                  onClick={() => setShowConfirmModal(true)}
+                >
+                  นัดสัมภาษณ์
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </div>
+      )}
       {/* Confirmation Modal */}
       <Modal open={showConfirmModal} footer={null} closable={false} centered width={400} className="modal-box">
         <div className="modal-content">
@@ -239,7 +244,7 @@ const Interview: React.FC = () => {
           <QuestionCircleOutlined className="modal-icon" />
           <Title level={4}>นัดสัมภาษณ์</Title>
           <Text className="modal-text">
-            {selectedDate?.format('dddd')} ที่ {selectedDate?.date()} {selectedDate?.format('MMMM')} {selectedDate?.year()} เวลา {getCurrentSlots().find(s => s.id === selectedTimeSlot)?.startTime}
+            {selectedDate?.format('dddd')} ที่ {selectedDate?.date()} {selectedDate?.format('MMMM')} {selectedDate?.year()} เวลา {selectedSlot ? dayjs(selectedSlot.DateAndTimeStart).format('HH:mm') : ''}
           </Text>
           <Text className="modal-warning">ไม่สามารถยกเลิกในภายหลังได้ !</Text>
           <div className="modal-actions">

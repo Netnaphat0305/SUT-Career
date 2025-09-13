@@ -27,7 +27,7 @@ export interface ChatHistory {
   Chat_Room: number;
   User: {
     ID: number;
-    Role: string;
+    role: string;
   };
   UserSenderID: number;
   Message_Type: string;

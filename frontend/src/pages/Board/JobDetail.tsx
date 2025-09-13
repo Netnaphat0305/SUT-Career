@@ -107,6 +107,7 @@ const PostLayout: React.FC = () => {
   }
 
   // edit by book
+
   // ฟังก์ชันเมื่อกด Contact
   const handleCreateChat = async () => {
     if (!selectedPost?.employer_id) return;
@@ -297,10 +298,12 @@ const PostLayout: React.FC = () => {
                 <p>{selectedPost.description || "ไม่มีรายละเอียดเพิ่มเติม"}</p>
               </div>
               {/* edit By Book */}
-              <div className="chat-fab" onClick={handleCreateChat}>
-                <span className="chat-label">Contact</span>
-                <MessageOutlined className="create-chat-button" />
-              </div>
+              {role === "student" && (
+                <div className="chat-fab" onClick={handleCreateChat}>
+                  <span className="chat-label">Contact</span>
+                  <MessageOutlined className="create-chat-button" />
+                </div>
+              )}
               {/* edit By Book */}
             </>
           )}
