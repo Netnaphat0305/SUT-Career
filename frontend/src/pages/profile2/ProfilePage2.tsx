@@ -187,7 +187,7 @@ const ProfilePage2: React.FC = () => {
   const { student, posts, reviews, rating } = profileData;
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ padding: '24px', maxWidth: '1200px', minHeight: "85vh", margin: '0 auto' }}>
       <Row gutter={[24, 24]}>
         {/* Profile Information Column */}
         <Col xs={24} lg={8}>

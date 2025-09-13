@@ -1,10 +1,11 @@
 import React from 'react';
-import { Card, Form, Input, Button, Typography, message, Divider } from 'antd';
-import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined, HomeOutlined, IdcardOutlined } from '@ant-design/icons';
+import { Card, Form, Input, Button, Typography, message, Divider, Row, Col, Select, DatePicker } from 'antd';
+import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined, HomeOutlined, IdcardOutlined, WomanOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import './RegisterPage.css'; // ใช้ CSS เดียวกันได้
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 const RegisterPageEmployer: React.FC = () => {
   const navigate = useNavigate();
@@ -18,10 +19,13 @@ const RegisterPageEmployer: React.FC = () => {
           username: values.username,
           password: values.password,
           company_name: values.companyName,
-          contact_person: values.contactPerson,
           email: values.email,
           phone: values.phone,
           address: values.address,
+          first_name: values.firstName,
+          last_name: values.lastName,
+          gender_id: values.gender_id,
+          birthday: values.birthday.toISOString(),
         }),
       });
 
@@ -44,18 +48,53 @@ const RegisterPageEmployer: React.FC = () => {
           สมัครสมาชิกสำหรับผู้ประกอบการ
         </Title>
         <Form name="register_employer" onFinish={onFinish} layout="vertical" scrollToFirstError>
-          <Form.Item name="companyName" label="ชื่อบริษัท/องค์กร" rules={[{ required: true, message: 'กรุณากรอกชื่อบริษัท!' }]}>
-            <Input prefix={<HomeOutlined />} placeholder="ชื่อบริษัท" />
-          </Form.Item>
-          <Form.Item name="contactPerson" label="ชื่อผู้ติดต่อ" rules={[{ required: true, message: 'กรุณากรอกชื่อผู้ติดต่อ!' }]}>
-            <Input prefix={<IdcardOutlined />} placeholder="ชื่อ-นามสกุล ของผู้ติดต่อ" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item name="companyName" label="ชื่อบริษัท/องค์กร" rules={[{ required: true, message: 'กรุณากรอกชื่อบริษัท!' }]}>
+                <Input prefix={<HomeOutlined />} placeholder="ชื่อบริษัท" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+               <Form.Item name="phone" label="เบอร์โทรศัพท์ติดต่อ" rules={[{ required: true, message: 'กรุณากรอกเบอร์โทรศัพท์!' }]}>
+                <Input prefix={<PhoneOutlined />} placeholder="เบอร์โทรศัพท์" />
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item name="firstName" label="ชื่อจริง (ผู้ติดต่อ)" rules={[{ required: true, message: 'กรุณากรอกชื่อจริง!' }]}>
+                <Input prefix={<IdcardOutlined />} placeholder="ชื่อจริง" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item name="lastName" label="นามสกุล (ผู้ติดต่อ)" rules={[{ required: true, message: 'กรุณากรอกนามสกุล!' }]}>
+                <Input prefix={<IdcardOutlined />} placeholder="นามสกุล" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+             <Col xs={24} sm={12}>
+                <Form.Item name="gender_id" label="เพศ" rules={[{ required: true, message: 'กรุณาเลือกเพศ!' }]}>
+                    <Select placeholder="เลือกเพศ" prefix={<WomanOutlined />}>
+                        <Option value={1}>ชาย</Option>
+                        <Option value={2}>หญิง</Option>
+                        <Option value={3}>ไม่ระบุ</Option>
+                    </Select>
+                </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+                <Form.Item name="birthday" label="วันเกิด" rules={[{ required: true, message: 'กรุณาเลือกวันเกิด!' }]}>
+                    <DatePicker style={{ width: '100%' }} placeholder="เลือกวันเกิด" />
+                </Form.Item>
+            </Col>
+          </Row>
+        
           <Form.Item name="email" label="อีเมลติดต่อ" rules={[{ required: true, message: 'กรุณากรอกอีเมล!', type: 'email' }]}>
             <Input prefix={<MailOutlined />} placeholder="อีเมลสำหรับการติดต่อ" />
           </Form.Item>
-          <Form.Item name="phone" label="เบอร์โทรศัพท์ติดต่อ" rules={[{ required: true, message: 'กรุณากรอกเบอร์โทรศัพท์!' }]}>
-            <Input prefix={<PhoneOutlined />} placeholder="เบอร์โทรศัพท์" />
-          </Form.Item>
+         
           <Form.Item name="address" label="ที่อยู่บริษัท" rules={[{ required: true, message: 'กรุณากรอกที่อยู่!' }]}>
             <Input.TextArea rows={2} placeholder="ที่อยู่บริษัท/องค์กร" />
           </Form.Item>

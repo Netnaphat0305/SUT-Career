@@ -530,14 +530,14 @@ const CreateStudentPostModal: React.FC<CreateStudentPostModalProps> = ({
         </Row>
         <Row gutter={16}>
           <Col span={12}><Form.Item label="สถานที่ที่สะดวก" name="preferredLocation" rules={[{ required: true, message: 'กรุณาระบุสถานที่' }]}><Input prefix={<EnvironmentOutlined />} placeholder="เช่น ใกล้มหาวิทยาลัย, Online" /></Form.Item></Col>
-          <Col span={12}><Form.Item label="ค่าตอบแทนที่คาดหวัง" name="expectedCompensation"><Input prefix={<DollarOutlined />} placeholder="เช่น 15,000-25,000 บาท/เดือน" /></Form.Item></Col>
+          <Col span={12}><Form.Item label="ค่าตอบแทนที่คาดหวัง" name="expectedCompensation"><Input prefix={<DollarOutlined />} placeholder="เช่น ชั่วโมงละ 50 บาท" /></Form.Item></Col>
         </Row>
         <Form.Item label="ทักษะ" name="skills" rules={[{ required: true, message: 'กรุณาระบุหรือเลือกทักษะอย่างน้อย 1 อย่าง' }]}>
           <Select
             mode="tags"
             allowClear
             style={{ width: '100%' }}
-            placeholder="เลือกทักษะที่มีอยู่ หรือพิมพ์เพื่อเพิ่มทักษะใหม่"
+            placeholder="เลือกทักษะที่มีอยู่"
             loading={skills.length === 0}
             tokenSeparators={[',']}
           >
