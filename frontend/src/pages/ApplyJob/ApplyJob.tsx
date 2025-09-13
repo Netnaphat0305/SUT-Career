@@ -251,11 +251,7 @@ const ApplyJob: React.FC = () => {
           </Form.Item>
 
           {/* ปุ่มแนบไฟล์ Resume */}
-          <Form.Item
-            label="แนบไฟล์ Resume"
-            name="resume_file"
-            rules={[{ required: true, message: "กรุณาอัปโหลด Resume" }]}
-          >
+          <Form.Item label="แนบไฟล์ Resume" name="resume_file">
             <Upload
               beforeUpload={(file) => {
                 setResumeFile(file);
@@ -264,7 +260,9 @@ const ApplyJob: React.FC = () => {
               maxCount={1}
               showUploadList={{ showRemoveIcon: true }}
             >
-              <Button icon={<UploadOutlined />}>คลิกเพื่ออัปโหลด</Button>
+              <Button icon={<UploadOutlined />}>
+                คลิกเพื่ออัปโหลด (ไม่บังคับ)
+              </Button>
             </Upload>
           </Form.Item>
 

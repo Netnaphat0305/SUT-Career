@@ -275,7 +275,6 @@ func UpdateInterviewSchedule(c *gin.Context) {
     })
 }
 
-
 // POST /api/jobapplications/:id/upload-resume_file
 func UploadResume(c *gin.Context) {
     id := c.Param("id")
@@ -302,15 +301,16 @@ func UploadResume(c *gin.Context) {
         return
     }
 
-    // อัปเดตชื่อไฟล์ใน DB
-    jobApp.ResumeFile = path
+    // อัปเดตชื่อไฟล์ใน DB (ใช้ pointer)
+    jobApp.ResumeFile = &path
     if err := config.DB().Save(&jobApp).Error; err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตข้อมูลไม่สำเร็จ"})
         return
     }
 
     c.JSON(http.StatusOK, gin.H{
-        "message": "อัปโหลด Portfolio สำเร็จ",
+        "message":     "อัปโหลด Resume สำเร็จ",
         "resume_file": path,
     })
 }
+
