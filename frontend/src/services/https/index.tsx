@@ -17,7 +17,7 @@ import type { Paymentmethod } from "../../interfaces/paymentmethod";
 import type { Skill } from "../../interfaces/skill"
 /** ใช้ VITE_API_KEY เป็น baseURL เหมือนเดิม */
 const API_URL = import.meta.env.VITE_API_KEY || "http://localhost:8080";
-export const UPLOAD_URL = `${API_URL}/upload`;
+export const UPLOAD_URL = `${API_URL}/api/upload`;
 /** build URL ให้สะอาด */
 const buildUrl = (path: string) =>
   `${API_URL.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
@@ -260,17 +260,17 @@ export const authAPI = {
 };
 
 export const studentAPI = {
-  signup: (data: Student) => post("/students", data, false),
-  getAll: () => get("/students"),
-  getById: (id: number) => get(`/students/${id}`),
-  getByUserId: (userId: number) => get(`/students/user/${userId}`),
+  signup: (data: Student) => post("/api/students", data, false),
+  getAll: () => get("/api/students"),
+  getById: (id: number) => get(`/api/students/${id}`),
+  getByUserId: (userId: number) => get(`/api/students/user/${userId}`),
   //============edit by netnaphat แก้ให้มันไม่ซ้ำเพราะต้องใช้ update เหมือนกัน=============================//
   updateapply: (id: number, data: Partial<Student>) =>
     Update(`/api/student/${id}`, data),
-  deleteapply: (id: number) => DeleteReq(`/students/${id}`),
+  deleteapply: (id: number) => DeleteReq(`/api/students/${id}`),
   //===============================================================================================//
-  update: (id: number, data: Partial<Student>) => put(`students/${id}`, data),
-  delete: (id: number) => del(`/students/${id}`),
+  update: (id: number, data: Partial<Student>) => put(`/api/students/${id}`, data),
+  delete: (id: number) => del(`/api/students/${id}`),
 };
 
 export const employerAPI = {
@@ -638,8 +638,8 @@ export const qnaAPI = {
 
 // Profile API
 export const profileAPI = {
-  getMyProfile: () => get("/profile"),
-  getProfileById: (studentId: string) => get(`/profile/${studentId}`),
+  getMyProfile: () => Get("/api/profile"),
+  getProfileById: (studentId: string) => Get(`/api/profile/${studentId}`),
 };
 
 // Job Category APIs

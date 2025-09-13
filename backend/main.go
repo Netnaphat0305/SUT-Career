@@ -466,6 +466,8 @@ func main() {
 
 		// 🔧 ⭐ เพิ่มใหม่: Public Profile View - ดูโปรไฟล์คนอื่นได้โดยไม่ต้อง login
 		api.GET("/profile/:studentId", controller.GetProfileByStudentID)
+		
+
 
 		// --- Job Categories ---
 		api.GET("/jobcategories", controller.ListJobCategories)

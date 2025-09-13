@@ -22,3 +22,23 @@ export type CreateReviewPayload = {
     comment: string;
     datetime?: Date | string;
 }
+// ✅ เพิ่มใหม่: Interface สำหรับแสดงผลรีวิว
+export interface ReviewDisplay {
+  ID: number;
+  comment: string;
+  datetime: Date | string;
+  rating: number;
+  reviewer?: {
+    name?: string;
+    avatar?: string;
+  };
+}
+
+// ✅ เพิ่มใหม่: Interface สำหรับสถิติรีวิว
+export interface ReviewStats {
+  average: number;
+  count: number;
+  distribution?: {
+    [key: number]: number; // key: rating score (1-5), value: count
+  };
+}
