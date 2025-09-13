@@ -13,9 +13,10 @@ import {
   Card,
   Row,
   Col,
+  Upload,
 } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { useAuth } from "../../context/AuthContext";
-// import type { RadioChangeEvent } from "antd";
 import "./JobPost.css";
 import PageHeader from "../../components/PageHeader";
 import {
@@ -155,16 +156,6 @@ const JobPost: React.FC = () => {
     navigate("/Job/Board");
   };
 
-  const handlePortfolioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setPortfolioFile(file);
-  };
-
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setLogoFile(file);
-  };
-
   const SalaryInput: React.FC = () => (
     <Row gutter={16}>
       <Col span={12}>
@@ -291,40 +282,36 @@ const JobPost: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item label="แนบผลงาน (Portfolio)">
-            <input
-              id="portfolio-upload"
-              type="file"
-              accept=".pdf,.doc,.docx,.jpg,.png"
-              style={{ display: "none" }}
-              onChange={handlePortfolioChange}
-            />
-            <Button
-              type="primary"
-              onClick={() =>
-                document.getElementById("portfolio-upload")?.click()
-              }
+          {/* ปุ่มอัปโหลด Portfolio */}
+          <Form.Item label="แนบผลงาน (Portfolio)" name="portfolio_file">
+            <Upload
+              beforeUpload={(file) => {
+                setPortfolioFile(file);
+                return false; // ❌ ไม่อัปโหลดอัตโนมัติ
+              }}
+              maxCount={1}
+              showUploadList={{ showRemoveIcon: true }}
             >
-              อัปโหลด Portfolio
-            </Button>
+              <Button icon={<UploadOutlined />}>คลิกเพื่ออัปโหลด Portfolio</Button>
+            </Upload>
             {portfolioFile && (
               <span style={{ marginLeft: 10 }}>{portfolioFile.name}</span>
             )}
           </Form.Item>
 
-          <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
-            <input
-              id="logo-upload"
-              type="file"
+          {/* ปุ่มอัปโหลด Logo */}
+          <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)" name="logo_file">
+            <Upload
+              beforeUpload={(file) => {
+                setLogoFile(file);
+                return false; // ❌ ไม่อัปโหลดอัตโนมัติ
+              }}
+              maxCount={1}
               accept="image/*"
-              style={{ display: "none" }}
-              onChange={handleLogoChange}
-            />
-            <Button
-              onClick={() => document.getElementById("logo-upload")?.click()}
+              showUploadList={{ showRemoveIcon: true }}
             >
-              เลือกรูปโลโก้
-            </Button>
+              <Button icon={<UploadOutlined />}>คลิกเพื่ออัปโหลดโลโก้</Button>
+            </Upload>
             {logoFile && (
               <span style={{ marginLeft: 10 }}>{logoFile.name}</span>
             )}

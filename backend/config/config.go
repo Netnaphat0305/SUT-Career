@@ -13,3 +13,6 @@ func CheckPasswordHash(password, hash string) bool {
    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
    return err == nil
 }
+
+// แปลงรหัสอกมาให้เป็นแบบ 5623u92-4-2129%45w219#$%$%&*FV
+//เวลา สมัครสมาชิก จะเอา plain password ของ user มา HashPassword ก่อน แล้วค่อยเก็บลง DB (ไม่เก็บ plain password ตรง ๆ)

@@ -96,7 +96,7 @@ const PostBoard: React.FC = () => {
                 <div className="job-left">
                   <h3 className="job-title">{post.title}</h3>
                   <p className="company">
-                    {post.Employer?.company_name || "ไม่ระบุบริษัท"}
+                    {post.employer?.company_name || "ไม่ระบุบริษัท"}
                   </p>
 
                   <div className="job-details">

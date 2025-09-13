@@ -8,7 +8,7 @@ import (
 	"time"
     "fmt"
 )
-
+//GET /jobapplications/init/:id
 // ดึงข้อมูลนักศึกษา  JobPost พร้อม Preload
 func InitJobApplication(c *gin.Context) {
 	jobpostID := c.Param("id")
@@ -45,6 +45,7 @@ func InitJobApplication(c *gin.Context) {
 
 func CreateJobApplication(c *gin.Context) {
 	var app entity.JobApplication
+    //map struc จาก frontend
 	if err := c.ShouldBindJSON(&app); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -127,6 +128,7 @@ func GetApplicantsByJobPost(c *gin.Context) {
     })
 }
 
+//อัปเดตสถานะใบสมัครงาน
 // PUT /api/jobapplications/:id/status
 func UpdateApplicationStatus(c *gin.Context) {
     id := c.Param("id")
@@ -160,7 +162,9 @@ func UpdateApplicationStatus(c *gin.Context) {
     })
 }
 
+//ตรวจสอบว่านักศึกษาคนนี้สมัครงานโพสต์นี้ไปแล้วหรือยัง
 // GET /api/jobapplications/check/:jobpost_id/:student_id
+//เช็คว่า student id=3 สมัครงานโพสต์ id=10 หรือยัง
 func CheckJobApplication(c *gin.Context) {
     jobpostID := c.Param("jobpost_id")
     studentID := c.Param("student_id")
@@ -184,9 +188,10 @@ func CheckJobApplication(c *gin.Context) {
     })
 }
 
+//นักศึกษาที่ถูกเรียกสัมภาษณ์เลือกวันและเวลาสัมภาษณ์
 // PUT /api/jobapplications/:id/interview
 func UpdateInterviewSchedule(c *gin.Context) {
-    id := c.Param("id")
+    id := c.Param("id") //ใบสมัคร
 
     var input struct {
         InterviewSchedulingID uint `json:"interview_scheduling_id" binding:"required"`
@@ -233,7 +238,7 @@ func UpdateInterviewSchedule(c *gin.Context) {
     // ใช้ Transaction เพื่อความปลอดภัย
     tx := config.DB().Begin()
 
-    // 1. อัปเดตสถานะของ JobApplication เป็น InterviewScheduled
+    // อัปเดตสถานะของ JobApplication เป็น InterviewScheduled
     if err := tx.Model(&entity.JobApplication{}).
         Where("id = ?", id).
         Updates(map[string]interface{}{
@@ -245,7 +250,7 @@ func UpdateInterviewSchedule(c *gin.Context) {
         return
     }
 
-    // 2. สร้าง Interview ใหม่
+    // สร้าง Interview ใหม่
     interview := entity.Interview{
         InterviewSchedulingID: input.InterviewSchedulingID,
         StudentID:             app.StudentID,
@@ -258,7 +263,7 @@ func UpdateInterviewSchedule(c *gin.Context) {
         return
     }
 
-    // 3. อัปเดตสถานะของตารางสัมภาษณ์เป็น booked
+    //  อัปเดตสถานะของตารางสัมภาษณ์เป็น booked
     schedule.Status = "booked"
     if err := tx.Save(&schedule).Error; err != nil {
         tx.Rollback()
@@ -275,6 +280,7 @@ func UpdateInterviewSchedule(c *gin.Context) {
     })
 }
 
+
 // POST /api/jobapplications/:id/upload-resume_file
 func UploadResume(c *gin.Context) {
     id := c.Param("id")
@@ -285,24 +291,23 @@ func UploadResume(c *gin.Context) {
         return
     }
 
-    // รับไฟล์จาก form-data
     file, err := c.FormFile("resume_file")
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "กรุณาเลือกไฟล์"})
         return
     }
 
-    // กำหนด path สำหรับบันทึกไฟล์
-    path := fmt.Sprintf("uploads/resume_file/%d_%s", jobApp.ID, file.Filename)
+    // path ที่บันทึกลงเครื่อง
+    savePath := fmt.Sprintf("./uploads/resume_file/%d_%s", jobApp.ID, file.Filename)
+    // path ที่เก็บลง DB → frontend ใช้โหลดได้
+    publicPath := fmt.Sprintf("/uploads/resume_file/%d_%s", jobApp.ID, file.Filename)
 
-    // บันทึกไฟล์ลง server
-    if err := c.SaveUploadedFile(file, path); err != nil {
+    if err := c.SaveUploadedFile(file, savePath); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถบันทึกไฟล์ได้"})
         return
     }
 
-    // อัปเดตชื่อไฟล์ใน DB (ใช้ pointer)
-    jobApp.ResumeFile = &path
+    jobApp.ResumeFile = &publicPath
     if err := config.DB().Save(&jobApp).Error; err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตข้อมูลไม่สำเร็จ"})
         return
@@ -310,7 +315,6 @@ func UploadResume(c *gin.Context) {
 
     c.JSON(http.StatusOK, gin.H{
         "message":     "อัปโหลด Resume สำเร็จ",
-        "resume_file": path,
+        "resume_file": publicPath,
     })
 }
-

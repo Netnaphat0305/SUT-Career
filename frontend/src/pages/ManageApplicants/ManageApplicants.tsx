@@ -244,6 +244,30 @@ const ManageApplicants: React.FC = () => {
                 {/* Divider */}
                 <div className="profile-divider" />
 
+                {/* Resume ผู้สมัคร */}
+                <div className="applicant-profile-resume">
+                  {/* Resume ของผู้สมัคร */}
+                  {selectedApplicant?.resume_file ? (
+                    <div className="resume-section">
+                      <h4>Resume</h4>
+                      <a
+                        href={`${API_BASE}/download/resume/${selectedApplicant.resume_file
+                          .split("/")
+                          .pop()}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        ดาวน์โหลด Resume
+                      </a>
+                    </div>
+                  ) : (
+                    <p style={{ color: "#888" }}>ผู้สมัครไม่ได้แนบ Resume</p>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="profile-divider" />
+
                 {/* วันสัมภาษณ์ */}
                 {selectedApplicant.InterviewScheduling && (
                   <div className="interview-date">

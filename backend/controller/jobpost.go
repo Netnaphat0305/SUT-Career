@@ -57,6 +57,7 @@ func GetJobPostByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": jobpost})
 }
 
+// ดึงโพสต์งานทั้งหมดที่ผู้ว่าจ้าง (employer) คนนั้นเคยโพสต์
 // GET /jobposts/employer/:id
 func ListJobPostsByEmployerID(c *gin.Context) {
 	var jobposts []entity.Jobpost
@@ -78,7 +79,7 @@ func CreateJobPost(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-
+	//map
 	var jobpost entity.Jobpost
 	if err := c.ShouldBindJSON(&jobpost); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

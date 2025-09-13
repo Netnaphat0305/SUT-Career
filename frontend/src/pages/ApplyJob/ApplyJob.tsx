@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import {
   Input,
   Form,
@@ -20,6 +20,7 @@ import "./AppJobDetail.css";
 import { jobApplicationAPI, studentAPI } from "../../services/https"; // เพิ่ม studentAPI
 import profile from "../../assets/profile.svg";
 import { API_BASE } from "../../config";
+import { number } from "echarts";
 
 const { TextArea } = Input;
 
@@ -34,6 +35,7 @@ const ApplyJob: React.FC = () => {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const navigate = useNavigate();
 
   const handleClose = () => {
     setIsModalVisible(false);
@@ -71,7 +73,7 @@ const ApplyJob: React.FC = () => {
   // ฟังก์ชันสมัครงาน + อัปเดตข้อมูลนักศึกษา
   const onFinish = async (values: any) => {
     try {
-      // ✅1. อัปเดตข้อมูลนักศึกษาใน DB ก่อน
+      // 1. อัปเดตข้อมูลนักศึกษาใน DB ก่อน
       const updatedStudent = {
         first_name: values.first_name,
         last_name: values.last_name,
@@ -87,7 +89,7 @@ const ApplyJob: React.FC = () => {
       await studentAPI.updateapply(student.ID, updatedStudent);
       console.log("update student ---------", updatedStudent);
 
-      // ✅ 2. สมัครงานตามปกติ
+      // 2. สมัครงานตามปกติ
       const payload = {
         student_id: student.ID,
         job_post_id: jobpost.ID,
@@ -98,8 +100,8 @@ const ApplyJob: React.FC = () => {
 
       if (res?.status === 201 || res?.status === 200 || res?.data) {
         const applicationId = res.data?.ID || res.ID;
-
-        // ✅ 3. ถ้ามีไฟล์ Resume ให้ Upload
+        console.log(res.message);
+        // 3. ถ้ามีไฟล์ Resume ให้ Upload
         if (resumeFile) {
           const formData = new FormData();
           formData.append("resume_file", resumeFile);
@@ -110,6 +112,7 @@ const ApplyJob: React.FC = () => {
         message.success("สมัครงานสำเร็จ!");
         setIsModalVisible(true);
         form.resetFields();
+        navigate("/my-applications");
       } else {
         message.error("สมัครงานไม่สำเร็จ");
       }
