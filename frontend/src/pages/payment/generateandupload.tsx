@@ -15,15 +15,17 @@ import {
 import { paymentReportAPI } from "../../services/https";
 import type { GenReportInputReactPDF } from "../../interfaces/paymentreport";
 
-import THSarabunReg        from "../../../public/fonts/THSarabunNew.ttf";
-import THSarabunBold       from "../../../public/fonts/THSarabunNew Bold.ttf";
-import THSarabunItalic     from "../../../public/fonts/THSarabunNew Italic.ttf";
+import THSarabunReg from "../../../public/fonts/THSarabunNew.ttf";
+import THSarabunBold from "../../../public/fonts/THSarabunNew Bold.ttf";
+import THSarabunItalic from "../../../public/fonts/THSarabunNew Italic.ttf";
 import THSarabunBoldItalic from "../../../public/fonts/THSarabunNew BoldItalic.ttf";
 
 dayjs.locale("th");
 
 const TH: React.FC<{ style?: any; children?: any }> = ({ style, children }) => {
-  const raw = Array.isArray(children) ? String(children.join("")) : String(children ?? "");
+  const raw = Array.isArray(children)
+    ? String(children.join(""))
+    : String(children ?? "");
   const fixed = raw.replace(/\u0E33/g, "\u0E4D\u0E32");
   return <Text style={style}>{fixed}</Text>;
 };
@@ -33,8 +35,8 @@ try {
     family: "THSarabunNew",
     fonts: [
       { src: THSarabunReg },
-      { src: THSarabunBold,       fontWeight: 700 },
-      { src: THSarabunItalic,     fontStyle: "italic" },
+      { src: THSarabunBold, fontWeight: 700 },
+      { src: THSarabunItalic, fontStyle: "italic" },
       { src: THSarabunBoldItalic, fontWeight: 700, fontStyle: "italic" },
     ],
   });
@@ -44,11 +46,26 @@ try {
 }
 
 const styles = StyleSheet.create({
-  page: { padding: 36, fontFamily: "THSarabunNew", fontSize: 12, color: "#111827" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 },
+  page: {
+    padding: 36,
+    fontFamily: "THSarabunNew",
+    fontSize: 12,
+    color: "#111827",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
   brandRow: { flexDirection: "row", alignItems: "center" },
   brandText: { fontSize: 22, fontWeight: 700, color: "#1E3A5F" },
-  docTitle: { fontSize: 14, fontWeight: 700, color: "#0f172a", textAlign: "right" },
+  docTitle: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: "#0f172a",
+    textAlign: "right",
+  },
   docSub: { fontSize: 10, color: "#6b7280", textAlign: "right" },
   hr: { height: 1, backgroundColor: "#e5e7eb", marginVertical: 10 },
   sectionBox: {
@@ -63,23 +80,46 @@ const styles = StyleSheet.create({
   label: { width: 170, color: "#6b7280" },
   value: { flex: 1, fontWeight: 500 },
   successRow: { flexDirection: "row", alignItems: "center", marginTop: 10 },
-  successDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#16a34a", marginRight: 6 },
+  successDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#16a34a",
+    marginRight: 6,
+  },
   note: { marginTop: 10, fontSize: 10, color: "#6b7280" },
 });
 
 function formatThaiDateBuddhist(isoOrDate: string | null) {
   const d = dayjs(isoOrDate);
   const months = [
-    "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
-    "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม",
   ];
-  return `${d.date()} ${months[d.month()]} ${d.year() + 543} เวลา ${d.format("HH:mm")} น.`;
+  return `${d.date()} ${months[d.month()]} ${d.year() + 543} เวลา ${d.format(
+    "HH:mm"
+  )} น.`;
 }
 
 const thMoney = (n: number) =>
-  `${Number(n || 0).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท`;
+  `${Number(n || 0).toLocaleString("th-TH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} บาท`;
 
-export async function generateAndUploadReportReactPDF(input: GenReportInputReactPDF) {
+export async function generateAndUploadReportReactPDF(
+  input: GenReportInputReactPDF
+) {
   const {
     paymentId,
     amount,
@@ -87,7 +127,7 @@ export async function generateAndUploadReportReactPDF(input: GenReportInputReact
     method_name,
     jobTitle,
     employerName,
-    employerAddress,     // เผื่อใช้ตอนหลัง
+    employerAddress, // เผื่อใช้ตอนหลัง
     logoDataUrl,
   } = input;
 
@@ -95,9 +135,10 @@ export async function generateAndUploadReportReactPDF(input: GenReportInputReact
   const brandName = "SUT Career";
   const titleText = jobTitle?.trim() ? jobTitle.trim() : "รายการชำระเงิน";
   const companyText = employerName?.trim() ? employerName.trim() : "-";
-  const AddressText = employerAddress?.trim() ? employerAddress.trim() : "-";
+  const addressText = employerAddress?.trim() ? employerAddress.trim() : "-";
   const payeeText = "บริษัท SUT Career";
-  const date = typeof dateInput === "string" ? dateInput : dateInput.toISOString();
+  const date =
+    typeof dateInput === "string" ? dateInput : dateInput.toISOString();
 
   const Doc = (
     <Document author={brandName} title={`Receipt #${paymentId}`}>
@@ -106,7 +147,12 @@ export async function generateAndUploadReportReactPDF(input: GenReportInputReact
         <View style={styles.header}>
           {/* ซ้าย: โลโก้มุมบนซ้าย + SUT Career */}
           <View style={styles.brandRow}>
-            {logoDataUrl ? <Image src={logoDataUrl} style={{ width: 36, height: 36, marginRight: 8 }} /> : null}
+            {logoDataUrl ? (
+              <Image
+                src={logoDataUrl}
+                style={{ width: 36, height: 36, marginRight: 8 }}
+              />
+            ) : null}
             <TH style={styles.brandText}>{brandName}</TH>
           </View>
 
@@ -114,7 +160,9 @@ export async function generateAndUploadReportReactPDF(input: GenReportInputReact
           <View>
             <TH style={styles.docTitle}>ใบเสร็จรับเงินอิเล็กทรอนิกส์</TH>
             <TH style={styles.docSub}>เลขที่เอกสาร: #{String(paymentId)}</TH>
-            <TH style={styles.docSub}>ออก ณ วันที่ {formatThaiDateBuddhist(date)}</TH>
+            <TH style={styles.docSub}>
+              ออก ณ วันที่ {formatThaiDateBuddhist(date)}
+            </TH>
           </View>
         </View>
 
@@ -129,7 +177,7 @@ export async function generateAndUploadReportReactPDF(input: GenReportInputReact
 
           <View style={styles.row}>
             <TH style={styles.label}>ที่อยู่</TH>
-            <TH style={styles.value}>{AddressText}</TH>
+            <TH style={styles.value}>{addressText}</TH>
           </View>
 
           <View style={styles.row}>

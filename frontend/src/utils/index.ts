@@ -74,48 +74,44 @@ export const toTHDateTime = (v?: string | number | Date | null, empty = ""): str
 
 // qr payment utils
 export const payerFromPayment = (p: any): string => {
-  if (!p) return "ผู้ชำระเงิน";
-  
-  const paths = [
-    p.billable_item?.jobpost?.employer,
-    p.BillableItem?.Jobpost?.Employer,
-    p.payment?.billable_item?.jobpost?.employer,
-  ];
-  
-  for (const employer of paths) {
-    if (employer) {
-      const companyName = 
-        employer.company_name || 
-        employer.CompanyName || 
-        employer.companyName ||
-        "";
-      if (companyName) return companyName;
-    }
+  if (!p) {
+    return "";
   }
   
-  return "ผู้ชำระเงิน";
+  const employer = p.billable_item?.job_application?.JobPost?.employer;
+  if (employer) {
+      const companyName = employer.company_name || employer.CompanyName;
+      if (companyName) {
+        return companyName;
+      }
+    }
+  
+  return "";
 };
 
+// ปรับปรุงฟังก์ชัน getEmployerAddress ให้สอดคล้องกัน
 export const getEmployerAddress = (p: any): string => {
-  if (!p) return "ที่อยู่ไม่ระบุ";
+  if (!p) {
+    return "";
+  }
   
   const paths = [
-    p.billable_item?.jobpost?.employer,
-    p.BillableItem?.Jobpost?.Employer,
-    p.payment?.billable_item?.jobpost?.employer,
+    p.billable_item?.job_application?.JobPost?.employer,
+    p.billableitem?.job_application?.JobPost?.employer,
+    p.payment?.billableitem?.job_application?.JobPost?.employer,
   ];
   
   for (const employer of paths) {
     if (employer) {
-      const address = 
-        employer.address || 
-        employer.Address || 
-        "";
-      if (address) return address;
+      // ✅ แก้ไข: เพิ่ม .address (snake_case) เป็นตัวเลือกแรก
+      const address = employer.address || employer.Address;
+      if (address) {
+        return address;
+      }
     }
   }
   
-  return "ที่อยู่ไม่ระบุ";
+  return "";
 };
 
 export const getPaymentMethodName = (p: any): string => {
@@ -148,9 +144,9 @@ export const getJobTitle = (p: any): string => {
   if (!p) return "รายการชำระเงิน";
   
   const titles = [
-    p.billable_item?.jobpost?.title,
-    p.BillableItem?.Jobpost?.title,
-    p.payment?.billable_item?.jobpost?.title,
+    p.billable_item?.job_application?.jobpost?.title,
+    p.BillableItem?.job_application?.Jobpost?.title,
+    p.payment?.billable_item?.job_application?.jobpost?.title,
     p.billable_item?.description,
     p.BillableItem?.description,
     p.payment?.billable_item?.description,

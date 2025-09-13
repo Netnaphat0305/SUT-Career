@@ -1,10 +1,10 @@
-import type { Jobpost } from "./jobpost"
+import type { JobApplication } from "./jobApplication";
 import type { Ratingscore } from "./ratingscore";
 
 export interface Review {
     ID: number;
-    jobpost_id: number;
-    jobpost?: Jobpost;
+    job_application_id: number;
+    job_application?: JobApplication;
     ratingscore_id: number;
     ratingscore?: Ratingscore;
     comment: string;
@@ -12,13 +12,13 @@ export interface Review {
 }
 
 export interface FindReviewRequest {
-    jobpost_id: number;
+    job_application_id: number;
     employer_id?: number;
 }
 
 export type CreateReviewPayload = {
-    ratingscore_id?: Ratingscore['ID'];
-    jobpost_id?: number;
+    ratingscore_id?: number;
+    job_application_id?: number;
     comment: string;
     datetime?: Date | string;
 }

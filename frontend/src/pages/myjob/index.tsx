@@ -63,12 +63,9 @@ export const statusColor = (row: any) => {
 };
 
 const asData = <T,>(r: any): T => (r?.data?.data ?? r?.data ?? r) as T;
-const toJobId = (r: any) =>
-  Number(r.jobpost_id ?? r.ID ?? 0);
+const toJobId = (r: any) => Number(r.jobpost_id ?? r.ID ?? 0);
 export const hasPaymentProofInPayload = (row: any): boolean =>
-  Boolean(
-    row?.proof_of_payment ?? row?.payment?.proof_of_payment
-  );
+  Boolean(row?.proof_of_payment ?? row?.payment?.proof_of_payment);
 
 const pick = <T,>(...vals: T[]) =>
   vals.find((v) => v !== undefined && v !== null);
@@ -123,17 +120,15 @@ const MyJobPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [checkingId, setCheckingId] = useState<number | null>(null);
 
-  const [paidModalOpen, setPaidModalOpen] = useState(false);
-  const [paymentInfo, setPaymentInfo] = useState<any>(null);
   const [reviewedModalOpen, setreviewedModalOpen] = useState(false);
   const [reviewInfo, setReviewInfo] = useState<any>(null);
 
   // ตรวจรีวิว
-  const handleReviewClick = async (jobId: number) => {
+  const handleReviewClick = async (jobapplicationId: number) => {
     if (checkingId) return; // กันคลิกรัว
-    setCheckingId(jobId);
+    setCheckingId(jobapplicationId);
     try {
-      const res = await reviewAPI.getForJob(jobId);
+      const res = await reviewAPI.getForJob(jobapplicationId);
 
       if (hasReview(res)) {
         const review = extractReview(res);
@@ -141,10 +136,10 @@ const MyJobPage: React.FC = () => {
         setreviewedModalOpen(true);
         return;
       }
-      navigate(`/review/${jobId}`);
+      navigate(`/review/${jobapplicationId}`);
     } catch (e: any) {
       if (e?.response?.status === 404) {
-        navigate(`/review/${jobId}`);
+        navigate(`/review/${jobapplicationId}`);
       } else {
         message.error(e?.message || "เกิดข้อผิดพลาดในการตรวจสอบรีวิว");
       }
@@ -154,31 +149,31 @@ const MyJobPage: React.FC = () => {
   };
 
   const handleViewReview = () => {
-  if (reviewInfo?.ID) {
-    // ปิด Modal ที่แสดงอยู่
-    setreviewedModalOpen(false);
-    navigate(`/reviews/view/${reviewInfo.ID}`);
-  } else {
-    message.error("ไม่พบรหัสรีวิว");
-  }
-};
+    if (reviewInfo?.ID) {
+      // ปิด Modal ที่แสดงอยู่
+      setreviewedModalOpen(false);
+      navigate(`/reviews/view/${reviewInfo.ID}`);
+    } else {
+      message.error("ไม่พบรหัสรีวิว");
+    }
+  };
 
   // ตรวจการชำระ
-  const handlePayClick = async (jobId: number) => {
-    // 1) เรียก backend ให้มี BillableItem ของงานนี้แน่นอน
-    const res = await billableItemAPI.create({ jobpost_id: jobId } as any);
-    const created = (res as any)?.data?.data ?? {};
+  const handlePayClick = async (jobapplicationId: number) => {
+    // แก้จาก job_application เป็น job_application_id
+    const res = await billableItemAPI.create({
+      job_application_id: jobapplicationId,
+    } as any);
 
+    const created = (res as any)?.data?.data ?? {};
     const amount =
       Number(created?.amount ?? created?.billable_item?.amount ?? 0) ||
       undefined;
-
     const billableId =
       Number(created?.ID ?? created?.id ?? created?.billable_item_id) ||
       undefined;
 
-    // 2) ไปหน้า Payment พร้อม state
-    navigate(`/payment/${jobId}`, {
+    navigate(`/payment/${jobapplicationId}`, {
       state: { amount, billableId },
       replace: true,
     });
@@ -392,56 +387,6 @@ const MyJobPage: React.FC = () => {
                 </Button>
               )}
               <Button block onClick={() => setreviewedModalOpen(false)}>
-                ปิด
-              </Button>
-            </Space>
-          }
-        />
-      </Modal>
-
-      {/* Modal: พบหลักฐานการชำระแล้ว */}
-      <Modal
-        open={paidModalOpen}
-        onCancel={() => setPaidModalOpen(false)}
-        footer={null}
-        centered
-        maskClosable={false}
-      >
-        <Result
-          status="success"
-          title="บิลนี้ชำระเงินเรียบร้อยแล้ว"
-          subTitle={
-            <>
-              <div>ระบบพบหลักฐานการชำระเงินของงานนี้</div>
-              {paymentInfo?.ID || paymentInfo?.id ? (
-                <div style={{ marginTop: 4 }}>
-                  หมายเลขการชำระเงิน{" "}
-                  <Text strong>#{paymentInfo?.ID ?? paymentInfo?.id}</Text>
-                </div>
-              ) : null}
-            </>
-          }
-          extra={
-            <Space direction="vertical" style={{ width: "100%" }}>
-              {hasPaymentProofInPayload(paymentInfo) ? (
-                <Button
-                  block
-                  type="primary"
-                  onClick={() =>
-                    window.open(
-                      String(
-                        paymentInfo?.proof_of_payment ||
-                          paymentInfo?.ProofOfPayment ||
-                          paymentInfo?.payment?.proof_of_payment
-                      ),
-                      "_blank"
-                    )
-                  }
-                >
-                  ดูหลักฐานการชำระเงิน
-                </Button>
-              ) : null}
-              <Button block onClick={() => setPaidModalOpen(false)}>
                 ปิด
               </Button>
             </Space>

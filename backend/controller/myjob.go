@@ -18,8 +18,6 @@ func GetEmployerPostsWithAcceptedApplications(c *gin.Context) {
 	}
 
 	db := config.DB()
-
-	// หา id/name ของสถานะ "รอการชำระ" ไว้เป็นค่าเริ่มต้น
 	var pending struct {
 		ID         uint
 		StatusName string `gorm:"column:status_name"`
@@ -46,44 +44,28 @@ func GetEmployerPostsWithAcceptedApplications(c *gin.Context) {
 	var rows []Row
 
 	err := db.Table("jobposts AS j").
-		// งานที่มีใบสมัคร Accepted
 		Joins(`
 			JOIN job_applications AS ja
 			  ON ja.job_post_id = j.id
 			 AND ja.application_status = ?
 		`, entity.StatusAccepted).
-		// เลือก billable_item "ล่าสุด" ของงาน (ผ่าน jobpost_id)
 		Joins(`
 			LEFT JOIN billable_items AS bi
-			  ON bi.id = (
-			     SELECT bi2.id
-			       FROM billable_items bi2
-			      WHERE bi2.jobpost_id = j.id
-			        AND bi2.deleted_at IS NULL
-			   ORDER BY bi2.created_at DESC, bi2.id DESC
-			      LIMIT 1
-			  )
+			  ON bi.job_application_id = ja.id AND bi.deleted_at IS NULL
 		`).
-		// เลือก payment "ล่าสุด" ของ billable_item นั้น
 		Joins(`
 			LEFT JOIN payments AS p
-			  ON p.id = (
-			     SELECT p2.id
-			       FROM payments p2
-			      WHERE p2.billable_item_id = bi.id
-			        AND p2.deleted_at IS NULL
-			   ORDER BY p2.created_at DESC, p2.id DESC
-			      LIMIT 1
-			  )
+			  ON p.billable_item_id = bi.id AND p.deleted_at IS NULL
 		`).
 		Joins(`LEFT JOIN statuses AS s ON s.id = p.status_id`).
 		Select(`
 			j.*,
 			COALESCE(s.id, ?) AS status_id,
 			COALESCE(s.status_name, ?) AS status_name,
-			CASE WHEN j.student_id IS NOT NULL THEN 1 ELSE 0 END AS student_assigned
+			CASE WHEN ja.student_id IS NOT NULL THEN 1 ELSE 0 END AS student_assigned
 		`, pending.ID, pending.StatusName).
 		Where("j.employer_id = ?", empID).
+		Group("j.id, ja.id").
 		Order("j.created_at DESC").
 		Scan(&rows).Error
 
@@ -118,9 +100,7 @@ func GetMyJobpostByID(c *gin.Context) {
 	var jp entity.Jobpost
 	if err := config.DB().
 		Where("id = ? AND employer_id = ?", id, empID).
-		Preload("Employer", func(db *gorm.DB) *gorm.DB {
-			return db.Select("employers.id", "employers.company_name")
-		}).
+		Preload("Employer").
 		Preload("SalaryType").
 		Preload("EmploymentType").
 		Preload("JobCategory").

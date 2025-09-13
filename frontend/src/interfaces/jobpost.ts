@@ -1,10 +1,9 @@
-import type { Billableitem } from "./billableitem";
+//หน้าที่: บอก React/TypeScript ว่า object ของโพสต์ มีโครงสร้างยังไง
 import type { Employer } from "./employer";
 import type { Student } from "./student";
 import type { JobCategory } from "./job_category";
 import type { EmploymentType } from "./employment_type";
 import type { SalaryType } from "./salary_type";
-import type { Status } from "./payment_status";
 
 export interface Jobpost {
   ID: number;
@@ -32,15 +31,6 @@ export interface Jobpost {
 
   salary_type_id: number;
   SalaryType?: SalaryType;
-
-  student_id: number;
-  Student?: Student;
-
-  billableitem_id?: number;
-  BillableItem?: Billableitem;
-
-  payment_status_name?: Status["status_name"];
-  ready_to_pay?: boolean;
 }
 
 // src/interfaces/jobpost.ts
@@ -58,4 +48,31 @@ export interface CreateJobpost {
   salary_type_id: number;
   employer_id: number;
   image_url?: string | null;
+}
+
+// interface for myjob
+export interface Jobpost {
+    ID: number;
+    CreatedAt: string;
+    UpdatedAt: string;
+    DeletedAt?: string | null;
+    title: string;
+    description: string;
+    status: string;
+    salary: number;
+    employer_id: number;
+    employer?: {
+      company_name: string;
+    };
+    job_category_id: number;
+    job_category?: JobCategory;
+    locationjob: string;
+    employment_type_id: number;
+    employment_type?: EmploymentType;
+    salary_type_id: number;
+    salary_type?: SalaryType;
+    student_id: number;
+    student?: Student;
+    payment_status_name?: string;
+    ready_to_pay?: boolean;
 }

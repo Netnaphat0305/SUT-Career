@@ -32,9 +32,8 @@ const ReviewDetailPage: React.FC = () => {
       try {
         setLoading(true);
         const response = await reviewAPI.getById(id);
-        const reviewData = response?.data;
-
-        if (reviewData) {
+        const reviewData: Review = response?.data;        
+      if (reviewData) {
           setReview(reviewData);
         } else {
           setError(`ไม่พบข้อมูลรีวิวสำหรับ ID: ${id}`);
@@ -99,7 +98,7 @@ const ReviewDetailPage: React.FC = () => {
 
           <Descriptions.Item label="ชื่องาน">
             <Text>
-              {review?.jobpost?.title || (
+              {review?.job_application?.JobPost?.title || (
                 <Text type="secondary">ไม่มีข้อมูลชื่องาน</Text>
               )}
             </Text>

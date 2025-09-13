@@ -1,7 +1,6 @@
 import type { Payment } from "./payment";
 import type { Jobpost } from "./jobpost";
 import type { Paymentmethod } from "./paymentmethod";
-import type { Employer } from "./employer";
 
 
 export interface Paymentreport {
@@ -36,12 +35,12 @@ export interface TableDataType {
 }
 
 export type GenReportInputReactPDF = {
-  paymentId: Payment['ID'];
-  amount: Payment['amount'];
-  date?: Paymentreport['create_date'];
-  method_name?: Paymentmethod['method_name'];
-  jobTitle?: Jobpost['title'];
-  employerName?: Employer['company_name'];
-  employerAddress?: Employer['address'];
+  paymentId: number;
+  amount: number;
+  date?: Date;
+  method_name?: string;
+  jobTitle?: string;
+  employerName?: string;
+  employerAddress?: string;
   logoDataUrl: string;
 };

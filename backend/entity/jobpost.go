@@ -26,7 +26,7 @@ type Jobpost struct {
 
 	//FK
 	EmployerID			uint    		`gorm:"not null" json:"employer_id"`
-    Employer   			Employer 		`gorm:"foreignKey:EmployerID;references:ID" json:"Employer"`
+    Employer   			Employer 		`gorm:"foreignKey:EmployerID;references:ID" json:"employer"`
 
 	JobCategoryID uint        `json:"job_category_id"`
 	JobCategory   JobCategory `gorm:"foreignKey:JobCategoryID"`
@@ -47,6 +47,4 @@ type Jobpost struct {
 	// เพิ่มตรงนี้ preload ผู้สมัครในโพสต์งาน
 	Applications []JobApplication `gorm:"foreignKey:JobPostID" json:"applications,omitempty"`
 
-	// เผื่อได้ Preload
-	BillableItem *BillableItems `gorm:"foreignKey:JobpostID" json:"billable_item,omitempty"`
 }

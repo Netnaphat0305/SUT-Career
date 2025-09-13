@@ -40,15 +40,18 @@ export interface Billableitem {
   ID: number;
   amount: number;
   description: string;
-  jobpost_id?: number;
-  jobpost?: {
-    ID: number;
-    title: string;
-    employer_id?: number;
-    employer?: {
+  job_application_id?: number;
+  job_application?: {
+    jobpost_id?: number;
+    JobPost?: {
       ID: number;
-      company_name: string;
-      address: string;
+      title: string;
+      employer_id?: number;
+        employer?: {
+        ID: number;
+        company_name: string;
+        address: string;
+      };
     };
   };
   created_at?: string;

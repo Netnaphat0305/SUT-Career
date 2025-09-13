@@ -59,7 +59,7 @@ const MainRoutes: React.FC = () => {
             <Route path="/payment-report" element={<PaymentReportPage />} />
             <Route path="/payment/:jobId" element={<PaymentPage />} />
             <Route path="/qr-payment/:paymentId" element={<QRPaymentPage />} />
-            <Route path="/review/:jobId" element={<ReviewPage />} />
+            <Route path="/review/:jobAppId" element={<ReviewPage />} />
             <Route path="/reviews/view/:id" element={<ViewReviewPage/>}/>
             <Route path="/Interview-Schedule" element={<InterviewScheduling/>} />
             <Route path="/profile-v1" element={<ProfilePageV1 />} />

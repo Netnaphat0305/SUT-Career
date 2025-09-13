@@ -3,8 +3,6 @@ import type { Paymentmethod } from "./paymentmethod";
 import type { Paymentreport } from "./paymentreport";
 import type { Status } from "./payment_status";
 import type { Discount } from "./discount";
-import type { Jobpost } from "./jobpost";
-import type { Student } from "./student";
 
 export interface Payment {
   ID: number;
@@ -26,22 +24,22 @@ export interface Payment {
 }
 
 export type CreatePaymentPayload = {
-  jobTitle: Jobpost['title'];
-  amount: Billableitem['amount'];
+  jobTitle: number;
+  amount: number;
   datetime?: Date;
   payment_method_id: number;
-  billable_item_id: Billableitem['ID'];
+  billable_item_id: number;
   status_id: number;
   proof_of_payment?: string;
-  discount_id?: Discount['ID'];
+  discount_id?: number;
 };
 
 // ------------- Student Finance ----------------
 export interface StudentFinance {
-  student_id: Student['ID'];
-  job_id: Jobpost['ID'];
-  jobTitle: Jobpost['title'];
-  amount: Payment['amount'];
+  student_id: number;
+  job_id: number;
+  jobTitle: string;
+  amount: number;
   status_id: number;
   datetime?: Date;
 }

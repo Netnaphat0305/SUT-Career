@@ -36,11 +36,11 @@ func ListPaymentReports(c *gin.Context) {
 func ListPaymentReportsByEmployerID(c *gin.Context) {
 	var reports []entity.PaymentReports
 	employerID := c.Param("id")
-
 	if err := config.DB().
 		Joins("JOIN payments ON payments.payment_report_id = payment_reports.id").
 		Joins("JOIN billable_items bi ON bi.id = payments.billable_item_id").
-		Joins("JOIN jobposts j ON j.id = bi.jobpost_id").
+		Joins("JOIN job_applications ja ON ja.id = bi.job_application_id").
+		Joins("JOIN jobposts j ON j.id = ja.job_post_id").
 		Where("j.employer_id = ?", employerID).
 		Preload("Payments.BillableItem.Jobpost").
 		Preload("Payments.PaymentMethod").
@@ -73,7 +73,8 @@ func ListMyPaymentReports(c *gin.Context) {
 		Select("payment_reports.id").
 		Joins("JOIN payments ON payments.payment_report_id = payment_reports.id").
 		Joins("JOIN billable_items ON billable_items.id = payments.billable_item_id").
-		Joins("JOIN jobposts ON jobposts.id = billable_items.jobpost_id").
+		Joins("JOIN job_applications ON job_applications.id = billable_items.job_application_id").
+		Joins("JOIN jobposts ON jobposts.id = job_applications.job_post_id").
 		Where("jobposts.employer_id = ?", employerID).
 		Group("payment_reports.id").
 		Pluck("payment_reports.id", &reportIDs).Error; err != nil {
@@ -89,14 +90,16 @@ func ListMyPaymentReports(c *gin.Context) {
 
 	var reports []entity.PaymentReports
 	if err := config.DB().
-		// --- แก้ไขบรรทัดนี้: เพิ่ม .Employer ต่อท้าย Jobpost ---
-		Preload("Payment.BillableItem.Jobpost.Employer").
+		Preload("Payment.BillableItem.JobApplication.JobPost.Employer.User").
+		Preload("Payment.BillableItem.JobApplication.Student.User").
+		Preload("Payment.BillableItem.JobApplication.JobPost.JobCategory").
+		Preload("Payment.BillableItem.JobApplication.JobPost.EmploymentType").
+		Preload("Payment.BillableItem.JobApplication.JobPost.SalaryType").
 		Preload("Payment.PaymentMethod").
 		Preload("Payment.Status").
-		Order("create_date DESC").
-		Find(&reports, reportIDs).Error; err != nil {
-		fmt.Println("ListMyPaymentReports: main query error:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch reports failed"})
+		Where("id IN ?", reportIDs).
+		Find(&reports).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to find reports"})
 		return
 	}
 
@@ -138,7 +141,7 @@ func UploadPaymentReport(c *gin.Context) {
 	if baseName == "" {
 		baseName = "Payment Receipt"
 	}
-	
+
 	baseName = fmt.Sprintf("%s#%d", baseName, ts)
 	filename := fmt.Sprintf("receipt_%d_%d.pdf", pid, ts)
 	diskPath := filepath.Join(dir, filename)
