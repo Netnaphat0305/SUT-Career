@@ -3,8 +3,7 @@ import React from "react";
 import { Link, useLocation, Outlet, useOutletContext } from "react-router-dom";
 import { 
   Layout, 
-  Menu, 
-  theme, 
+  Menu,  
   Button, 
   Flex, 
   Space, 
@@ -33,24 +32,25 @@ const createMenuItem = (key: string, label: React.ReactNode): MenuItem => {
   } as MenuItem;
 };
 
-const navItems: MenuItem[] = [
-  // createMenuItem("home", "Home"),
-  createMenuItem("Job/Board", "Jobs"),
-  createMenuItem("my-jobs", "My Job"),
-  createMenuItem("payment-report", "Payment Report"),
-  createMenuItem("help", "Help"),
-  createMenuItem("chat", "Chat"),
-  createMenuItem("interview","Interview Table"),
-  createMenuItem("worklog","Worklog"),
-  createMenuItem("report","Report"),
-  createMenuItem("feed", "Feed"),
-  createMenuItem("Interview-Schedule", "Interview Schedule"),
-];
+// const navItems: MenuItem[] = [
+//   createMenuItem("Job/Board", "Jobs"),
+//   createMenuItem("my-jobs", "My Job"),
+//   createMenuItem("payment-report", "Payment Report"),
+//   createMenuItem("help", "Help"),
+//   createMenuItem("chat", "Chat"),
+//   createMenuItem("interview","Interview Table"),
+//   createMenuItem("worklog","Worklog"),
+//   createMenuItem("report","Report"),
+//   createMenuItem("feed", "Feed"),
+//   createMenuItem("Interview-Schedule", "Interview Schedule"),
+// ];
+
+
 
 const FullLayout: React.FC = () => {
-  const {
-    token: { colorText },
-  } = theme.useToken();
+  // const {
+  //   token: { colorText },
+  // } = theme.useToken();
 
   const location = useLocation();
   const context = useOutletContext();
@@ -59,46 +59,62 @@ const FullLayout: React.FC = () => {
   const currentPageKey = location.pathname.split("/")[1] || "home";
 
 
-  // read auth info
-  // const user = React.useMemo(() => {
-  //   try {
-  //     return JSON.parse(localStorage.getItem("user") || "{}");
-  //   } catch {
-  //     return {};
-  //   }
-  // }, []);
-  // const role: string | undefined = user?.role;
-  // const isLoggedIn = !!localStorage.getItem("token");
-
-  // // dropdown menu actions
-  // const onProfileMenuClick = ({ key }: { key: string }) => {
-  //   if (key === "profile") {
-  //     if (role === "employer") {
-  //       navigate("/employer/profile");
-  //     } else if (role === "student") {
-  //       navigate("/student/profile");
-  //     } else {
-  //       navigate("/login");
-  //     }
-  //   }
-  //   if (key === "logout") {
-  //     localStorage.removeItem("token");
-  //     localStorage.removeItem("user");
-  //     navigate("/login");
-  //   }
-  // };
-
-  // const profileMenu: MenuProps = {
-  //   items: [
-  //     { key: "profile", icon: <UserOutlined />, label: "Profile" },
-  //     { type: "divider" },
-  //     { key: "logout", icon: <LogoutOutlined />, label: "Logout" },
-  //   ],
-  //   onClick: onProfileMenuClick,
-  // };
-
   // Get user and logout function from AuthContext
   const { user, logout } = useAuth();
+
+
+  let navItems: MenuItem[] = [];
+
+  if (user) {
+    const userRole = user.role.toLowerCase();
+    //nav bar ของ student
+    if (userRole === "student" || userRole === "stu") { 
+      navItems = [
+        createMenuItem("Job/Board", "Jobs"),
+        createMenuItem("feed", "Feed"),
+        createMenuItem("report", "Report"),
+        createMenuItem("my/finance/summary", "รายได้"),
+
+        createMenuItem("help", "Help"),
+        
+      ];
+    // nav bar ของ employer
+    } else if (userRole === "employer" || userRole === "emp") {
+      navItems = [
+        createMenuItem("Job/Board", "Jobs"),
+        createMenuItem("Interview-Schedule", "Interview Schedule"),
+        createMenuItem("worklog", "Worklog"),
+        createMenuItem("feed", "Feed"),
+        createMenuItem("report", "Report"),
+        createMenuItem("my-jobs", "My Job"),
+        createMenuItem("Job/Mypost-job", "โพสต์ของฉัน"),
+        createMenuItem("payment-report", "Payment Report"),
+        
+      ];
+    } else {
+      //admin
+      navItems = [
+        createMenuItem("Job/Board", "Jobs"),
+        createMenuItem("feed", "Feed"),
+      ];
+    }
+  } else {
+    // ถ้ายังไม่ login
+    navItems = [
+      createMenuItem("Job/Board", "Jobs"),
+      createMenuItem("feed", "Feed"),
+      createMenuItem("help", "Help"),
+    ];
+  }
+  
+
+
+
+
+
+
+
+
 
   // Dynamically create menu items based on user role
   const menuItems: MenuProps['items'] = [];
@@ -136,9 +152,11 @@ const FullLayout: React.FC = () => {
         icon: <EditOutlined />
         
     });
+
+
     }
     menuItems.push({
-        key: 'logout',
+        key: 'my_reprort',
         label: <Link to="/list-report">ดูรายงานของฉัน</Link>,
         icon: <ExclamationCircleOutlined />,
     });
@@ -204,36 +222,6 @@ const FullLayout: React.FC = () => {
         <Flex align="center">
           <Space size="middle">
 
-
-
-              {/* {isLoggedIn ? ( 
-            //   <Dropdown menu={profileMenu} trigger={["click"]}>
-            //     <Button
-            //       type="text"
-            //       style={{
-            //         fontSize: 20,
-            //         border: "1px solid #d9d9d9",
-            //         borderRadius: 6,
-            //         color: "#0088FF",
-            //       }}
-            //     >
-            //       Profile
-            //     </Button>
-            //   </Dropdown>
-            // ) : (
-            //   <Button
-            //     type="text"
-            //     icon={<LoginOutlined />}
-            //     onClick={() => navigate("/login")}
-            //     style={{
-            //       fontSize: 16,
-            //       border: "1px solid #d9d9d9",
-            //       borderRadius: 6,
-            //       color: "#0088FF",
-            //     }}
-            //   >
-            //     Login
-            //   </Button> */}
 
             
             {/* Conditional rendering for user profile/login */}

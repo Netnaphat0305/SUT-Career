@@ -38,6 +38,27 @@ func GetAllWorklogs(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, worklogs)
 }
+
+
+
+// Get Worklog by ID
+func GetWorklogByID(c *gin.Context) {
+    id := c.Param("id")
+
+    var worklog entity.Worklog
+    if err := config.DB().
+        Preload("Jobpost").
+        Preload("Student").
+        First(&worklog, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "worklog not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, worklog)
+}
+
+
+
 //Get Worklog of Student
 func GetWorklogStudent(c *gin.Context) {
 	studentID := c.Param("id")
@@ -61,12 +82,12 @@ func UpdateWorklogByID(c *gin.Context) {
 	var worklog entity.Worklog
 
 	if err := config.DB().First(&worklog, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "worklog not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error 1": "worklog not found"})
 		return
 	}
 
 	if err := c.ShouldBindJSON(&worklog); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error 2": err.Error()})
 		return
 	}
 
