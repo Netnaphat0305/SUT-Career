@@ -45,7 +45,7 @@ const ReviewPage: React.FC = () => {
   }, []);
 
   const navigate = useNavigate();
-  const { jobId } = useParams<{ jobId: string }>();
+  const { jobAppId } = useParams<{ jobAppId: string }>();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -59,7 +59,7 @@ const ReviewPage: React.FC = () => {
   const [successOpen, setSuccessOpen] = useState(false);
 
   useEffect(() => {
-    if (!jobId) {
+    if (!jobAppId) {
       message.error("ไม่พบรหัสงาน");
       navigate("/my-jobs");
       return;
@@ -71,7 +71,7 @@ const ReviewPage: React.FC = () => {
       try {
         setLoading(true);
 
-        const res = await reviewAPI.getForJob(Number(jobId));
+        const res = await reviewAPI.getForJob(Number(jobAppId));
         const rows = asData<ReviewItem[]>(res);
 
         if (!cancel) {
@@ -101,10 +101,10 @@ const ReviewPage: React.FC = () => {
     return () => {
       cancel = true;
     };
-  }, [jobId, navigate]);
+  }, [jobAppId, navigate]);
 
   const onSubmit = async () => {
-    if (!jobId) {
+    if (!jobAppId) {
       message.error("ไม่พบรหัสงาน");
       navigate("/profile");
       return;
@@ -114,7 +114,7 @@ const ReviewPage: React.FC = () => {
       setSubmitting(true);
 
       const payload: CreateReviewPayload = {
-        jobpost_id: Number(jobId),
+        job_application_id: Number(jobAppId),
         ratingscore_id: Number(rating),
         comment: (comment || "").trim(),
       };
@@ -210,7 +210,7 @@ const ReviewPage: React.FC = () => {
       <div style={{ maxWidth: 880, margin: "0 auto" }}>
         <Flex style={{ marginBottom: 24 }}>
           <Text type="secondary" style={{ fontSize: 18, color: "#1E3A5F" }}>
-            รหัสงาน : {jobId ?? "-"}
+            รหัสงาน : {jobAppId ?? "-"}
           </Text>
         </Flex>
 

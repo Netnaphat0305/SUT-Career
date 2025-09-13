@@ -6,8 +6,8 @@ type BillableItems struct {
 	gorm.Model
 	Description string `json:"description"`
 	Amount      float32   `json:"amount"`
-	JobpostID	*uint	`json:"jobpost_id"`
-	Jobpost		*Jobpost `gorm:"foreignKey:JobpostID;references:ID" json:"jobpost,omitempty"`
+	JobApplicationID	*uint	`json:"job_application_id"`
+	JobApplication		*JobApplication `gorm:"foreignKey:JobApplicationID;references:ID" json:"job_application,omitempty"`
 	OrderID		*uint	`json:"order_id"`
 	Order		*Orders `gorm:"foreignKey:OrderID;references:ID" json:"order,omitempty"`
 }

@@ -6,19 +6,14 @@ import type { ChatRoom, ChatHistory, UserRole } from "../../interfaces/Chat";
 
 import type { Employer, SignInEmployer } from "../../interfaces/employer";
 import type { Student, SignInStudent } from "../../interfaces/student";
-import type {CreateReviewPayload,Review,FindReviewRequest,} from "../../interfaces/review";
+import type { CreateReviewPayload, Review } from "../../interfaces/review";
 import type { FAQ, RequestTicket, TicketAttachment, FAQComment } from '../../interfaces/helpcenter';
 import type { Discount } from "../../interfaces/discount";
 import type { Jobpost, CreateJobpost } from "../../interfaces/jobpost";
 import type { Payment, CreatePaymentPayload, StudentFinanceResponse, FinanceSummaryResponse } from "../../interfaces/payment";
-import type { Order } from "../../interfaces/order";
-import type { EmploymentType } from "../../interfaces/employment_type";
-import type { JobCategory } from "../../interfaces/job_category";
-import type { SalaryType } from "../../interfaces/salary_type";
 import type { SignInCommon } from "../../interfaces/user";
 import type { CreateBillableitemPayload } from "../../interfaces/billableitem";
 import type { Paymentmethod } from "../../interfaces/paymentmethod";
-import type { Ratingscore } from "../../interfaces/ratingscore";
 import type { Skill } from "../../interfaces/skill"
 /** ใช้ VITE_API_KEY เป็น baseURL เหมือนเดิม */
 const API_URL = import.meta.env.VITE_API_KEY || "http://localhost:8080";
@@ -325,7 +320,7 @@ export const myjobpostAPI = {
 export const billableItemAPI = {
   create: (data: CreateBillableitemPayload) => Post("/api/billable_items", data),
   getById: (id: number) => Get(`/api/billable_items/${id}`),
-  getByJobPostId: (jobPostId: number) => Get(`/api/billable_items/jobpost/${jobPostId}`),
+  getByJobPostId: (jobapplicationId: number) => Get(`/api/billable_items/jobpost/${jobapplicationId}`),
   list: () => Get("/billable_items"),
   delete: (id: number) => DeleteReq(`/api/billable_items/${id}`),
 };
@@ -334,7 +329,7 @@ export const paymentAPI = {
   create: (data: CreatePaymentPayload) => Post("/api/payments", data),
   getById: (id: number): Promise<{ data: Payment }> =>
     Get(`/api/payments/${id}`, true, { silent404: true }),
-  getLatestByBillable: (billableId: number) => Get(`/api/payments/billable/${billableId}`),
+  getLatestByBillable: (jobapplicationId: number) => Get(`/api/payments/billable/${jobapplicationId}`),
   getByEmployerId: (employerId: number): Promise<{ data: Payment[] }> =>
     Get(`/api/payments/employer/${employerId}`),
   update: (id: number, data: Partial<Payment>) =>
@@ -359,8 +354,8 @@ export const PaymentmethodAPI = {
 
 export const discountAPI = {
   list: () => Get<Discount[]>(`/api/discounts`),
-  getApplicableByJob: (jobPostId: number) =>
-    Get<Discount[]>(`/discounts/applicable?job_post_id=${jobPostId}`),
+  getApplicableByJob: (jobapplicationId: number) =>
+    Get<Discount[]>(`/discounts/applicable?job_post_id=${jobapplicationId}`),
   getUsedByEmployer: (employerId: number) =>
     Get<number[] | { discount_id: number }[]>(
       `/discounts/used?employer_id=${employerId}&employerId=${employerId}`
@@ -387,55 +382,30 @@ export const paymentReportAPI = {
 export const StudentFinanceAPI = {
   // API ใหม่ที่ใช้ JWT token
   getFinanceData: async (): Promise<StudentFinanceResponse> => {
-    console.log(`📊 Fetching my finance data (using JWT token)`);
-    
     try {
       const response = await Get<StudentFinanceResponse>(`/api/my/finance`);
-      
-      console.log("💰 My finance data response:", {
-        hasData: !!response?.data,
-        dataLength: response?.data?.length || 0,
-        data: response?.data
-      });
-      
       if (!response) {
         throw new Error("No response received from server");
       }
-      
       if (!response.data) {
-        console.warn("⚠️ Response has no data property");
         return { data: [] };
       }
-      
       if (!Array.isArray(response.data)) {
-        console.warn("⚠️ Response data is not an array:", typeof response.data);
         return { data: [] };
       }
-      
       return response;
     } catch (error) {
-      console.error("💥 Error fetching my finance data:", error);
       throw error;
     }
   },
 
   getFinanceSummary: async (): Promise<FinanceSummaryResponse> => {
-    console.log(`📈 Fetching my finance summary (using JWT token)`);
-    
     try {
       const response = await Get<FinanceSummaryResponse>(`/api/my/finance/summary`);
-      
-      console.log("📊 My finance summary response:", {
-        hasData: !!response?.data,
-        summary: response?.data
-      });
-      
       if (!response) {
         throw new Error("No response received from server");
       }
-      
       if (!response.data) {
-        console.warn("⚠️ Summary response has no data property");
         return { 
           data: { 
             monthlyJobCount: 0, 
@@ -444,65 +414,40 @@ export const StudentFinanceAPI = {
           } 
         };
       }
-      
       return response;
     } catch (error) {
-      console.error("💥 Error fetching my finance summary:", error);
       throw error;
     }
   },
 
   // ✅ เพิ่ม missing functions ที่ Frontend ต้องการ
   getFinanceDataByStudentId: async (studentId: number): Promise<StudentFinanceResponse> => {
-    console.log(`📊 Fetching finance data for student ID: ${studentId}`);
     
     try {
-      const response = await Get<StudentFinanceResponse>(`/api/student/${studentId}/finance`);
-      
-      console.log("💰 Finance data response:", {
-        hasData: !!response?.data,
-        dataLength: response?.data?.length || 0,
-        data: response?.data
-      });
-      
+      const response = await Get<StudentFinanceResponse>(`/api/student/${studentId}/finance`);      
       if (!response) {
         throw new Error("No response received from server");
       }
-      
       if (!response.data) {
-        console.warn("⚠️ Response has no data property");
         return { data: [] };
       }
-      
       if (!Array.isArray(response.data)) {
-        console.warn("⚠️ Response data is not an array:", typeof response.data);
-        return { data: [] };
       }
       
       return response;
     } catch (error) {
-      console.error("💥 Error fetching finance data:", error);
       throw error;
     }
   },
 
   getFinanceSummaryByStudentId: async (studentId: number): Promise<FinanceSummaryResponse> => {
-    console.log(`📈 Fetching finance summary for student ID: ${studentId}`);
     
     try {
-      const response = await Get<FinanceSummaryResponse>(`/api/student/${studentId}/finance/summary`);
-      
-      console.log("📊 Finance summary response:", {
-        hasData: !!response?.data,
-        summary: response?.data
-      });
-      
+      const response = await Get<FinanceSummaryResponse>(`/api/student/${studentId}/finance/summary`);      
       if (!response) {
         throw new Error("No response received from server");
       }
-      
       if (!response.data) {
-        console.warn("⚠️ Summary response has no data property");
         return { 
           data: { 
             monthlyJobCount: 0, 
@@ -511,10 +456,8 @@ export const StudentFinanceAPI = {
           } 
         };
       }
-      
       return response;
     } catch (error) {
-      console.error("💥 Error fetching finance summary:", error);
       throw error;
     }
   }
@@ -527,7 +470,7 @@ export const adminFinanceAPI = {
 
 export const reviewAPI = {
   create: (data: CreateReviewPayload) => Post("/api/reviews", data),
-  getForJob: (jobId: number) => Get(`/api/reviews/job/${jobId}`),
+  getForJob: (jobapplicationId: number) => Get(`/api/reviews/jobapp/${jobapplicationId}`),
   getById: (id: string): Promise<{ data: Review }> =>
     Get(`/api/reviews/view/${id}`),
 };
@@ -647,12 +590,6 @@ export const employmentTypeAPI = {
 export const salaryTypeAPI = {
   getAll: () => get("/salarytype", false),
   getById: (id: number) => get(`/salarytype/${id}`, false),
-};
-
-
-
-export const ratingScoreAPI = {
-  getAll: (): Promise<AxiosResponse<Ratingscore[]>> => get("/ratingscores") as Promise<AxiosResponse<Ratingscore[]>>,
 };
 
 // report APIs

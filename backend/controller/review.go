@@ -17,15 +17,15 @@ import (
 )
 
 type CreateReviewPayload struct {
-	JobPostID     *uint      `json:"jobpost_id"`
+	JobApplicationID     *uint      `json:"job_application_id"`
 	RatingScoreID *uint      `json:"ratingscore_id"`
 	Comment       string     `json:"comment"`
 	Datetime      *time.Time `json:"datetime"`
 }
 
 func (p *CreateReviewPayload) Normalize() (jobID uint, scoreID uint, comment string) {
-	if p.JobPostID != nil {
-		jobID = *p.JobPostID
+	if p.JobApplicationID != nil {
+		jobID = *p.JobApplicationID
 	}
 	if p.RatingScoreID != nil {
 		scoreID = *p.RatingScoreID
@@ -56,19 +56,20 @@ func (p *CreateReviewPayload) Normalize() (jobID uint, scoreID uint, comment str
 
 // }
 
-// GET /api/reviews/job/:jobId   (protected)
-func FindRatingsByJobPostID(c *gin.Context) {
-	jobID := c.Param("jobId")
-
-	var reviews []entity.Reviews
-	if err := config.DB().
-		Where("jobpost_id = ?", jobID).
-		Preload("Ratingscore").
-		Find(&reviews).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"data": reviews})
+// GET /api/reviews/jobapp/:jobAppId  (protected)
+func FindRatingsByJobApplicationID(c *gin.Context) {
+    jobAppID := c.Param("jobAppId")
+    var reviews []entity.Reviews
+    
+    if err := config.DB().
+        Where("job_application_id = ?", jobAppID).
+        Preload("Ratingscore").
+        Preload("JobApplication").
+        Find(&reviews).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"data": reviews})
 }
 
 func CreateReview(c *gin.Context) {
@@ -102,76 +103,70 @@ func CreateReview(c *gin.Context) {
 
 	// 2) อ่าน payload
 	var payload CreateReviewPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json payload"})
-		return
-	}
-	jobID, scoreID, comment := payload.Normalize()
-	if jobID <= 0 || scoreID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "jobpost_id and ratingscore_id are required"})
-		return
-	}
+    if err := c.ShouldBindJSON(&payload); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json payload"})
+        return
+    }
 
-	// 3) โหลดงาน
-	var jp entity.Jobpost
-	if err := db.First(&jp, jobID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "job post not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "query job post failed"})
-		return
-	}
+    jobAppID, scoreID, comment := payload.Normalize()
+    if jobAppID <= 0 || scoreID <= 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "job_application_id and ratingscore_id are required"})
+        return
+    }
 
-	// 4) ตรวจว่า job นี้เป็นของนายจ้างคนนี้จริง
-	if int(jp.EmployerID) != empID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "you can only review your own job"})
-		return
-	}
+    // โหลด JobApplication แทน Jobpost
+    var jobApp entity.JobApplication
+    if err := db.Preload("JobPost").First(&jobApp, jobAppID).Error; err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            c.JSON(http.StatusNotFound, gin.H{"error": "job application not found"})
+            return
+        }
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "query job application failed"})
+        return
+    }
 
-	// 5) ตรวจว่า ratingscore มีจริง
-	var rs entity.Ratingscores
-	if err := db.First(&rs, scoreID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ratingscore_id"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "query rating score failed"})
-		return
-	}
+    // ตรวจสอบว่า JobPost เป็นของ employer นี้
+    if int(jobApp.JobPost.EmployerID) != empID {
+        c.JSON(http.StatusForbidden, gin.H{"error": "you can only review your own job applications"})
+        return
+    }
 
-	// 6) กันรีวิวซ้ำ: 1 งาน 1 รีวิว
-	{
-		var existing entity.Reviews
-		if err := db.Where("jobpost_id = ?", jobID).First(&existing).Error; err == nil {
-			c.JSON(http.StatusConflict, gin.H{"error": "review already exists for this job"})
-			return
-		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "query existing review failed"})
-			return
-		}
-	}
+    // ตรวจสอบสถานะ JobApplication ว่าเป็น Accepted
+    if jobApp.ApplicationStatus != entity.StatusAccepted {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "can only review accepted applications"})
+        return
+    }
 
-	// 7) เวลา Asia/Bangkok
-	loc, err := time.LoadLocation("Asia/Bangkok")
-	if err != nil {
-		loc = time.FixedZone("UTC+7", 7*3600)
-	}
-	now := time.Now().In(loc)
+    // ตรวจสอบรีวิวซ้ำ
+    var existing entity.Reviews
+    if err := db.Where("job_application_id = ?", jobAppID).First(&existing).Error; err == nil {
+        c.JSON(http.StatusConflict, gin.H{"error": "review already exists for this job application"})
+        return
+    } else if !errors.Is(err, gorm.ErrRecordNotFound) {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "query existing review failed"})
+        return
+    }
 
-	review := entity.Reviews{
-		JobpostID:      jobID,
-		Ratingscore_ID: rs.ID,
-		Comment:        strings.TrimSpace(comment),
-		Datetime:       now,
-	}
+    // สร้างรีวิว
+    loc, err := time.LoadLocation("Asia/Bangkok")
+    if err != nil {
+        loc = time.FixedZone("UTC+7", 7*3600)
+    }
 
-	if err := db.Create(&review).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "create review failed"})
-		return
-	}
-	_ = db.Preload("Ratingscore").First(&review, review.ID).Error
-	c.JSON(http.StatusCreated, gin.H{"data": review})
+    review := entity.Reviews{
+        JobApplicationID: &jobAppID, // เปลี่ยนจาก JobpostID
+        Ratingscore_ID:   scoreID,
+        Comment:          strings.TrimSpace(comment),
+        Datetime:         time.Now().In(loc),
+    }
+
+    if err := db.Create(&review).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "create review failed"})
+        return
+    }
+
+    _ = db.Preload("Ratingscore").Preload("JobApplication.JobPost").First(&review, review.ID).Error
+    c.JSON(http.StatusCreated, gin.H{"data": review})
 }
 
 func GetReviewByID(c *gin.Context) {
@@ -187,7 +182,7 @@ func GetReviewByID(c *gin.Context) {
 
 	result := config.DB().
 		Preload("Ratingscore").
-		Preload("Jobpost").
+		Preload("JobApplication.JobPost").
 		First(&review, id)
 
 	if result.Error != nil {

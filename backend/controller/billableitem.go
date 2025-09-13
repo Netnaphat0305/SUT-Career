@@ -12,214 +12,90 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// // GET /billable_items
-// func ListBillableItems(c *gin.Context) {
-// 	var items []entity.BillableItems
-// 	if err := config.DB().Find(&items).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not retrieve billable items"})
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, items)
-// }
-
-// // DELETE /billable_item/:id
-// func DeleteBillableItemById(c *gin.Context) {
-// 	id := c.Param("id")
-// 	if tx := config.DB().Exec("DELETE FROM billableitemid WHERE id = ?", id); tx.RowsAffected == 0 {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "id not found"})
-// 		return
-// 	}
-
-// 	c.JSON(http.StatusOK, gin.H{"message": "deleted succesful"})
-// }
-
-// func GetBillableItemByID(c *gin.Context) {
-// 	id, err := strconv.Atoi(c.Param("id"))
-// 	if err != nil || id <= 0 {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
-// 		return
-// 	}
-// 	var bi entity.BillableItems
-// 	err = config.DB().
-// 		Preload("Jobpost").
-// 		Preload("Order").
-// 		Preload("Jobpost.Employer").
-// 		First(&bi, id).Error
-// 	if errors.Is(err, gorm.ErrRecordNotFound) {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "billable item not found"})
-// 		return
-// 	} else if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, gin.H{"data": bi})
-// }
-
-// func getPendingStatusID(tx *gorm.DB) (uint, error) {
-// 	var s struct {
-// 		ID         uint
-// 		StatusName string `gorm:"column:status_name"`
-// 	}
-// 	if err := tx.Table("statuses").
-// 		Where("LOWER(status_name) IN (?)", []string{"รอการชำระ", "unpaid", "pending"}).
-// 		Limit(1).
-// 		Scan(&s).Error; err != nil {
-// 		return 0, err
-// 	}
-// 	if s.ID == 0 {
-// 		return 1, nil
-// 	}
-// 	return s.ID, nil
-// }
-
-// func EnsureBillAndPaymentForJob(tx *gorm.DB, jobID uint) (*entity.BillableItems, *entity.Payments, bool, error) {
-// 	created := false
-
-// 	var jp struct {
-// 		ID              uint
-// 		Title           string
-// 		Salary          float32
-// 		BillableItemID  *uint `gorm:"column:billable_item_id"`
-// 	}
-// 	if err := tx.Table("jobposts").
-// 		Select("id, title, salary, billable_item_id").
-// 		Where("id = ?", jobID).
-// 		Take(&jp).Error; err != nil {
-// 		if errors.Is(err, gorm.ErrRecordNotFound) {
-// 			return nil, nil, false, fmt.Errorf("jobpost not found")
-// 		}
-// 		return nil, nil, false, err
-// 	}
-
-// 	var bi entity.BillableItems
-// 	if jp.BillableItemID != nil {
-// 		if err := tx.First(&bi, *jp.BillableItemID).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-// 			return nil, nil, false, err
-// 		}
-// 	}
-
-// 	if bi.ID == 0 {
-// 		if err := tx.Where("jobpost_id = ?", jobID).First(&bi).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-// 			return nil, nil, false, err
-// 		}
-// 	}
-
-// 	if bi.ID == 0 {
-// 		bi = entity.BillableItems{
-// 			Description: jp.Title,
-// 			Amount:      jp.Salary,
-// 			JobpostID:   &jp.ID,
-// 		}
-// 		if err := tx.
-// 			Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "jobpost_id"}}, DoNothing: true}).
-// 			Create(&bi).Error; err != nil {
-// 			return nil, nil, false, err
-// 		}
-// 		if bi.ID == 0 {
-// 			if err := tx.Where("jobpost_id = ?", jobID).First(&bi).Error; err != nil {
-// 				return nil, nil, false, err
-// 			}
-// 		}
-// 		_ = tx.Table("jobposts").Where("id = ?", jp.ID).
-// 			Update("billable_item_id", bi.ID).Error
-// 		created = true
-// 	}
-// 	var pay entity.Payments
-// 	if err := tx.
-// 		Where("billable_item_id = ?", bi.ID).
-// 		Order("created_at DESC, id DESC").
-// 		First(&pay).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-// 		return nil, nil, created, err
-// 	}
-
-// 	if pay.ID == 0 {
-// 		statusID, _ := getPendingStatusID(tx)
-// 		pay = entity.Payments{
-// 			BillableItemID: bi.ID,
-// 			StatusID:       statusID,
-// 			Datetime:       time.Now(),
-// 		}
-// 		if err := tx.Create(&pay).Error; err != nil {
-// 			return nil, nil, created, err
-// 		}
-// 		created = true
-// 	}
-
-// 	if err := tx.Preload("Status").First(&pay, pay.ID).Error; err != nil {
-// 		return &bi, &pay, created, err
-// 	}
-
-// 	return &bi, &pay, created, nil
-// }
-
-type CreateBillableReq struct {
-	JobpostID   uint   `json:"jobpost_id"`
-	Description string `json:"description"`
+type CreateBillableForAppReq struct {
+	JobApplicationID uint   `json:"job_application_id" binding:"required"`
+	Description      string `json:"description"`
 }
 
-func CreateOrUpdateBillableItem(c *gin.Context) {
-	var req CreateBillableReq
-	if err := c.ShouldBindJSON(&req); err != nil || req.JobpostID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+func CreateOrUpdateBillableForApplication(c *gin.Context) {
+	var req CreateBillableForAppReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload, job_application_id is required"})
 		return
 	}
 
 	db := config.DB()
 
-	// โหลด salary + salary type
-	var job struct {
-		ID             uint
-		Title          string
+	var app entity.JobApplication
+	if err := db.Preload("JobPost").First(&app, req.JobApplicationID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "job application not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load job application"})
+		return
+	}
+
+	if app.ApplicationStatus != entity.StatusAccepted {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot create a bill for a non-accepted application"})
+		return
+	}
+
+	if app.JobPost.ID == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "job post data is missing in the application"})
+		return
+	}
+	jobID := app.JobPost.ID
+
+	var jobDetails struct {
 		Salary         float64
 		SalaryTypeName string
 	}
 	if err := db.Table("jobposts AS j").
-		Select("j.id, j.title, j.salary, LOWER(st.salary_type_name) AS salary_type_name").
+		Select("j.salary, LOWER(st.salary_type_name) AS salary_type_name").
 		Joins("LEFT JOIN salary_types st ON st.id = j.salary_type_id").
-		Where("j.id = ?", req.JobpostID).
-		Scan(&job).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "load job failed"})
+		Where("j.id = ?", jobID).
+		Scan(&jobDetails).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load job details"})
 		return
 	}
-
-	st := job.SalaryTypeName
-	amount := job.Salary
+	st := jobDetails.SalaryTypeName
+	amount := jobDetails.Salary
 
 	switch {
 	case strings.Contains(st, "ชั่วโมง") || strings.Contains(st, "hour"):
-		hours, err := computeWorkedHoursGORM(db, req.JobpostID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "sum hours failed"})
-			return
-		}
-		amount = round2(hours * job.Salary)
+    hours, err := computeWorkedHoursGORM(db, jobID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to sum worked hours"})
+        return
+    }
+    amount = round2(hours * jobDetails.Salary)
 
 	case strings.Contains(st, "วัน") || strings.Contains(st, "day") ||
 		strings.Contains(st, "project") || strings.Contains(st, "โปรเจ"):
-		amount = round2(job.Salary)
+		amount = round2(jobDetails.Salary)
 
 	case strings.Contains(st, "เดือน") || strings.Contains(st, "month"):
-		amount = round2(job.Salary)
+		amount = round2(jobDetails.Salary)
 	}
-
-	// upsert billable by job
 	var bi entity.BillableItems
-	err := db.Where("jobpost_id = ?", job.ID).First(&bi).Error
+	err := db.Where("job_application_id = ?", req.JobApplicationID).First(&bi).Error
 	if err == gorm.ErrRecordNotFound {
+		// Create new billable item
 		bi = entity.BillableItems{
-			Description: ifEmpty(req.Description, job.Title),
-			Amount:      float32(amount),
-			JobpostID:   &job.ID,
+			Description:      ifEmpty(req.Description, app.JobPost.Title),
+			Amount:           float32(amount),
+			JobApplicationID: &req.JobApplicationID,
 		}
 		if err := db.Create(&bi).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		_ = db.Table("jobposts").Where("id = ?", job.ID).Update("billable_item_id", bi.ID).Error
 	} else if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	} else {
+		// Update existing billable item
 		if err := db.Model(&bi).Updates(map[string]any{
 			"amount":      amount,
 			"description": ifEmpty(req.Description, bi.Description),
@@ -233,17 +109,18 @@ func CreateOrUpdateBillableItem(c *gin.Context) {
 }
 
 func computeWorkedHoursGORM(db *gorm.DB, jobID uint) (float64, error) {
-	var total struct{ Sum float64 }
-	if err := db.Model(&entity.Worklog{}).
-		Select("COALESCE(SUM(hours),0) AS sum").
-		Where("jobpost_id = ?", jobID).
-		Scan(&total).Error; err != nil {
-		return 0, err
-	}
-	return math.Max(0, total.Sum), nil
+    var total struct{ Sum float64 }
+    if err := db.Model(&entity.Worklog{}).
+        Select("COALESCE(SUM(hours),0) AS sum").
+        Where("jobpost_id = ?", jobID).
+        Scan(&total).Error; err != nil {
+        return 0, err
+    }
+    return math.Max(0, total.Sum), nil
 }
 
 func round2(x float64) float64 { return math.Round(x*100) / 100 }
+
 func ifEmpty(s, def string) string {
 	if strings.TrimSpace(s) == "" {
 		return def
@@ -260,9 +137,9 @@ func GetBillableItemByID(c *gin.Context) {
 
 	var bi entity.BillableItems
 	err = config.DB().
-		Preload("Jobpost").
-		Preload("Jobpost.Employer").
-		Preload("Jobpost.PaymentMethod").
+		Preload("JobApplication.JobPost.Employer").
+		Preload("JobApplication.JobPost.SalaryType").
+		Preload("JobApplication.Student").
 		First(&bi, id).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {

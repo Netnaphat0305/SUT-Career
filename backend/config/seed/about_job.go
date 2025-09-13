@@ -64,13 +64,13 @@ func SeedJobData(db *gorm.DB) {
         // Applications for JobPost ID 3
         {
             Model:             gorm.Model{ID: 1},
-            ApplicationStatus: entity.StatusPending, LastUpdate: time.Now(),
+            ApplicationStatus: entity.StatusAccepted, LastUpdate: time.Now(),
             ApplicationReason: "สนใจงานบริการและสามารถทำงานกะดึกได้ครับ",
             StudentID:         2, JobPostID: 3,
         },
         {
             Model:             gorm.Model{ID: 2},
-            ApplicationStatus: entity.StatusPending, LastUpdate: time.Now(),
+            ApplicationStatus: entity.StatusAccepted, LastUpdate: time.Now(),
             ApplicationReason: "อยากหารายได้เสริมค่ะ มีประสบการณ์ร้านอาหาร",
             StudentID:         3, JobPostID: 3,
         },

@@ -162,11 +162,11 @@ const FinancialReportPage: React.FC = () => {
   if (error) { /* ... Error UI ... */ }
 
   return (
-    <Layout style={{ maxWidth: "880px", minHeight: "100vh", margin: "auto", background: "#f5f5f5" }}>
+    <Layout style={{ maxWidth: "960px", minHeight: "100vh", margin: "auto", background: "#f5f5f5" }}>
       <Content style={{ padding: "30px" }}>
  
         <Flex justify="space-between" align="center" style={{ marginBottom: "30px" }}>
-          <Title level={2} style={{ margin: 0 }}>
+          <Title level={2} style={{ margin: 0, color: "#1E3A5F" }}>
             รายงานด้านการเงิน
           </Title>
           <Button type="primary" size="large" onClick={() => alert('Withdraw button clicked!')}>

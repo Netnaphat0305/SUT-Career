@@ -75,7 +75,7 @@ const PaymentReportPage: React.FC = () => {
     const q = search.trim().toLowerCase();
     if (!q) return sortedRows;
     return sortedRows.filter((r) => {
-      const title = r.payment?.billable_item?.jobpost?.title ?? "ไม่พบชื่อรายการ";
+      const title = r.payment?.billable_item?.job_application?.JobPost?.title ?? "ไม่พบชื่อรายการ";
       const sub = r.payment?.billable_item?.description ?? "";
       const file = (r.file_path ?? "").split("/").pop() ?? "—";
       return (
@@ -89,7 +89,7 @@ const PaymentReportPage: React.FC = () => {
   const tableData = useMemo(() => {
     return filteredRows.map((r, idx) => {
       const reportId = r?.ID ?? undefined;
-      const title = r.reportname ?? r.payment?.billable_item?.jobpost?.title ?? "ไม่พบชื่อรายการ";
+      const title = r.reportname ?? r.payment?.billable_item?.job_application?.JobPost?.title ?? "ไม่พบชื่อรายการ";
       const fileName = r.file_path ? r.file_path.split("/").pop() : "—";
       const when = r.create_date || undefined;
       const method = r.payment?.payment_method?.method_name ?? "-";
@@ -147,7 +147,7 @@ const PaymentReportPage: React.FC = () => {
           <Button
             size="small"
             icon={<FilePdfOutlined />}
-            disabled={!record.fileHref} 
+            disabled={!record.fileHref}
             onClick={() =>
               window.open(record.fileHref, "_blank", "noopener,noreferrer")
             }

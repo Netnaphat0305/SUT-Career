@@ -125,6 +125,7 @@ const PaymentPage: React.FC = () => {
       try {
         const resp = await myjobpostAPI.getById(Number(jobId));
         const jp = asData<Jobpost>(resp);
+        console.log("Data from API:", jp);
         if (cancelled) return;
         setJob(jp);
 
@@ -141,7 +142,7 @@ const PaymentPage: React.FC = () => {
         }
 
         const createdRes = await billableItemAPI.create({
-          jobpost_id: Number(jobId),
+          job_application_id: Number(jobId),
         } as any);
         const created = asData<any>(createdRes);
 
@@ -251,14 +252,8 @@ const PaymentPage: React.FC = () => {
 
   const view = useMemo(
     () => ({
-      employerName:
-        (job as any)?.employer?.company_name ??
-        (job as any)?.Employer?.CompanyName ??
-        "",
-      employerAddress:
-        (job as any)?.employer?.address ??
-        (job as any)?.Employer?.Address ??
-        "",
+      employerName: (job as any)?.employer?.company_name ?? "",
+      employerAddress: (job as any)?.employer?.address ?? "",
       jobTitle: (job as any)?.title ?? "",
       salaryTypeKey: salaryType.key,
       salaryTypeLabel: salaryType.label,
@@ -287,7 +282,7 @@ const PaymentPage: React.FC = () => {
       // ถ้าเคยจ่ายแล้วและไม่ใช่รายเดือน → ไปหน้ารายละเอียด
       if (alreadyPaid && salaryType.key !== "monthly") {
         navigate(`/qr-payment/${billableId}`, {
-          state: { jobId: Number(jobId), title: view.jobTitle },
+          state: { jobapplicationId: Number(jobId), title: view.jobTitle },
         });
         return;
       }
@@ -375,12 +370,10 @@ const PaymentPage: React.FC = () => {
           <Flex align="center" gap={16}>
             <div>
               <Text strong style={{ fontSize: 16 }}>
-                {view.employerName || view.jobTitle}
+                {view.employerName}
               </Text>
               <br />
-              <Text type="secondary">
-                {view.employerName ? view.employerAddress : ""}
-              </Text>
+              <Text type="secondary">{view.employerAddress ?? ""}</Text>
             </div>
           </Flex>
         </Card>
@@ -425,10 +418,7 @@ const PaymentPage: React.FC = () => {
         />
 
         {/* ช่องทางการชำระเงิน */}
-        <PaymentMethodSelector
-          method={method}
-          setMethod={setMethod}
-        />
+        <PaymentMethodSelector method={method} setMethod={setMethod} />
         {/* สรุปยอด */}
         <Card style={{ borderRadius: 12, marginBottom: 16 }}>
           <Title level={5} style={{ textAlign: "left", margin: 0 }}>

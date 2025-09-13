@@ -11,9 +11,8 @@ type Reviews struct {
 	Comment        	string        		`json:"comment"`
 	Datetime       	time.Time     		`json:"datetime"`
 
-	//FK
-	JobpostID         	uint         	`json:"job_post_id"`
-	Jobpost           	*Jobpost	  	`gorm:"foreignKey: JobpostID;references:ID" json:"jobpost"`
+	JobApplicationID	*uint	`json:"job_application_id"`
+	JobApplication		*JobApplication `gorm:"foreignKey:JobApplicationID;references:ID" json:"job_application,omitempty"`
 
 	Ratingscore_ID 	uint          		`json:"ratingscore_id"`
 	Ratingscore    	*Ratingscores 		`gorm:"foreignKey: Ratingscore_ID;references:ID" json:"ratingscore"`

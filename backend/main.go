@@ -624,7 +624,7 @@ func main() {
 		auth.GET("/my-jobs/:id", controller.GetMyJobpostByID)
 
 		// --- Reviews ---
-		auth.GET("/reviews/job/:jobId", controller.FindRatingsByJobPostID)
+		auth.GET("/reviews/jobapp/:jobAppId", controller.FindRatingsByJobApplicationID)
 		auth.POST("/reviews", controller.CreateReview)
 		auth.GET("/reviews/view/:id", controller.GetReviewByID)
 
@@ -633,7 +633,7 @@ func main() {
 		auth.GET("/payments", controller.ListPayments)
 		auth.GET("/orders", controller.ListOrders)
 		auth.GET("/discounts", controller.ListDiscounts)
-		auth.POST("/billable_items", controller.CreateOrUpdateBillableItem)
+		auth.POST("/billable_items", controller.CreateOrUpdateBillableForApplication)
 		auth.GET("/paymentmethods", controller.ListPaymentMethods)
 		auth.GET("/payments/:id", controller.GetPaymentByID)
 		auth.GET("/payments/job/:jobId", controller.GetPaymentByJobId)

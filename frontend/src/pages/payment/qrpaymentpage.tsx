@@ -1,6 +1,12 @@
 // src/pages/payments/QRPromptpayPage.tsx - แก้ไขด้วย state polling แทน delay
 
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import {
   useLocation,
   useNavigate,
@@ -16,17 +22,28 @@ import {
   Space,
   Modal,
   Result,
+  Flex,
 } from "antd";
 import type { UploadFile } from "antd/es/upload/interface";
 import { CheckCircleFilled } from "@ant-design/icons";
 import QRCode from "qrcode";
 import generatePayload from "promptpay-qr";
 import { asData } from "../../utils";
-import { paymentAPI, billableItemAPI, paymentReportAPI } from "../../services/https";
+import {
+  paymentAPI,
+  billableItemAPI,
+  paymentReportAPI,
+} from "../../services/https";
 import QRCountdown from "./qrcountdown";
 import type { Payment } from "../../interfaces/payment";
 import type { Billableitem } from "../../interfaces/billableitem";
-import { payerFromPayment, getEmployerAddress, getPaymentMethodName, getJobTitle, getAmountFromData } from "../../utils/index";
+import {
+  payerFromPayment,
+  getEmployerAddress,
+  getPaymentMethodName,
+  getJobTitle,
+  getAmountFromData,
+} from "../../utils/index";
 const { Title, Text } = Typography;
 
 // const toBaht = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
@@ -87,10 +104,10 @@ const QRPromptpayPage: React.FC = () => {
   // ใช้ ref เพื่อ track ข้อมูลล่าสุด
   const dataRef = useRef({
     jobTitle: "รายการชำระเงิน",
-    payerName: "ผู้ชำระเงิน", 
+    payerName: "ผู้ชำระเงิน",
     payerAddress: "ที่อยู่ไม่ระบุ",
     paymentMethodName: "PromptPay",
-    amount: 0
+    amount: 0,
   });
 
   // ฟังก์ชันตรวจสอบว่าข้อมูลเปลี่ยนจาก default หรือยัง
@@ -104,28 +121,32 @@ const QRPromptpayPage: React.FC = () => {
   }, [jobTitle, payerName, payerAddress, paymentMethodName]);
 
   // ฟังก์ชันรอให้ข้อมูลพร้อม
-  const waitForData = useCallback(async (maxWaitMs: number = 10000): Promise<boolean> => {
-    const startTime = Date.now();
-    
-    while (Date.now() - startTime < maxWaitMs) {
-      if (hasRealData()) {
-        return true; // มีข้อมูลจริงแล้ว
+  const waitForData = useCallback(
+    async (maxWaitMs: number = 10000): Promise<boolean> => {
+      const startTime = Date.now();
+
+      while (Date.now() - startTime < maxWaitMs) {
+        if (hasRealData()) {
+          return true; // มีข้อมูลจริงแล้ว
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100)); // รอ 100ms แล้วลองใหม่
       }
-      await new Promise(resolve => setTimeout(resolve, 100)); // รอ 100ms แล้วลองใหม่
-    }
-    
-    return false; // timeout
-  }, [hasRealData]);
+
+      return false; // timeout
+    },
+    [hasRealData]
+  );
 
   // อัปเดต ref เมื่อ state เปลี่ยน
   useEffect(() => {
     dataRef.current = {
       jobTitle,
       payerName,
-      payerAddress, 
+      payerAddress,
       paymentMethodName,
-      amount
+      amount,
     };
+    console.log('🔄 [State/Ref Update] dataRef อัปเดตเป็น:', dataRef.current);
   }, [jobTitle, payerName, payerAddress, paymentMethodName, amount]);
 
   const closeModal = () => {
@@ -138,11 +159,11 @@ const QRPromptpayPage: React.FC = () => {
   //   const fetchAmount = async () => {
   //     if (amount > 0) return;
   //     if (!billableItemId) return;
-      
+
   //     try {
   //       const res = await billableItemAPI.getById(Number(billableItemId));
   //       const item = asData(res) as Billableitem;
-        
+
   //       const amt = getAmountFromData(item);
   //       if (amt > 0) setAmount(toBaht(amt));
   //     } catch (error) {
@@ -165,20 +186,20 @@ const QRPromptpayPage: React.FC = () => {
           try {
             const res = await paymentAPI.getById(Number(paymentId));
             const p = asData(res) as Payment;
-            
+
             if (!cancelled && p) {
               const title = getJobTitle(p);
               const payer = payerFromPayment(p);
               const address = getEmployerAddress(p);
               const method = getPaymentMethodName(p);
               const amt = getAmountFromData(p);
-              
+              console.log('✅ [API Payment] ข้อมูลที่ได้:', { payer, address });
               setJobTitle(title);
               setPayerName(payer);
               setPayerAddress(address);
               setPaymentMethodName(method);
               if (amt > 0) setAmount(amt);
-              
+
               success = true;
             }
           } catch (error) {
@@ -189,22 +210,24 @@ const QRPromptpayPage: React.FC = () => {
         // Priority 2: ลอง billable API
         if (billableItemId && !success && !cancelled) {
           try {
-            const rb = await paymentAPI.getLatestByBillable(Number(billableItemId));
+            const rb = await paymentAPI.getLatestByBillable(
+              Number(billableItemId)
+            );
             const p = asData(rb) as Payment;
-            
+
             if (p) {
               const title = getJobTitle(p);
               const payer = payerFromPayment(p);
               const address = getEmployerAddress(p);
               const method = getPaymentMethodName(p);
               const amt = getAmountFromData(p);
-              
+
               setJobTitle(title);
               setPayerName(payer);
               setPayerAddress(address);
               setPaymentMethodName(method);
               if (amt > 0) setAmount(amt);
-              
+
               success = true;
             }
           } catch (error) {
@@ -217,25 +240,27 @@ const QRPromptpayPage: React.FC = () => {
           try {
             const reportsRes = await paymentReportAPI.getMine();
             const reports = asData(reportsRes);
-            
+
             if (Array.isArray(reports) && reports.length > 0) {
-              let targetReport = reports.find((r: any) => r.payment?.ID === paymentId) || reports[0];
-              
+              let targetReport =
+                reports.find((r: any) => r.payment?.ID === paymentId) ||
+                reports[0];
+
               if (targetReport?.payment) {
                 const p = targetReport.payment;
-                
+
                 const title = getJobTitle(p);
                 const payer = payerFromPayment(p);
                 const address = getEmployerAddress(p);
                 const method = getPaymentMethodName(p);
                 const amt = getAmountFromData(p);
-                
+
                 setJobTitle(title);
                 setPayerName(payer);
                 setPayerAddress(address);
                 setPaymentMethodName(method);
                 if (amt > 0) setAmount(amt);
-                
+
                 success = true;
               }
             }
@@ -249,21 +274,29 @@ const QRPromptpayPage: React.FC = () => {
           try {
             const biRes = await billableItemAPI.getById(Number(billableItemId));
             const bi = asData(biRes) as Billableitem;
-            
+
             if (bi) {
-              const title = bi.jobpost?.title || bi.description || "รายการชำระเงิน";
+              const title =
+                bi.job_application?.jobpost?.title ||
+                bi.description ||
+                "รายการชำระเงิน";
               const amt = getAmountFromData(bi);
-              
+
               setJobTitle(title);
               if (amt > 0) setAmount(amt);
-              
-              if (bi.jobpost?.employer) {
-                const payer = bi.jobpost.employer.company_name || "ผู้ชำระเงิน";
-                const address = bi.jobpost.employer.address || "ที่อยู่ไม่ระบุ";
+
+              if (bi.job_application?.jobpost?.employer) {
+                const payer =
+                  bi.job_application?.jobpost.employer.company_name ||
+                  "ผู้ชำระเงิน";
+                const address =
+                  bi.job_application?.jobpost.employer.address ||
+                  "ที่อยู่ไม่ระบุ";
+                console.log('✅ [API BillableItem] ข้อมูลที่ได้:', { payer, address });
                 setPayerName(payer);
                 setPayerAddress(address);
               }
-              
+
               success = true;
             }
           } catch (error) {
@@ -275,7 +308,6 @@ const QRPromptpayPage: React.FC = () => {
         if (!success && !cancelled && state?.amount) {
           setAmount(Number(state.amount));
         }
-        
       } catch (error) {
         // Silent error
       }
@@ -292,16 +324,16 @@ const QRPromptpayPage: React.FC = () => {
     const convertLogoToDataUrl = async () => {
       const logoUrls = [
         "/assets/logo.svg",
-        "/logo.svg", 
+        "/logo.svg",
         "/assets/logo.png",
-        "/logo.png"
+        "/logo.png",
       ];
-      
+
       for (const url of logoUrls) {
         try {
           const response = await fetch(url);
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          
+
           const blob = await response.blob();
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -364,7 +396,7 @@ const QRPromptpayPage: React.FC = () => {
       setUploading(true);
 
       const hideLoading = message.loading("กำลังตรวจสอบข้อมูล...", 0);
-      
+
       const dataReady = await waitForData(10000); // รอสูงสุด 10 วินาที
       hideLoading();
 
@@ -383,7 +415,7 @@ const QRPromptpayPage: React.FC = () => {
         const mod = await import("./generateandupload");
         const generateAndUploadReportReactPDF =
           (mod as any).generateAndUploadReportReactPDF ?? (mod as any).default;
-        
+
         const result = await generateAndUploadReportReactPDF({
           paymentId: Number(paymentId),
           amount: currentData.amount || amount,
@@ -394,7 +426,7 @@ const QRPromptpayPage: React.FC = () => {
           method_name: currentData.paymentMethodName,
           logoDataUrl: logoDataUrl,
         });
-
+        console.log('🔥 [To PDF] ข้อมูลที่กำลังจะส่งไปสร้าง PDF:', currentData);
         const resp = (result?.uploadResp ?? result) as any;
         const data = resp?.data?.data ?? resp?.data ?? resp ?? {};
         const id = data?.ID ?? data?.id ?? data?.report_id ?? null;
@@ -431,7 +463,9 @@ const QRPromptpayPage: React.FC = () => {
       <Card>
         <Space direction="vertical" size="large" style={{ width: "100%" }}>
           <div style={{ textAlign: "center" }}>
-            <Title level={3} style={{ color: "#1E3A5F" }}>QR PromptPay</Title>
+            <Title level={3} style={{ color: "#1E3A5F" }}>
+              QR PromptPay
+            </Title>
             <Text type="secondary">สแกนเพื่อชำระเงิน</Text>
           </div>
 
@@ -468,57 +502,64 @@ const QRPromptpayPage: React.FC = () => {
             )}
 
             {expired && (
-              <Text type="danger">
-                QR หมดอายุแล้ว • กรุณากด "รีเฟรช QR"
-              </Text>
+              <Text type="danger">QR หมดอายุแล้ว • กรุณากด "รีเฟรช QR"</Text>
             )}
           </div>
 
           <div style={{ textAlign: "center" }}>
-            <Text style={{ color: "#1E3A5F" }}>ชื่อบัญชี: นางสาวพนิดา โต๊ะเหลือ</Text>
+            <Text style={{ color: "#1E3A5F" }}>
+              ชื่อบัญชี: นางสาวพนิดา โต๊ะเหลือ
+            </Text>
             <br />
-            <Text style={{ color: "#1E3A5F" }}>ยอดชำระ <Text style={{ color: "#1E3A5F" }}strong>{amount.toLocaleString()} บาท</Text></Text>
+            <Text style={{ color: "#1E3A5F" }}>
+              ยอดชำระ{" "}
+              <Text style={{ color: "#1E3A5F" }} strong>
+                {amount.toLocaleString()} บาท
+              </Text>
+            </Text>
           </div>
 
-          <Button
-            type="default"
-            onClick={() => setQrNonce((n) => n + 1)}
-            disabled={!amount}
-          >
-            รีเฟรช QR
-          </Button>
+          <Flex justify="center">
+            <Button
+              type="default"
+              onClick={() => setQrNonce((n) => n + 1)}
+              disabled={!amount}
+            >
+              รีเฟรช QR
+            </Button>
+          </Flex>
 
           {/* อัปโหลดหลักฐาน */}
-          <Upload
-            fileList={fileList}
-            beforeUpload={(file) => {
-              setEvidence(file as File);
-              setFileList([
-                {
-                  uid: (file as any).uid ?? String(Date.now()),
-                  name: file.name,
-                  status: "done",
-                  originFileObj: file,
-                } as UploadFile,
-              ]);
-              return false;
-            }}
-            onChange={(info) => {
-              setFileList(info.fileList);
-              const latest = info.fileList[info.fileList.length - 1];
-              setEvidence((latest?.originFileObj as File) ?? null);
-            }}
-            onRemove={() => {
-              setFileList([]);
-              setEvidence(null);
-            }}
-            accept="image/*,.pdf"
-            maxCount={1}
-          >
-            <Button type="dashed" block>
-              แนบหลักฐานการชำระเงิน
-            </Button>
-          </Upload>
+            <Upload
+              fileList={fileList}
+              beforeUpload={(file) => {
+                setEvidence(file as File);
+                setFileList([
+                  {
+                    uid: (file as any).uid ?? String(Date.now()),
+                    name: file.name,
+                    status: "done",
+                    originFileObj: file,
+                  } as UploadFile,
+                ]);
+                return false;
+              }}
+              onChange={(info) => {
+                setFileList(info.fileList);
+                const latest = info.fileList[info.fileList.length - 1];
+                setEvidence((latest?.originFileObj as File) ?? null);
+              }}
+              onRemove={() => {
+                setFileList([]);
+                setEvidence(null);
+              }}
+              accept="image/*,.pdf"
+              maxCount={1}
+            >
+              <Button type="dashed" block>
+                แนบหลักฐานการชำระเงิน
+              </Button>
+            </Upload>
 
           <Button
             type="primary"
@@ -551,12 +592,7 @@ const QRPromptpayPage: React.FC = () => {
                 <div style={{ marginTop: 8 }}>
                   <Text type="secondary">
                     หมายเลขการชำระเงิน #{paymentId}
-                    {amount ? (
-                      <>
-                        {" "}
-                        • ยอด {amount.toLocaleString()} บาท
-                      </>
-                    ) : null}
+                    {amount ? <> • ยอด {amount.toLocaleString()} บาท</> : null}
                   </Text>
                 </div>
               )}

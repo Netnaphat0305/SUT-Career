@@ -46,4 +46,6 @@ type JobApplication struct {
      // เพิ่มช่องเก็บไฟล์ ResumeFile
     ResumeFile string `gorm:"type:varchar(255)" json:"resume_file"`
     
+    // // เผื่อได้ Preload
+	// BillableItem *BillableItems `gorm:"foreignKey:JobpostID" json:"billable_item,omitempty"`
 }
