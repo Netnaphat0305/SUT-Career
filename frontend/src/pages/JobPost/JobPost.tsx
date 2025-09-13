@@ -26,6 +26,7 @@ import {
 } from "../../services/https";
 import type { CreateJobpost } from "../../interfaces/jobpost";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 
 const { TextArea } = Input;
 
@@ -35,7 +36,7 @@ const JobPost: React.FC = () => {
   const [open, setOpen] = useState(false);
 
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
-  const [logoFile, setLogoFile] = useState<File | null>(null); // ✅ state สำหรับโลโก้
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const navigate = useNavigate();
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -113,29 +114,28 @@ const JobPost: React.FC = () => {
         description: values.jobDetails,
         salary: Number(values.compensation),
         locationjob: values.locationjob,
-        deadline: values.applicationDeadline.toISOString(),
+        deadline: values.applicationDeadline
+          .endOf("day")
+          .toDate()
+          .toISOString(),
         status: "Open",
         portfolio_required: "false",
         job_category_id: values.job_category_id,
         employment_type_id: values.employmentTypeId,
         salary_type_id: values.salaryTypeId,
         employer_id: Number(user?.id),
-        image_url: "", // จะอัปโหลดทีหลัง
+        image_url: "",
       };
 
       const res = await jobPostAPI.create(payload);
       const jobpostId = res.data.ID || res.data.data?.ID;
 
-      // อัปโหลด portfolio ถ้ามี
       if (portfolioFile) {
         await jobPostAPI.uploadPortfolio(jobpostId, portfolioFile);
       }
 
-      // อัปโหลด logo ถ้ามี
       if (logoFile) {
-        await jobPostAPI.uploadPortfolio(jobpostId, logoFile);
-        // 🔹 ถ้า backend แยก API upload logo เช่น uploadLogo()
-        // ให้เปลี่ยนเป็น jobPostAPI.uploadLogo(jobpostId, logoFile)
+        await jobPostAPI.uploadLogo(jobpostId, logoFile);
       }
 
       setOpen(true);
@@ -147,7 +147,6 @@ const JobPost: React.FC = () => {
     }
   };
 
-  // reset modal
   const handleClose = () => {
     setOpen(false);
     setPortfolioFile(null);
@@ -156,18 +155,16 @@ const JobPost: React.FC = () => {
     navigate("/Job/Board");
   };
 
-  // เลือก Portfolio
   const handlePortfolioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setPortfolioFile(file);
   };
 
-  // เลือก Logo
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setLogoFile(file);
   };
-  // เงินเดือน
+
   const SalaryInput: React.FC = () => (
     <Row gutter={16}>
       <Col span={12}>
@@ -197,7 +194,6 @@ const JobPost: React.FC = () => {
     </Row>
   );
 
-  // ประเภทงาน
   const EmploymentTypeSelector: React.FC = () => (
     <Form.Item
       label="ประเภทงาน"
@@ -209,9 +205,7 @@ const JobPost: React.FC = () => {
           {employmenttype.map((emp) => (
             <Card
               key={emp.id}
-              onClick={() =>
-                form.setFieldsValue({ employmentTypeId: emp.id })
-              }
+              onClick={() => form.setFieldsValue({ employmentTypeId: emp.id })}
               className={`custom-card ${
                 form.getFieldValue("employmentTypeId") === emp.id
                   ? "custom-card-selected"
@@ -226,7 +220,6 @@ const JobPost: React.FC = () => {
     </Form.Item>
   );
 
-  // หมวดหมู่
   const JobCategorySelector: React.FC = () => (
     <Form.Item
       name="job_category_id"
@@ -288,10 +281,16 @@ const JobPost: React.FC = () => {
             name="applicationDeadline"
             rules={[{ required: true, message: "กรุณาเลือกวันหมดเขตรับสมัคร" }]}
           >
-            <DatePicker size="large" style={{ width: "100%" }} format="YYYY-MM-DD" />
+            <DatePicker
+              size="large"
+              style={{ width: "100%" }}
+              format="YYYY-MM-DD"
+              disabledDate={(current) => {
+                return current && current.isBefore(dayjs().startOf("day"));
+              }}
+            />
           </Form.Item>
 
-          {/* ✅ อัปโหลด Portfolio */}
           <Form.Item label="แนบผลงาน (Portfolio)">
             <input
               id="portfolio-upload"
@@ -313,7 +312,6 @@ const JobPost: React.FC = () => {
             )}
           </Form.Item>
 
-          {/* ✅ อัปโหลด Logo */}
           <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
             <input
               id="logo-upload"
@@ -322,7 +320,9 @@ const JobPost: React.FC = () => {
               style={{ display: "none" }}
               onChange={handleLogoChange}
             />
-            <Button onClick={() => document.getElementById("logo-upload")?.click()}>
+            <Button
+              onClick={() => document.getElementById("logo-upload")?.click()}
+            >
               เลือกรูปโลโก้
             </Button>
             {logoFile && (
@@ -351,7 +351,13 @@ const JobPost: React.FC = () => {
         </Form>
       </div>
 
-      <Modal open={open} onCancel={handleClose} footer={null} centered width={450}>
+      <Modal
+        open={open}
+        onCancel={handleClose}
+        footer={null}
+        centered
+        width={450}
+      >
         <Result
           status="success"
           title="โพสต์งานเรียบร้อยแล้ว"

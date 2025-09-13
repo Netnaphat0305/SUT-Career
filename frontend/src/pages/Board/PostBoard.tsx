@@ -5,16 +5,21 @@ import PageHeader from "../../components/PageHeader";
 import "./PostBoard.css";
 import { jobPostAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
-import { FileTextOutlined, DownloadOutlined } from "@ant-design/icons";
-
+import { FileTextOutlined } from "@ant-design/icons";
 import {
   ClockCircleOutlined,
   DollarCircleOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons";
+import dayjs from "dayjs";
+import { useAuth } from "../../context/AuthContext"; //  import
+import { API_BASE } from "../../config";
 
 const PostBoard: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth(); //  ดึง user
+  const role = user?.role; // student หรือ employer
+
   const [posts, setPosts] = useState<Jobpost[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,13 +28,18 @@ const PostBoard: React.FC = () => {
       try {
         setLoading(true);
         const res = await jobPostAPI.getAll();
-        const result: Jobpost[] = res.data || res;
+        let result: Jobpost[] = res.data || res;
 
-        // กรองเฉพาะโพสต์ที่เปิดอยู่ (status = Open)
-        const filtered = result.filter((post) => post.status === "Open");
+        // กรองโพสต์หมดเขตออกเสมอ (ไม่ว่า student หรือ employer)
+        result = result.filter(
+          (post) =>
+            post.status === "Open" &&
+            (!post.deadline ||
+              dayjs(post.deadline).endOf("day").isAfter(dayjs()))
+        );
 
-        const sorted = filtered.sort(
-          (a: Jobpost, b: Jobpost) =>
+        const sorted = result.sort(
+          (a, b) =>
             new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
         );
 
@@ -57,7 +67,12 @@ const PostBoard: React.FC = () => {
           <Empty description="ยังไม่มีโพสต์งาน" />
         ) : (
           posts.map((post) => {
-            const deadlineText = post.deadline
+            const isExpired =
+              post.deadline && dayjs(post.deadline).isBefore(dayjs(), "day");
+
+            const deadlineText = isExpired
+              ? "หมดเวลารับสมัครแล้ว"
+              : post.deadline
               ? new Date(post.deadline).toLocaleDateString("th-TH", {
                   year: "numeric",
                   month: "long",
@@ -68,8 +83,14 @@ const PostBoard: React.FC = () => {
             return (
               <div
                 key={post.ID}
-                className="job-card"
-                onClick={() => navigate(`/Job/post-detail/${post.ID}`)}
+                className={`job-card ${
+                  isExpired && role === "student" ? "job-card-disabled" : ""
+                }`}
+                onClick={() => {
+                  if (!(isExpired && role === "student")) {
+                    navigate(`/Job/post-detail/${post.ID}`);
+                  }
+                }}
               >
                 {/* ฝั่งซ้าย */}
                 <div className="job-left">
@@ -83,7 +104,11 @@ const PostBoard: React.FC = () => {
                       <ClockCircleOutlined className="job-icon" />
                       <div>
                         <span>ระยะเวลาการรับสมัคร</span>
-                        <strong>{deadlineText}</strong>
+                        <strong
+                          style={{ color: isExpired ? "red" : "inherit" }}
+                        >
+                          {deadlineText}
+                        </strong>
                       </div>
                     </div>
                     <div className="job-detail">
@@ -107,7 +132,7 @@ const PostBoard: React.FC = () => {
                     post.portfolio_required !== "false" && (
                       <a
                         className="portfolio-link"
-                        href={`http://localhost:8080/download/${post.portfolio_required
+                        href={`${API_BASE}/download/${post.portfolio_required
                           ?.split("/")
                           .pop()}`}
                         target="_blank"
@@ -124,7 +149,7 @@ const PostBoard: React.FC = () => {
                 <div className="job-right">
                   {post.image_url ? (
                     <img
-                      src={post.image_url}
+                      src={`${API_BASE}${post.image_url}`}
                       alt={post.title}
                       className="job-image"
                     />

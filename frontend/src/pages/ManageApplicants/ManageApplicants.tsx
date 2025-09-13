@@ -6,6 +6,7 @@ import defaultProfile from "../../assets/profile.svg";
 import "./ManageApplicants.css";
 import type { JobApplication, JobPost } from "../../interfaces/jobApplication";
 import PageHeader from "../../components/PageHeader";
+import { API_BASE } from "../../config";
 
 const ManageApplicants: React.FC = () => {
   const { jobpost_id } = useParams<{ jobpost_id: string }>();
@@ -73,7 +74,11 @@ const ManageApplicants: React.FC = () => {
             </p>
           </div>
           <img
-            src={jobpost.image_url || defaultProfile}
+            src={
+              jobpost.image_url
+                ? `${API_BASE}${jobpost.image_url}`
+                : defaultProfile
+            }
             alt="logo"
             className="job-logo"
           />
@@ -234,7 +239,7 @@ const ManageApplicants: React.FC = () => {
                     </span>
                   </div>
                 )}
-                
+
                 {/* ปุ่มจัดการสถานะ */}
                 <div className="applicant-actions">
                   <button

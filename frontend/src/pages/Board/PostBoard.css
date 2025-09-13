@@ -181,6 +181,12 @@
   border: 1px dashed #e2e2e2;
 }
 
+.job-card-disabled {
+  opacity: 0.6;          /* ทำให้ดูจางลง */
+  pointer-events: none;  /* คลิกไม่ได้ */
+  cursor: not-allowed;
+}
+
 /* ---------------- Responsive ---------------- */
 @media (max-width: 768px) {
   .job-card {
