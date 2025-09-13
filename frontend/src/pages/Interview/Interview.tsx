@@ -25,7 +25,6 @@ const Interview: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState<Dayjs>(dayjs());
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
-  const [interview, setInterview] = useState<any | null>(null);
   const [schedules, setSchedules] = useState<InterviewScheduling[]>([]);
   const navigate = useNavigate();
   // ✅ อ่าน applicationId จาก query string
@@ -43,15 +42,6 @@ const Interview: React.FC = () => {
           setSchedules(res.data);
         } else {
           setSchedules([]);
-        }
-
-        // ✅ interview (เช็กว่า backend ส่งค่ามาหรือไม่)
-        if (res.interview) {
-          setInterview(res.interview); // <-- state ใหม่ไว้เก็บ Interview
-        } else if (res.data?.interview) {
-          setInterview(res.data.interview);
-        } else {
-          setInterview(null);
         }
 
       } catch {
@@ -144,97 +134,88 @@ const Interview: React.FC = () => {
 
   return (
     <div className="interview-container">
-      {interview ? (
-        <Card
-          title="คุณได้เลือกนัดสัมภาษณ์แล้ว"
-          extra={<CloseOutlined onClick={() => navigate("/my-applications")} />}
-        >
-          <p>คุณไม่สามารถจองใหม่ได้</p>
-        </Card>
-      ) : (
-        <div className="interview-header">
-          <Row gutter={24}>
-            <Col span={16}>
-              <Card>
-                {/* Month Navigation */}
-                <div className="month-nav">
-                  <Button type="text" icon={<LeftOutlined />} onClick={() => setCurrentMonth(currentMonth.subtract(1, 'month'))} />
-                  <div className="month-display">{currentMonth.format('MMMM YYYY')}</div>
-                  <Button type="text" icon={<RightOutlined />} onClick={() => setCurrentMonth(currentMonth.add(1, 'month'))} />
-                </div>
+      <div className="interview-header">
+        <Row gutter={24}>
+          <Col span={16}>
+            <Card>
+              {/* Month Navigation */}
+              <div className="month-nav">
+                <Button type="text" icon={<LeftOutlined />} onClick={() => setCurrentMonth(currentMonth.subtract(1, 'month'))} />
+                <div className="month-display">{currentMonth.format('MMMM YYYY')}</div>
+                <Button type="text" icon={<RightOutlined />} onClick={() => setCurrentMonth(currentMonth.add(1, 'month'))} />
+              </div>
 
-                {/* Calendar Header */}
-                <div className="calendar-header">
-                  {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(d => <div key={d} className="calendar-header-cell">{d}</div>)}
-                </div>
+              {/* Calendar Header */}
+              <div className="calendar-header">
+                {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(d => <div key={d} className="calendar-header-cell">{d}</div>)}
+              </div>
 
-                {/* Calendar Grid */}
-                <div className="calendar-grid">
-                  {Array.from({ length: 42 }, (_, i) => {
-                    const startOfMonth = currentMonth.startOf('month').startOf('week');
-                    const currentDate = startOfMonth.add(i, 'day');
-                    const isCurrentMonth = currentDate.month() === currentMonth.month();
-                    return (
-                      <div key={i} className={`calendar-cell ${!isCurrentMonth ? 'cell-other-month' : ''}`}>
-                        {isCurrentMonth
-                          ? dateCellRender(currentDate)
-                          : <div className="cell-disabled">{currentDate.date()}</div>}
-                      </div>
-                    );
-                  })}
-                </div>
+              {/* Calendar Grid */}
+              <div className="calendar-grid">
+                {Array.from({ length: 42 }, (_, i) => {
+                  const startOfMonth = currentMonth.startOf('month').startOf('week');
+                  const currentDate = startOfMonth.add(i, 'day');
+                  const isCurrentMonth = currentDate.month() === currentMonth.month();
+                  return (
+                    <div key={i} className={`calendar-cell ${!isCurrentMonth ? 'cell-other-month' : ''}`}>
+                      {isCurrentMonth
+                        ? dateCellRender(currentDate)
+                        : <div className="cell-disabled">{currentDate.date()}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          </Col>
+
+          <Col span={8}>
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              {/* Legend */}
+              <Card size="small">
+                <Space direction="vertical" size="small">
+                  <div className="legend-item"><div className="legend-dot selected" /> <Text>วันที่เลือก</Text></div>
+                  <div className="legend-item"><div className="legend-dot busy" /> <Text>เต็ม</Text></div>
+                  <div className="legend-item"><div className="legend-dot available" /> <Text>ว่าง</Text></div>
+                </Space>
               </Card>
-            </Col>
 
-            <Col span={8}>
-              <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                {/* Legend */}
-                <Card size="small">
-                  <Space direction="vertical" size="small">
-                    <div className="legend-item"><div className="legend-dot selected" /> <Text>วันที่เลือก</Text></div>
-                    <div className="legend-item"><div className="legend-dot busy" /> <Text>เต็ม</Text></div>
-                    <div className="legend-item"><div className="legend-dot available" /> <Text>ว่าง</Text></div>
+              {/* Time Slots */}
+              {selectedDate && (
+                <Card
+                  title={<Title level={3} style={{ margin: 0 }}>{selectedDate.date()} {selectedDate.format('ddd').toUpperCase()} {selectedDate?.year()}</Title>}
+                  className="time-slot-card"
+                >
+                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                    {getCurrentDaySchedules().map(s => (
+                      <div key={s.ID} className="time-slot-row">
+                        <Text strong>
+                          {dayjs(s.DateAndTimeStart).format('HH:mm')} - {dayjs(s.DateAndTimeEnd).format('HH:mm')}
+                        </Text>
+                        <div
+                          className={`time-slot-btn ${String(s.Status).toLowerCase()} ${selectedTimeSlot === s.ID ? 'selected' : ''}`}
+                          onClick={() => setSelectedTimeSlot(s.ID)}
+                        />
+                      </div>
+                    ))}
                   </Space>
                 </Card>
+              )}
 
-                {/* Time Slots */}
-                {selectedDate && (
-                  <Card
-                    title={<Title level={4} style={{ margin: 0 }}>{selectedDate.date()} {selectedDate.format('ddd').toUpperCase()}</Title>}
-                    className="time-slot-card"
-                  >
-                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                      {getCurrentDaySchedules().map(s => (
-                        <div key={s.ID} className="time-slot-row">
-                          <Text strong>
-                            {dayjs(s.DateAndTimeStart).format('HH:mm')} - {dayjs(s.DateAndTimeEnd).format('HH:mm')}
-                          </Text>
-                          <div
-                            className={`time-slot-btn ${String(s.Status).toLowerCase()} ${selectedTimeSlot === s.ID ? 'selected' : ''}`}
-                            onClick={() => setSelectedTimeSlot(s.ID)}
-                          />
-                        </div>
-                      ))}
-                    </Space>
-                  </Card>
-                )}
-
-                {/* Schedule Button */}
-                <Button
-                  type="primary"
-                  size="large"
-                  block
-                  disabled={!selectedTimeSlot}
-                  className={`schedule-btn ${selectedTimeSlot ? 'enabled' : 'disabled'}`}
-                  onClick={() => setShowConfirmModal(true)}
-                >
-                  นัดสัมภาษณ์
-                </Button>
-              </Space>
-            </Col>
-          </Row>
-        </div>
-      )}
+              {/* Schedule Button */}
+              <Button
+                type="primary"
+                size="large"
+                block
+                disabled={!selectedTimeSlot}
+                className={`schedule-btn ${selectedTimeSlot ? 'enabled' : 'disabled'}`}
+                onClick={() => setShowConfirmModal(true)}
+              >
+                นัดสัมภาษณ์
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+      </div>
       {/* Confirmation Modal */}
       <Modal open={showConfirmModal} footer={null} closable={false} centered width={400} className="modal-box">
         <div className="modal-content">
@@ -246,6 +227,12 @@ const Interview: React.FC = () => {
           <Text className="modal-text">
             {selectedDate?.format('dddd')} ที่ {selectedDate?.date()} {selectedDate?.format('MMMM')} {selectedDate?.year()} เวลา {selectedSlot ? dayjs(selectedSlot.DateAndTimeStart).format('HH:mm') : ''}
           </Text>
+          <Text style={{ fontWeight: "bold" }}>
+            รายละเอียดการนัดสัมภาษณ์:
+          </Text>
+          <div className="date-detail">
+            {selectedSlot?.Detail || "ไม่มีรายละเอียด"}
+          </div>
           <Text className="modal-warning">ไม่สามารถยกเลิกในภายหลังได้ !</Text>
           <div className="modal-actions">
             <Button className="modal-cancel" onClick={() => setShowConfirmModal(false)}>ยกเลิก</Button>
@@ -258,10 +245,29 @@ const Interview: React.FC = () => {
       <Modal open={showSuccessModal} footer={null} closable={false} centered width={400} className="modal-box">
         <div className="modal-content success">
           <div className="modal-close">
-            <CloseOutlined onClick={() => setShowSuccessModal(false)} />
+            <CloseOutlined
+              onClick={() => {
+                setShowSuccessModal(false),
+                  navigate("/my-applications")
+              }
+              } />
           </div>
           <CheckCircleOutlined className="modal-icon" />
           <Title level={4}>นัดสัมภาษณ์สำเร็จ</Title>
+          <div className="Show-success-booked-detail">
+            <Text strong style={{fontSize: "20px"}}>
+              {selectedDate?.format('dddd')} ที่ {selectedDate?.date()} {selectedDate?.format('MMMM')} {selectedDate?.year()}
+            </Text>
+            <br />
+            <Text>
+              เวลา {selectedSlot ? dayjs(selectedSlot.DateAndTimeStart).format('HH:mm') : ""} -
+              {selectedSlot ? dayjs(selectedSlot.DateAndTimeEnd).format('HH:mm') : ""}
+            </Text>
+            <br />
+            <Text>
+              รายละเอียด: {selectedSlot?.Detail || "ไม่มีรายละเอียด"}
+            </Text>
+          </div>
         </div>
       </Modal>
     </div>

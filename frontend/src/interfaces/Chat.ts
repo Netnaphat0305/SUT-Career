@@ -7,6 +7,7 @@ export interface ChatRoom {
     ID: number;
     first_name?: string;
     last_name?: string;
+    profile_image_url?: string;
     User: {
       ID: number;
     };
@@ -16,6 +17,7 @@ export interface ChatRoom {
     ID: number;
     first_name?: string;
     last_name?: string;
+    avatar_url?: string;
     User?: {
       ID: number;
     };

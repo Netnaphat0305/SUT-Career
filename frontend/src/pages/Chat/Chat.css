@@ -52,7 +52,6 @@
 
 /* รูปโปรไฟล์ (Avatar) */
 .chat-avatar {
-  background-color: #1890ff;
   margin-left: 24px;
 }
 
@@ -164,7 +163,7 @@
 
 /* Avatar ในกล่องข้อความ */
 .avatar-other {
-  background-color: #ff7a45;
+  background-color: #ccc;
 }
 
 .avatar-own {

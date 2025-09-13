@@ -30,9 +30,10 @@ import {
   ClockCircleOutlined,
   DeleteOutlined,
   StarOutlined,
+  MessageOutlined, // ======================= edit by book ========================
 } from '@ant-design/icons';
 import { useAuth } from '../../context/AuthContext';
-import { studentPostAPI, profileAPI } from '../../services/https/index';
+import { studentPostAPI, profileAPI, chatAPI } from '../../services/https/index';
 import type { Student } from '../../interfaces/student';
 import type { StudentPost } from '../../interfaces/studentpost';
 import type { Review } from '../../interfaces/review';
@@ -55,7 +56,7 @@ const ProfilePage2: React.FC = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
-  
+
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,9 +64,27 @@ const ProfilePage2: React.FC = () => {
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [editingPost, setEditingPost] = useState<StudentPost | null>(null);
 
+  // ======================= edit by book ========================
+  // ฟังก์ชันสร้างห้องแชท
+  const handleCreateChat = async () => {
+    if (!profileData?.student?.user_id) return;
+
+    try {
+      const room = await chatAPI.createOrGetRoom(
+        profileData.student.ID,  // targetId = student user_id
+        "student"                     // targetRole = student
+      );
+      navigate("/Chat", { state: { roomId: room.ID } });
+    } catch (err) {
+      console.error("Failed to create chat room:", err);
+      message.error("ไม่สามารถสร้างห้องแชทได้");
+    }
+  };
+  // ======================= edit by book ========================
+
   const isMyProfile = useMemo(() => {
     if (authLoading || !user || !profileData?.student) return false;
-    if (!studentId) return true; 
+    if (!studentId) return true;
     return profileData.student.user_id === user.id;
   }, [user, studentId, profileData?.student, authLoading]);
 
@@ -73,21 +92,21 @@ const ProfilePage2: React.FC = () => {
     if (authLoading) {
       return;
     }
-    
+
     console.log("=== ProfilePage2 Debug ===");
     console.log("📍 Current params:", { studentId });
     console.log("👤 Current user:", { id: user?.id, role: user?.role });
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       let apiResponse;
-      
+
       if (!studentId) {
         if (!user) {
-            navigate('/login');
-            return; // Stop execution if no user
+          navigate('/login');
+          return; // Stop execution if no user
         }
         console.log("🏠 Loading my profile...");
         apiResponse = await profileAPI.getMyProfile();
@@ -162,7 +181,7 @@ const ProfilePage2: React.FC = () => {
 
   if (authLoading || loading) {
     return (
-        <Spin size="large" tip="กำลังโหลดข้อมูลโปรไฟล์..." fullscreen />
+      <Spin size="large" tip="กำลังโหลดข้อมูลโปรไฟล์..." fullscreen />
     );
   }
 
@@ -202,7 +221,7 @@ const ProfilePage2: React.FC = () => {
               <Title level={3} style={{ marginBottom: '8px' }}>
                 {student.first_name} {student.last_name}
               </Title>
-              
+
               <div style={{ marginBottom: '16px' }}>
                 <Rate disabled allowHalf value={rating?.average || 0} />
                 <Text type="secondary" style={{ marginLeft: '8px' }}>
@@ -250,6 +269,22 @@ const ProfilePage2: React.FC = () => {
                 แก้ไขโปรไฟล์
               </Button>
             )}
+            {/* ======================= edit by book ======================== */}
+            {user?.role === "employer" && !isMyProfile && (
+              <div>
+                <Divider />
+                <Button
+                  type="primary"
+                  icon={<MessageOutlined />}
+                  block
+                  style={{ marginTop: '12px' }}
+                  onClick={handleCreateChat}
+                >
+                  สร้างห้องแชทคุยกับนักศึกษา
+                </Button>
+              </div>
+            )}
+            {/* ======================= edit by book ======================== */}
           </Card>
         </Col>
 

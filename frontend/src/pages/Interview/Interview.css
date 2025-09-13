@@ -104,6 +104,7 @@
 /* Time Slots */
 .time-slot-card {
     background-color: #e6f4ff;
+    text-align: center;
 }
 
 .time-slot-row {
@@ -200,7 +201,8 @@
 
 .modal-warning {
     color: #ff4d4f;
-    font-size: 14px;
+    font-size: 20px;
+    font-weight: bold;
     display: block;
     margin-bottom: 24px;
 }
@@ -223,4 +225,9 @@
     width: 100px;
     background-color: #1890ff !important;
     color: white !important;
+}
+
+.date-detail{
+    font-weight: 400;
+    font-size: 16px;
 }
