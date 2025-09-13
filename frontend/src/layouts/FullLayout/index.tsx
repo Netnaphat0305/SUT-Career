@@ -9,12 +9,16 @@ import {
   Flex, 
   Space, 
   Dropdown,
+  
 } from "antd";
-import { DownOutlined, UserOutlined, LogoutOutlined, ProfileOutlined } from "@ant-design/icons";
+import { DownOutlined, UserOutlined, LogoutOutlined, ProfileOutlined,FormOutlined,EditOutlined} from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import logoImage from '../../assets/logo.svg';
 // Import useAuth to get user and logout function
 import { useAuth } from "../../context/AuthContext"; 
+
+
+
 
 const { Header, Content, Footer } = Layout;
 
@@ -30,7 +34,7 @@ const createMenuItem = (key: string, label: React.ReactNode): MenuItem => {
 };
 
 const navItems: MenuItem[] = [
-  createMenuItem("home", "Home"),
+  // createMenuItem("home", "Home"),
   createMenuItem("Job/Board", "Jobs"),
   createMenuItem("my-jobs", "My Job"),
   createMenuItem("payment-report", "Payment Report"),
@@ -108,7 +112,33 @@ const FullLayout: React.FC = () => {
             label: <Link to="/profile">ดูโปรไฟล์</Link>,
             icon: <ProfileOutlined />,
         });
+
+        // add by netnaphat เพิ่ม myapp==============//
+    menuItems.push({
+        key: 'MyApplication',
+        label: <Link to="/my-applications">ใบสมัครของฉัน</Link>,
+        icon: <FormOutlined />
+    });
     }
+
+    //edit by netnaphat copy satang แก้้ให้ employer มีปุ่มโปรไฟล์
+    else if (userRole === 'employer' || userRole === 'emp') {
+        menuItems.push({
+            key: 'employer-profile',
+            label: <Link to="/employer/profile">ดูโปรไฟล์</Link>,
+            icon: <ProfileOutlined />,
+        });
+
+        // add by netnaphat เพิ่ม mypost==============//
+        menuItems.push({
+        key: 'JobMyPost',
+        label: <Link to="/Job/Mypost-job">โพสต์ของฉัน</Link>,
+        icon: <EditOutlined />
+        
+    });
+    }
+    
+
 
     // Add logout option for all logged-in users
     menuItems.push({
@@ -118,6 +148,9 @@ const FullLayout: React.FC = () => {
         onClick: logout, // Call logout function on click
         danger: true,
     });
+
+
+
   }
 
 

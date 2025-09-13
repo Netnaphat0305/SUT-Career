@@ -4,14 +4,27 @@ import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import type { ChatRoom, ChatHistory } from "../../interfaces/Chat";
 import type { InterviewScheduling } from "../../interfaces/InterviewScheduling"
 
-
 import type { Employer, SignInEmployer } from "../../interfaces/employer";
 import type { Student, SignInStudent } from "../../interfaces/student";
-import type { CreateReviewPayload, Review, FindReviewRequest, } from "../../interfaces/review";
-import type { FAQ, RequestTicket, TicketAttachment, FAQComment } from '../../interfaces/helpcenter';
+import type {
+  CreateReviewPayload,
+  Review,
+  FindReviewRequest,
+} from "../../interfaces/review";
+import type {
+  FAQ,
+  RequestTicket,
+  TicketAttachment,
+  FAQComment,
+} from "../../interfaces/helpcenter";
 import type { Discount } from "../../interfaces/discount";
 import type { Jobpost, CreateJobpost } from "../../interfaces/jobpost";
-import type { Payment, CreatePaymentPayload, StudentFinanceResponse, FinanceSummaryResponse } from "../../interfaces/payment";
+import type {
+  Payment,
+  CreatePaymentPayload,
+  StudentFinanceResponse,
+  FinanceSummaryResponse,
+} from "../../interfaces/payment";
 import type { Order } from "../../interfaces/order";
 import type { EmploymentType } from "../../interfaces/employment_type";
 import type { JobCategory } from "../../interfaces/job_category";
@@ -20,7 +33,7 @@ import type { SignInCommon } from "../../interfaces/user";
 import type { CreateBillableitemPayload } from "../../interfaces/billableitem";
 import type { Paymentmethod } from "../../interfaces/paymentmethod";
 import type { Ratingscore } from "../../interfaces/ratingscore";
-import type { Skill } from "../../interfaces/skill"
+import type { Skill } from "../../interfaces/skill";
 /** ใช้ VITE_API_KEY เป็น baseURL เหมือนเดิม */
 const API_URL = import.meta.env.VITE_API_KEY || "http://localhost:8080";
 export const UPLOAD_URL = `${API_URL}/upload`;
@@ -221,8 +234,6 @@ export const Delete = async (
     });
 };
 
-
-
 const getConfig = (requireAuth = true) => {
   const token = localStorage.getItem("token");
   const headers: { [key: string]: string } = {
@@ -248,17 +259,23 @@ const handleRequest = async (request: Promise<AxiosResponse>) => {
   }
 };
 
-const get = (url: string, requireAuth = true) => handleRequest(axios.get(`${API_URL}${url}`, getConfig(requireAuth)));
-const post = (url: string, data: any, requireAuth = true) => handleRequest(axios.post(`${API_URL}${url}`, data, getConfig(requireAuth)));
-const put = (url: string, data: any, requireAuth = true) => handleRequest(axios.put(`${API_URL}${url}`, data, getConfig(requireAuth)));
-const del = (url: string, requireAuth = true) => handleRequest(axios.delete(`${API_URL}${url}`, getConfig(requireAuth)));
+const get = (url: string, requireAuth = true) =>
+  handleRequest(axios.get(`${API_URL}${url}`, getConfig(requireAuth)));
+const post = (url: string, data: any, requireAuth = true) =>
+  handleRequest(axios.post(`${API_URL}${url}`, data, getConfig(requireAuth)));
+const put = (url: string, data: any, requireAuth = true) =>
+  handleRequest(axios.put(`${API_URL}${url}`, data, getConfig(requireAuth)));
+const del = (url: string, requireAuth = true) =>
+  handleRequest(axios.delete(`${API_URL}${url}`, getConfig(requireAuth)));
 
 // --- API Service Objects ---
 
 export const authAPI = {
   login: (data: SignInCommon) => Post("/api/login", data, false),
-  studentLogin: (data: SignInStudent) => post("/auth/student/login", data, false),
-  employerLogin: (data: { email: string; password?: string }) => post("/auth/employer/login", data, false),
+  studentLogin: (data: SignInStudent) =>
+    post("/auth/student/login", data, false),
+  employerLogin: (data: { email: string; password?: string }) =>
+    post("/auth/employer/login", data, false),
 };
 
 export const studentAPI = {
@@ -266,10 +283,12 @@ export const studentAPI = {
   getAll: () => get("/students"),
   getById: (id: number) => get(`/students/${id}`),
   getByUserId: (userId: number) => get(`/students/user/${userId}`),
-  update: (id: number, data: Partial<Student>) =>
-    //   Update(`/api/student/${id}`, data),
-    // delete: (id: number) => DeleteReq(`/students/${id}`),
-    put(`students/${id}`, data),
+  //============edit by netnaphat แก้ให้มันไม่ซ้ำเพราะต้องใช้ update เหมือนกัน=============================//
+  updateapply: (id: number, data: Partial<Student>) =>
+    Update(`/api/student/${id}`, data),
+  deleteapply: (id: number) => DeleteReq(`/students/${id}`),
+  //===============================================================================================//
+  update: (id: number, data: Partial<Student>) => put(`students/${id}`, data),
   delete: (id: number) => del(`/students/${id}`),
 };
 
@@ -278,7 +297,6 @@ export const employerAPI = {
   getAll: () => get("/employers"),
   getById: (id: number) => get(`/employers/${id}`),
   update: (id: number, data: Partial<Employer>) =>
-
     Update(`/employers/${id}`, data),
   delete: (id: number) => DeleteReq(`/employers/${id}`),
 };
@@ -324,9 +342,11 @@ export const myjobpostAPI = {
 };
 
 export const billableItemAPI = {
-  create: (data: CreateBillableitemPayload) => Post("/api/billable_items", data),
+  create: (data: CreateBillableitemPayload) =>
+    Post("/api/billable_items", data),
   getById: (id: number) => Get(`/api/billable_items/${id}`),
-  getByJobPostId: (jobPostId: number) => Get(`/api/billable_items/jobpost/${jobPostId}`),
+  getByJobPostId: (jobPostId: number) =>
+    Get(`/api/billable_items/jobpost/${jobPostId}`),
   list: () => Get("/billable_items"),
   delete: (id: number) => DeleteReq(`/api/billable_items/${id}`),
 };
@@ -335,7 +355,8 @@ export const paymentAPI = {
   create: (data: CreatePaymentPayload) => Post("/api/payments", data),
   getById: (id: number): Promise<{ data: Payment }> =>
     Get(`/api/payments/${id}`, true, { silent404: true }),
-  getLatestByBillable: (billableId: number) => Get(`/api/payments/billable/${billableId}`),
+  getLatestByBillable: (billableId: number) =>
+    Get(`/api/payments/billable/${billableId}`),
   getByEmployerId: (employerId: number): Promise<{ data: Payment[] }> =>
     Get(`/api/payments/employer/${employerId}`),
   update: (id: number, data: Partial<Payment>) =>
@@ -374,7 +395,8 @@ export const discountAPI = {
 
 export const paymentReportAPI = {
   getMine: () => Get("/api/payment-reports/me", true),
-  getByEmployerId: (id: number) => Get(`/api/payment-reports/employer/${id}`, true),
+  getByEmployerId: (id: number) =>
+    Get(`/api/payment-reports/employer/${id}`, true),
   upload: (form: FormData) =>
     axios.post(buildUrl("/api/payment-reports/upload"), form, {
       headers: {
@@ -396,7 +418,7 @@ export const StudentFinanceAPI = {
       console.log("💰 My finance data response:", {
         hasData: !!response?.data,
         dataLength: response?.data?.length || 0,
-        data: response?.data
+        data: response?.data,
       });
 
       if (!response) {
@@ -424,11 +446,13 @@ export const StudentFinanceAPI = {
     console.log(`📈 Fetching my finance summary (using JWT token)`);
 
     try {
-      const response = await Get<FinanceSummaryResponse>(`/api/my/finance/summary`);
+      const response = await Get<FinanceSummaryResponse>(
+        `/api/my/finance/summary`
+      );
 
       console.log("📊 My finance summary response:", {
         hasData: !!response?.data,
-        summary: response?.data
+        summary: response?.data,
       });
 
       if (!response) {
@@ -441,8 +465,8 @@ export const StudentFinanceAPI = {
           data: {
             monthlyJobCount: 0,
             totalJobCount: 0,
-            totalEarnings: 0
-          }
+            totalEarnings: 0,
+          },
         };
       }
 
@@ -454,16 +478,20 @@ export const StudentFinanceAPI = {
   },
 
   // ✅ เพิ่ม missing functions ที่ Frontend ต้องการ
-  getFinanceDataByStudentId: async (studentId: number): Promise<StudentFinanceResponse> => {
+  getFinanceDataByStudentId: async (
+    studentId: number
+  ): Promise<StudentFinanceResponse> => {
     console.log(`📊 Fetching finance data for student ID: ${studentId}`);
 
     try {
-      const response = await Get<StudentFinanceResponse>(`/api/student/${studentId}/finance`);
+      const response = await Get<StudentFinanceResponse>(
+        `/api/student/${studentId}/finance`
+      );
 
       console.log("💰 Finance data response:", {
         hasData: !!response?.data,
         dataLength: response?.data?.length || 0,
-        data: response?.data
+        data: response?.data,
       });
 
       if (!response) {
@@ -487,15 +515,19 @@ export const StudentFinanceAPI = {
     }
   },
 
-  getFinanceSummaryByStudentId: async (studentId: number): Promise<FinanceSummaryResponse> => {
+  getFinanceSummaryByStudentId: async (
+    studentId: number
+  ): Promise<FinanceSummaryResponse> => {
     console.log(`📈 Fetching finance summary for student ID: ${studentId}`);
 
     try {
-      const response = await Get<FinanceSummaryResponse>(`/api/student/${studentId}/finance/summary`);
+      const response = await Get<FinanceSummaryResponse>(
+        `/api/student/${studentId}/finance/summary`
+      );
 
       console.log("📊 Finance summary response:", {
         hasData: !!response?.data,
-        summary: response?.data
+        summary: response?.data,
       });
 
       if (!response) {
@@ -508,8 +540,8 @@ export const StudentFinanceAPI = {
           data: {
             monthlyJobCount: 0,
             totalJobCount: 0,
-            totalEarnings: 0
-          }
+            totalEarnings: 0,
+          },
         };
       }
 
@@ -518,12 +550,16 @@ export const StudentFinanceAPI = {
       console.error("💥 Error fetching finance summary:", error);
       throw error;
     }
-  }
+  },
 };
 
 export const adminFinanceAPI = {
   summary: (from?: string, to?: string) =>
-    Get(`/api/admin/finance/summary${from ? `?from=${from}&to=${to ?? from}` : ""}`),
+    Get(
+      `/api/admin/finance/summary${
+        from ? `?from=${from}&to=${to ?? from}` : ""
+      }`
+    ),
 };
 
 export const reviewAPI = {
@@ -538,14 +574,17 @@ export const jobPostAPI = {
   create: (data: CreateJobpost) => Post("/api/jobposts", data),
   getAll: () => Get("/api/jobposts"),
   getById: (id: number) => Get(`/api/jobposts/${id}`),
-  update: (id: number, data: Partial<Jobpost>) => Update(`/api/jobposts/${id}`, data),
+  update: (id: number, data: Partial<Jobpost>) =>
+    Update(`/api/jobposts/${id}`, data),
   delete: (id: number) => Delete(`/api/jobposts/${id}`),
   getMyPosts: () => Get("/api/employer/myposts"), // ใช้ token จาก localStorage
 
 
+  // Upload Portfolio
   uploadPortfolio: (id: number, file: File) => {
     const formData = new FormData();
     formData.append("portfolio", file);
+
     const token = localStorage.getItem("token");
     return axios.post(
       `${API_URL}/api/jobposts/upload-portfolio/${id}`,
@@ -557,6 +596,20 @@ export const jobPostAPI = {
         },
       }
     );
+  },
+
+  // Upload Logo (เก็บใน image_url)
+  uploadLogo: (id: number, file: File) => {
+    const formData = new FormData();
+    formData.append("logo", file);
+
+    const token = localStorage.getItem("token");
+    return axios.post(`${API_URL}/api/jobposts/upload-logo/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    });
   },
 };
 
@@ -591,38 +644,79 @@ export const jobApplicationAPI = {
 export const studentPostAPI = {
   getStudentPosts: () => get("/api/student-posts", false),
   getStudentPostById: (id: number) => get(`/api/student-posts/${id}`, false),
-  getPostsByStudentId: (studentId: number) => get(`/api/student-posts/student/${studentId}`, false),
+  getPostsByStudentId: (studentId: number) =>
+    get(`/api/student-posts/student/${studentId}`, false),
   createStudentPost: (postData: any) => post("/api/student-posts", postData),
-  updateStudentPost: (postId: number, postData: any) => put(`/api/student-posts/${postId}`, postData),
+  updateStudentPost: (postId: number, postData: any) =>
+    put(`/api/student-posts/${postId}`, postData),
   deleteStudentPost: (postId: number) => del(`/api/student-posts/${postId}`),
   getMyStudentPosts: () => get("/my-posts"),
 };
 
 // Skill API
 export const skillAPI = {
-  getAllSkills: (): Promise<AxiosResponse<Skill[]>> => get("/skills") as Promise<AxiosResponse<Skill[]>>,
+  getAllSkills: (): Promise<AxiosResponse<Skill[]>> =>
+    get("/skills") as Promise<AxiosResponse<Skill[]>>,
 };
 
 // Q&A and Help Center APIs
 export const qnaAPI = {
   // FAQ APIs
-  getFaqs: (): Promise<AxiosResponse<{ data: FAQ[] }>> => get("/api/faqs", false) as Promise<AxiosResponse<{ data: FAQ[] }>>,
-  getFaqById: (id: string): Promise<AxiosResponse<{ data: FAQ }>> => get(`/api/faqs/${id}`, false) as Promise<AxiosResponse<{ data: FAQ }>>,
-  createFaq: (data: { title: string; content: string; image_url?: string; comments_enabled: boolean }) => post("/api/admin/faqs", data),
-  updateFaq: (id: string, data: { title: string; content: string; image_url?: string; comments_enabled: boolean }) => put(`/api/admin/faqs/${id}`, data),
+  getFaqs: (): Promise<AxiosResponse<{ data: FAQ[] }>> =>
+    get("/api/faqs", false) as Promise<AxiosResponse<{ data: FAQ[] }>>,
+  getFaqById: (id: string): Promise<AxiosResponse<{ data: FAQ }>> =>
+    get(`/api/faqs/${id}`, false) as Promise<AxiosResponse<{ data: FAQ }>>,
+  createFaq: (data: {
+    title: string;
+    content: string;
+    image_url?: string;
+    comments_enabled: boolean;
+  }) => post("/api/admin/faqs", data),
+  updateFaq: (
+    id: string,
+    data: {
+      title: string;
+      content: string;
+      image_url?: string;
+      comments_enabled: boolean;
+    }
+  ) => put(`/api/admin/faqs/${id}`, data),
   deleteFaq: (id: string) => del(`/api/admin/faqs/${id}`),
 
   // FAQ Comment APIs
-  getFaqComments: (faqId: string): Promise<AxiosResponse<{ data: FAQComment[] }>> => get(`/api/faqs/${faqId}/comments`, false) as Promise<AxiosResponse<{ data: FAQComment[] }>>,
-  createFaqComment: (faqId: string, data: { content: string }): Promise<AxiosResponse<{ data: FAQComment }>> => post(`/api/faqs/${faqId}/comments`, data) as Promise<AxiosResponse<{ data: FAQComment }>>,
+  getFaqComments: (
+    faqId: string
+  ): Promise<AxiosResponse<{ data: FAQComment[] }>> =>
+    get(`/api/faqs/${faqId}/comments`, false) as Promise<
+      AxiosResponse<{ data: FAQComment[] }>
+    >,
+  createFaqComment: (
+    faqId: string,
+    data: { content: string }
+  ): Promise<AxiosResponse<{ data: FAQComment }>> =>
+    post(`/api/faqs/${faqId}/comments`, data) as Promise<
+      AxiosResponse<{ data: FAQComment }>
+    >,
 
   // Ticket APIs
-  createTicket: (data: { subject: string; initial_message: string; attachments?: any[] }) => post("/api/tickets", data),
+  createTicket: (data: {
+    subject: string;
+    initial_message: string;
+    attachments?: any[];
+  }) => post("/api/tickets", data),
   getMyTickets: () => get("/api/tickets"),
   getAllTicketsForAdmin: () => get("/api/admin/tickets"),
   getTicketById: (ticketId: string) => get(`/api/tickets/${ticketId}`),
-  createTicketReply: (ticketId: string, data: { message: string; is_staff_reply: boolean; attachments?: Omit<TicketAttachment, 'ID'>[] }) => post(`/api/tickets/${ticketId}/replies`, data),
-  updateTicketStatus: (ticketId: string, status: string) => put(`/api/admin/tickets/${ticketId}/status`, { status }),
+  createTicketReply: (
+    ticketId: string,
+    data: {
+      message: string;
+      is_staff_reply: boolean;
+      attachments?: Omit<TicketAttachment, "ID">[];
+    }
+  ) => post(`/api/tickets/${ticketId}/replies`, data),
+  updateTicketStatus: (ticketId: string, status: string) =>
+    put(`/api/admin/tickets/${ticketId}/status`, { status }),
 };
 
 // Profile API
@@ -630,7 +724,6 @@ export const profileAPI = {
   getMyProfile: () => get("/profile"),
   getProfileById: (studentId: string) => get(`/profile/${studentId}`),
 };
-
 
 // Job Category APIs
 export const jobCategoryAPI = {
@@ -650,10 +743,9 @@ export const salaryTypeAPI = {
   getById: (id: number) => get(`/api/salarytype/${id}`, false),
 };
 
-
-
 export const ratingScoreAPI = {
-  getAll: (): Promise<AxiosResponse<Ratingscore[]>> => get("/ratingscores") as Promise<AxiosResponse<Ratingscore[]>>,
+  getAll: (): Promise<AxiosResponse<Ratingscore[]>> =>
+    get("/ratingscores") as Promise<AxiosResponse<Ratingscore[]>>,
 };
 
 // report APIs
@@ -662,7 +754,8 @@ export const reportAPI = {
   getAll: () => Get("/api/reports"),
   getById: (id: number) => Get(`/api reports/${id}`),
   getByUserId: (userId: number) => Get(`/api/reports/user/${userId}`),
-  update: (id: number, data: Partial<any>) => Update(`/api/reports/${id}`, data),
+  update: (id: number, data: Partial<any>) =>
+    Update(`/api/reports/${id}`, data),
   delete: (id: number) => Delete(`/api/reports/${id}`),
 };
 
@@ -708,8 +801,7 @@ export const interviewAPI = {
 
 
 export const chatAPI = {
-  listMyRooms: (): Promise<ChatRoom[]> =>
-    Get("/api/chat/rooms"),
+  listMyRooms: (): Promise<ChatRoom[]> => Get("/api/chat/rooms"),
 
   createOrGetRoom: (targetId: number, targetRole: string): Promise<ChatRoom> =>
     Post("/api/chat/rooms", { target_id: targetId, target_role: targetRole }),
@@ -750,9 +842,9 @@ export const worklogAPI = {
   getByUserId: (userId: number) => Get(`/worklogs/user/${userId}`),
   update: (id: number, data: Partial<any>) => Update(`/worklogs/${id}`, data),
   delete: (id: number) => Delete(`/worklogs/${id}`),
-  getByEmployerID: (employerId: number) => Get(`/api/worklogs/employer/${employerId}`),
+  getByEmployerID: (employerId: number) =>
+    Get(`/api/worklogs/employer/${employerId}`),
   getJobpostByUserID: (userId: number) => Get(`/api/worklogs/user/${userId}`),
-  getJobApplicationByJobpostID: (jobpostID: number) => Get(`/api/jobapplications/${jobpostID}`),
-
+  getJobApplicationByJobpostID: (jobpostID: number) =>
+    Get(`/api/jobapplications/${jobpostID}`),
 };
-

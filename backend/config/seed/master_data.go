@@ -21,7 +21,7 @@ func SeedMasterData(db *gorm.DB) {
 
     // SalaryTypes
     salaryTypes := []entity.SalaryType{
-        {Model: gorm.Model{ID: 1}, SalaryTypeName: entity.Monthly},
+        // {Model: gorm.Model{ID: 1}, SalaryTypeName: entity.Monthly},
         {Model: gorm.Model{ID: 2}, SalaryTypeName: entity.Hourly},
         {Model: gorm.Model{ID: 3}, SalaryTypeName: entity.Daily},
         {Model: gorm.Model{ID: 4}, SalaryTypeName: entity.ProjectBased},

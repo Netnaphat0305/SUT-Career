@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Empty, Spin, message, Tag } from "antd";
+import { Button, Empty, Spin, message, Tag, Modal } from "antd";
 import {
   ClockCircleOutlined,
   DollarCircleOutlined,
@@ -9,15 +9,20 @@ import {
   EditOutlined,
   DeleteOutlined,
   TeamOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { jobPostAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
 import "./Mypost.css";
-import lahui from "../../assets/lahui.svg";
+import profile from "../../assets/profile.svg";
 import { useNavigate } from "react-router-dom";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 import PageHeader from "../../components/PageHeader";
+import dayjs from "dayjs";
+import { API_BASE } from "../../config";
+
+const { confirm } = Modal;
 
 const MyPost: React.FC = () => {
   const [posts, setPosts] = useState<Jobpost[]>([]);
@@ -51,24 +56,31 @@ const MyPost: React.FC = () => {
     fetchMyPosts();
   }, []);
 
-  const handleDelete = async (id: number) => {
-    try {
-      await jobPostAPI.delete(id);
-      message.success("ลบโพสต์เรียบร้อยแล้ว");
-      fetchMyPosts();
-    } catch (err) {
-      message.error("ลบโพสต์ไม่สำเร็จ");
-    }
+  const showDeleteConfirm = (id: number) => {
+    confirm({
+      title: "คุณแน่ใจหรือไม่ที่จะลบโพสต์นี้?",
+      icon: <ExclamationCircleOutlined style={{ color: "red" }} />,
+      content: "การลบโพสต์จะไม่สามารถกู้คืนได้",
+      okText: "ลบโพสต์",
+      okType: "danger",
+      cancelText: "ยกเลิก",
+      async onOk() {
+        try {
+          await jobPostAPI.delete(id);
+          message.success("ลบโพสต์เรียบร้อยแล้ว");
+          fetchMyPosts();
+        } catch (err) {
+          message.error("ลบโพสต์ไม่สำเร็จ");
+        }
+      },
+    });
   };
 
   const handleToggleStatus = async (id: number, currentStatus: string) => {
     try {
       const newStatus = currentStatus === "Open" ? "Close" : "Open";
-
-      // เรียก API เพื่ออัปเดตสถานะ
       await jobPostAPI.update(id, { status: newStatus });
 
-      // อัปเดต state ทันที ไม่ต้อง fetch ใหม่ทั้งหน้า
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post.ID === id ? { ...post, status: newStatus } : post
@@ -101,7 +113,12 @@ const MyPost: React.FC = () => {
         <Empty description="ยังไม่มีโพสต์งาน" />
       ) : (
         posts.map((post) => {
-          const deadlineText = post.deadline
+          const isExpired =
+            post.deadline && dayjs().isAfter(dayjs(post.deadline).endOf("day"));
+
+          const deadlineText = isExpired
+            ? "หมดเวลารับสมัครแล้ว"
+            : post.deadline
             ? new Date(post.deadline).toLocaleDateString("th-TH", {
                 year: "numeric",
                 month: "long",
@@ -110,7 +127,12 @@ const MyPost: React.FC = () => {
             : "จนกว่าจะปิดรับสมัคร";
 
           return (
-            <div key={post.ID} className="mypost-card">
+            <div
+              key={post.ID}
+              className={`mypost-card ${
+                isExpired ? "mypost-card-expired" : ""
+              }`}
+            >
               {/* ฝั่งซ้าย */}
               <div className="mypost-left">
                 <h3 className="mypost-title">
@@ -120,7 +142,11 @@ const MyPost: React.FC = () => {
                       post.status === "Open" ? "tag-open" : "tag-close"
                     }
                   >
-                    {post.status === "Open" ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
+                    {isExpired
+                      ? "หมดเขตแล้ว"
+                      : post.status === "Open"
+                      ? "เปิดรับสมัคร"
+                      : "ปิดรับสมัคร"}
                   </Tag>
                 </h3>
                 <p className="mypost-company">
@@ -132,7 +158,9 @@ const MyPost: React.FC = () => {
                     <ClockCircleOutlined className="mypost-icon" />
                     <div>
                       <span>ระยะเวลาการรับสมัคร</span>
-                      <strong>{deadlineText}</strong>
+                      <strong style={{ color: isExpired ? "red" : "inherit" }}>
+                        {deadlineText}
+                      </strong>
                     </div>
                   </div>
                   <div className="mypost-detail">
@@ -153,26 +181,27 @@ const MyPost: React.FC = () => {
 
                 {/* ปุ่มจัดการโพสต์ */}
                 <div className="mypost-actions">
-                  {/* เปิด / ปิดโพสต์ */}
-                  <Button
-                    icon={
-                      post.status === "Open" ? (
-                        <LockOutlined />
-                      ) : (
-                        <UnlockOutlined />
-                      )
-                    }
-                    size="middle"
-                    className="btn-outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleStatus(post.ID, post.status);
-                    }}
-                  >
-                    {post.status === "Open" ? "ปิดโพสต์" : "เปิดโพสต์"}
-                  </Button>
+                  {/* ปุ่มปิด/เปิดโพสต์ */}
+                  {!isExpired && (
+                    <Button
+                      icon={
+                        post.status === "Open" ? (
+                          <LockOutlined />
+                        ) : (
+                          <UnlockOutlined />
+                        )
+                      }
+                      size="middle"
+                      className="btn-outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleStatus(post.ID, post.status);
+                      }}
+                    >
+                      {post.status === "Open" ? "ปิดโพสต์" : "เปิดโพสต์"}
+                    </Button>
+                  )}
 
-                  {/* แก้ไข */}
                   <Button
                     icon={<EditOutlined />}
                     size="middle"
@@ -185,20 +214,18 @@ const MyPost: React.FC = () => {
                     แก้ไข
                   </Button>
 
-                  {/* ลบ */}
                   <Button
                     icon={<DeleteOutlined />}
                     size="middle"
                     className="btn-delete"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDelete(post.ID);
+                      showDeleteConfirm(post.ID);
                     }}
                   >
                     ลบโพสต์
                   </Button>
 
-                  {/* ดูผู้สมัคร */}
                   <Button
                     icon={<TeamOutlined />}
                     size="middle"
@@ -217,14 +244,14 @@ const MyPost: React.FC = () => {
               <div className="mypost-right">
                 {post.image_url ? (
                   <img
-                    src={post.image_url}
+                    src={`${API_BASE}${post.image_url}`}
                     alt={post.title}
                     className="mypost-image"
                   />
                 ) : (
                   <div className="mypost-image-fallback">
                     <img
-                      src={lahui}
+                      src={profile}
                       alt="Default Logo"
                       className="mypost-image"
                     />

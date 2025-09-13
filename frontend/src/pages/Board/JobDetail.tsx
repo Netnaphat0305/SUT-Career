@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button, Spin, message, Tag } from "antd";
-import lahui from "../../assets/lahui.svg";
+import { Button, Spin, message} from "antd";
+import profile from "../../assets/profile.svg";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import "./JobDetail.css";
 import "../../index.css";
@@ -13,7 +13,7 @@ import {
 } from "@ant-design/icons";
 import { jobPostAPI, chatAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
-
+import { API_BASE } from "../../config";
 
 const PostLayout: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -168,7 +168,12 @@ const PostLayout: React.FC = () => {
                     </div>
                     <div className="meta-item">
                       <DollarCircleOutlined />
-                      <span>{post.salary.toLocaleString()} บาท</span>
+                      <span>
+                        {post.salary.toLocaleString()}
+                        {post.SalaryType?.salary_type_name
+                          ? `/${post.SalaryType.salary_type_name}`
+                          : ""}
+                      </span>
                     </div>
                     <div className="meta-item">
                       <EnvironmentOutlined />
@@ -181,7 +186,9 @@ const PostLayout: React.FC = () => {
                 <div className="post-image-wrapper">
                   <img
                     className="post-image-detail"
-                    src={post.image_url || lahui}
+                    src={
+                      post.image_url ? `${API_BASE}${post.image_url}` : profile
+                    }
                     alt={post.title}
                   />
                 </div>
@@ -198,10 +205,15 @@ const PostLayout: React.FC = () => {
               <div className="job-header-highlight">
                 <div className="job-header-left">
                   <img
-                    src={selectedPost.image_url || lahui}
+                    src={
+                      selectedPost.image_url
+                        ? `${API_BASE}${selectedPost.image_url}`
+                        : profile
+                    }
                     alt={selectedPost.title}
                     className="post-detail-image"
                   />
+
                   <div className="job-title-info">
                     <h2 className="title-detail">{selectedPost.title}</h2>
                     <p className="company-name">
@@ -262,7 +274,12 @@ const PostLayout: React.FC = () => {
                 </div>
                 <div className="meta-item">
                   <DollarCircleOutlined />
-                  <span>{selectedPost.salary.toLocaleString()} /เดือน</span>
+                  <span>
+                    {selectedPost.salary.toLocaleString()}{" "}
+                    {selectedPost.SalaryType?.salary_type_name
+                      ? `/${selectedPost.SalaryType.salary_type_name}`
+                      : ""}
+                  </span>
                 </div>
                 <div className="meta-item">
                   <EnvironmentOutlined />
@@ -283,13 +300,13 @@ const PostLayout: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="job-time">
+                {/* <div className="job-time">
                   <h3>เวลาเริ่ม - เลิกงาน</h3>
                   <p>
-                    {/* {selectedPost.start_time || "ไม่ระบุ"} -{" "}
-                    {selectedPost.end_time || "ไม่ระบุ"} */}
+                    {selectedPost.start_time || "ไม่ระบุ"} -{" "}
+                    {selectedPost.end_time || "ไม่ระบุ"}
                   </p>
-                </div>
+                </div> */}
               </div>
 
               {/* รายละเอียดงาน */}

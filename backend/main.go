@@ -564,6 +564,7 @@ func main() {
 		auth.DELETE("/jobposts/:id", controller.DeleteJobPost)
 		auth.POST("/jobposts/upload-portfolio/:id", controller.UploadPortfolio)
 		auth.GET("/jobposts/:id", controller.GetJobPostByID)
+		auth.POST("/jobposts/upload-logo/:id", controller.UploadLogo)
 
 		// --- Employer: My Posts ---
 		auth.GET("/employer/myposts", controller.GetEmployerPosts)
@@ -579,6 +580,7 @@ func main() {
 		auth.DELETE("/student-posts/:id", controller.DeleteStudentPost)
 		auth.GET("/skills", controller.ListSkills)
 		auth.POST("/upload", controller.UploadToSupabase)
+		
 
 		// --- Job Applications ---
 		auth.GET("/jobapplications/init/:id", controller.InitJobApplication)

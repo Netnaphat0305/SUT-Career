@@ -1,0 +1,67 @@
+/* Container */
+.employer-profile-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Loading */
+.profile-loading {
+  text-align: center;
+  padding: 40px;
+}
+
+/* Avatar Wrapper */
+.profile-avatar-wrapper {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+/* Avatar group */
+.profile-avatar-group {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* Avatar */
+.profile-avatar {
+  background-color: #d1d5db;
+  color: #4b5563;
+  font-size: 24px;
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.profile-avatar-group:hover .profile-avatar {
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.3);
+}
+
+/* Edit icon */
+.profile-avatar-edit {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #fff;
+  border-radius: 9999px;
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.profile-avatar-edit:hover {
+  background: #f0f8ff;
+  color: #1890ff;
+}
+
+.profile-avatar-edit.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Descriptions */
+.profile-descriptions {
+  font-size: 15px;
+}

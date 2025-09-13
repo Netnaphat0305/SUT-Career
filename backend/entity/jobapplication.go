@@ -44,6 +44,6 @@ type JobApplication struct {
 	// InterviewScheduling   *InterviewScheduling `gorm:"foreignKey:InterviewSchedulingID" json:"interview_scheduling"`
 
      // เพิ่มช่องเก็บไฟล์ ResumeFile
-    ResumeFile string `gorm:"type:varchar(255)" json:"resume_file"`
+    ResumeFile *string `gorm:"type:varchar(255)" json:"resume_file"`
     
 }

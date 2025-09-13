@@ -17,7 +17,9 @@ import dayjs from "dayjs";
 import PageHeader from "../../components/PageHeader";
 import "./ApplyJob.css";
 import "./AppJobDetail.css";
-import { jobApplicationAPI, studentAPI } from "../../services/https"; // ✅ เพิ่ม studentAPI
+import { jobApplicationAPI, studentAPI } from "../../services/https"; // เพิ่ม studentAPI
+import profile from "../../assets/profile.svg";
+import { API_BASE } from "../../config";
 
 const { TextArea } = Input;
 
@@ -63,13 +65,13 @@ const ApplyJob: React.FC = () => {
   }, [form, jobpost_id, post]);
 
   useEffect(() => {
-  console.log("📌 student object:", student);
-}, [student]);
+    console.log("📌 student object:", student);
+  }, [student]);
 
   // ฟังก์ชันสมัครงาน + อัปเดตข้อมูลนักศึกษา
   const onFinish = async (values: any) => {
     try {
-      // ✅ 1. อัปเดตข้อมูลนักศึกษาใน DB ก่อน
+      // ✅1. อัปเดตข้อมูลนักศึกษาใน DB ก่อน
       const updatedStudent = {
         first_name: values.first_name,
         last_name: values.last_name,
@@ -82,9 +84,8 @@ const ApplyJob: React.FC = () => {
         gpa: parseFloat(values.gpa),
       };
 
-      await studentAPI.update(student.ID, updatedStudent);
-      console.log("update student ---------",updatedStudent);
-
+      await studentAPI.updateapply(student.ID, updatedStudent);
+      console.log("update student ---------", updatedStudent);
 
       // ✅ 2. สมัครงานตามปกติ
       const payload = {
@@ -144,7 +145,11 @@ const ApplyJob: React.FC = () => {
 
       {/* รายละเอียดประกาศงาน */}
       <div className="apply-job-content">
-        <img src={post?.image_url} alt="Job" className="apply-job-image" />
+        <img
+          src={post.image_url ? `${API_BASE}${post.image_url}` : profile}
+          alt="Job"
+          className="apply-job-image"
+        />
         <div className="apply-detail-container">
           <div className="apply-detail">
             <h2 className="post-title-AppJob">
@@ -176,20 +181,40 @@ const ApplyJob: React.FC = () => {
           className="apply-form"
         >
           <div className="form-grid">
-            <Form.Item label="ชื่อ" name="first_name" rules={[{ required: true }]}>
+            <Form.Item
+              label="ชื่อ"
+              name="first_name"
+              rules={[{ required: true }]}
+            >
               <Input size="large" />
             </Form.Item>
-            <Form.Item label="นามสกุล" name="last_name" rules={[{ required: true }]}>
+            <Form.Item
+              label="นามสกุล"
+              name="last_name"
+              rules={[{ required: true }]}
+            >
               <Input size="large" />
             </Form.Item>
             <Form.Item label="รหัสนักศึกษา" name="student_code">
               <Input size="large" readOnly />
             </Form.Item>
-            <Form.Item label="เบอร์โทร" name="phone" rules={[{ required: true }]}>
+            <Form.Item
+              label="เบอร์โทร"
+              name="phone"
+              rules={[{ required: true }]}
+            >
               <Input size="large" />
             </Form.Item>
-            <Form.Item label="วันเกิด" name="birthday" rules={[{ required: true }]}>
-              <DatePicker size="large" style={{ width: "100%" }} format="YYYY-MM-DD" />
+            <Form.Item
+              label="วันเกิด"
+              name="birthday"
+              rules={[{ required: true }]}
+            >
+              <DatePicker
+                size="large"
+                style={{ width: "100%" }}
+                format="YYYY-MM-DD"
+              />
             </Form.Item>
             <Form.Item label="อายุ" name="age" rules={[{ required: true }]}>
               <Input size="large" />
@@ -226,11 +251,7 @@ const ApplyJob: React.FC = () => {
           </Form.Item>
 
           {/* ปุ่มแนบไฟล์ Resume */}
-          <Form.Item
-            label="แนบไฟล์ Resume"
-            name="resume_file"
-            rules={[{ required: true, message: "กรุณาอัปโหลด Resume" }]}
-          >
+          <Form.Item label="แนบไฟล์ Resume" name="resume_file">
             <Upload
               beforeUpload={(file) => {
                 setResumeFile(file);
@@ -239,7 +260,9 @@ const ApplyJob: React.FC = () => {
               maxCount={1}
               showUploadList={{ showRemoveIcon: true }}
             >
-              <Button icon={<UploadOutlined />}>คลิกเพื่ออัปโหลด</Button>
+              <Button icon={<UploadOutlined />}>
+                คลิกเพื่ออัปโหลด (ไม่บังคับ)
+              </Button>
             </Upload>
           </Form.Item>
 

@@ -35,9 +35,9 @@
 
 /* ====== Label ====== */
 .ant-form-item-label > label {
-  font-size: 16px;
-  font-weight: 500;
-  color: #1f2937;
+  font-size: 16px !important;
+  font-weight: 400;
+  color: #2d2d2d;
 }
 
 /* ====== Input / Select / Textarea ====== */
@@ -46,7 +46,151 @@
 .ant-picker {
   font-size: 15px;
   border-radius: 6px;
+  
 }
+
+/* ====== ฟอร์ม Input ====== */
+.ant-form-item {
+  margin-bottom: 24px; /* ระยะห่างระหว่างช่อง */
+}
+
+.ant-form-item-label > label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151; /* สีเทาเข้ม */
+}
+
+/* ====== Input ====== */
+.ant-input {
+  height: 48px;             /* ความสูงเท่ากันทุกช่อง */
+  border-radius: 10px;      /* มุมโค้ง */
+  border: 1px solid #d1d5db;
+  background: #fff;      /* เทาอ่อน */
+  padding: 0 14px;          /* padding ด้านข้าง */
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+/* Hover & Focus */
+.ant-input:hover {
+  border-color: #93c5fd; /* ฟ้าอ่อน */
+}
+
+.ant-input:focus {
+  border-color: #2563eb; /* ฟ้าน้ำเงิน */
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Placeholder */
+.ant-input::placeholder {
+  font-size: 14px;
+  font-weight: 300;
+  color: #9ca3af; /* เทาอ่อน */
+}
+
+/* Error Message */
+.ant-form-item-explain-error {
+  font-size: 13px;
+  color: #dc2626;
+  margin-top: 4px;
+}
+
+/* ====== Select ====== */
+.ant-select-selector {
+  height: 48px !important;     /* ✅ เท่ากับ Input */
+  border-radius: 10px !important;
+  border: 1px solid #d1d5db !important;
+  background: #fff !important;
+  padding: 0 14px !important;
+  font-size: 15px !important;
+  display: flex;
+  align-items: center;         /* ตัวอักษรอยู่ตรงกลาง */
+  transition: all 0.2s ease;
+}
+
+/* Hover */
+.ant-select-selector:hover {
+  border-color: #93c5fd !important;
+}
+
+/* Focus */
+.ant-select-focused .ant-select-selector {
+  border-color: #2563eb !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Placeholder */
+.ant-select-selection-placeholder {
+  font-size: 14px;
+  font-weight: 300;
+  color: #9ca3af !important;
+}
+
+/* Dropdown เมนู */
+.ant-select-dropdown {
+  border-radius: 10px !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+  padding: 6px 0;
+}
+
+/* Option */
+.ant-select-item {
+  font-size: 15px;
+  padding: 10px 14px !important;
+}
+
+.ant-select-item-option-active {
+  background-color: #eff6ff !important; /* ฟ้าอ่อน */
+}
+
+.ant-select-item-option-selected {
+  background-color: #dbeafe !important; /* ฟ้าเข้มขึ้น */
+  font-weight: 600;
+}
+/* radio */
+/* กริดวาง Card */
+.employment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+  gap: 16px;
+}
+
+/* กล่อง Card */
+.custom-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  height: auto;        /* ✅ ปล่อยให้สูงตามเนื้อหา */
+  width: 735px;         /* ✅ กว้างเท่ากัน */
+  max-width: 100%;
+  
+}
+
+/* Hover effect */
+.custom-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+}
+
+/* Card ที่ถูกเลือก */
+.custom-card-selected {
+  border: 2px solid #1890ff;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  background: #f0f8ff;
+}
+
+/* ปรับ label radio ให้ตรงกลาง */
+.custom-card .ant-radio-wrapper {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 400;
+}
+
 
 .ant-input::placeholder,
 .ant-select-selection-placeholder,

@@ -9,18 +9,6 @@ export interface Bank {
   bank_name: string;
 }
 
-// ข้อมูลนักศึกษา
-export interface Student {
-  ID: number;
-  first_name: string;
-  last_name: string;
-  phone: string;
-  user: User;
-  bank: Bank;
-  faculty?: string; 
-  email?: string;
-}
-
 // ข้อมูลบริษัท
 export interface Employer {
   company_name: string;
@@ -51,6 +39,10 @@ export type ApplicationStatus =
   | "Accepted"
   | "Rejected"
   | "Cancelled";
+
+//  ใช้ Student ตัวจริงจาก interfaces/student.ts
+import type { Student } from "./student";
+
 // ข้อมูลการสมัครงาน
 export interface JobApplication {
   ID: number;
@@ -58,9 +50,7 @@ export interface JobApplication {
   application_reason: string;
   CreatedAt: string;
   JobPost: JobPost;
-  Student: Student;
+  Student: Student;   // ตอนนี้ Student มี profile_image_url แน่นอน 
 
-  //  แก้ให้ใช้ interface ที่เราสร้างด้านบน
   InterviewScheduling?: InterviewScheduling | null;
 }
-

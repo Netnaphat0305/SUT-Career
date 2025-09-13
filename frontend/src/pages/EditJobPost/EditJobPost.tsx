@@ -13,6 +13,7 @@ import {
   Card,
   Row,
   Col,
+  Spin,
 } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../../components/PageHeader";
@@ -26,7 +27,7 @@ import type { Jobpost } from "../../interfaces/jobpost";
 import defaultLogo from "../../assets/profile.svg";
 import dayjs from "dayjs";
 import "../JobPost/JobPost.css";
-import { Spin } from "antd";
+
 const { TextArea } = Input;
 
 const EditJobPost: React.FC = () => {
@@ -34,9 +35,13 @@ const EditJobPost: React.FC = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [open, setOpen] = useState(false);
+
+  // preview + file state
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
 
+  // dropdown states
   const [categories, setCategories] = useState<
     { id: number; category_name: string }[]
   >([]);
@@ -46,41 +51,54 @@ const EditJobPost: React.FC = () => {
   const [employmenttype, setEmploymentTypes] = useState<
     { id: number; employment_type_name: string }[]
   >([]);
+
   const [loading, setLoading] = useState(true);
   const [redirectLoading, setRedirectLoading] = useState(false);
 
   // โหลด categories
   useEffect(() => {
-    jobCategoryAPI.getAll().then((data) => {
-      const mapped = (data.data || data).map((cat: any) => ({
-        id: cat.ID,
-        category_name: cat.CategoryName || cat.category_name,
-      }));
-      setCategories(mapped);
-    });
+    jobCategoryAPI
+      .getAll()
+      .then((res: any) => {
+        const list = res?.data?.data || res?.data || [];
+        const mapped = (list || []).map((cat: any) => ({
+          id: cat.ID,
+          category_name: cat.CategoryName || cat.category_name,
+        }));
+        setCategories(mapped);
+      })
+      .catch((err) => console.error("Error fetching categories:", err));
   }, []);
 
   // โหลด salary types
   useEffect(() => {
-    salaryTypeAPI.getAll().then((data) => {
-      const mapped = (data.data || data).map((s: any) => ({
-        id: s.ID,
-        salary_type_name: s.SalaryTypeName || s.salary_type_name,
-      }));
-      setSalaryTypes(mapped);
-    });
+    salaryTypeAPI
+      .getAll()
+      .then((res: any) => {
+        const list = res?.data?.data || res?.data || [];
+        const mapped = (list || []).map((s: any) => ({
+          id: s.ID,
+          salary_type_name: s.SalaryTypeName || s.salary_type_name,
+        }));
+        setSalaryTypes(mapped);
+      })
+      .catch((err) => console.error("Error fetching salary types:", err));
   }, []);
 
   // โหลด employment types
   useEffect(() => {
-    employmentTypeAPI.getAll().then((data) => {
-      const mapped = (data.data || data).map((emp: any) => ({
-        id: emp.ID,
-        employment_type_name:
-          emp.EmploymentTypeName || emp.employment_type_name,
-      }));
-      setEmploymentTypes(mapped);
-    });
+    employmentTypeAPI
+      .getAll()
+      .then((res: any) => {
+        const list = res?.data?.data || res?.data || [];
+        const mapped = (list || []).map((emp: any) => ({
+          id: emp.ID,
+          employment_type_name:
+            emp.EmploymentTypeName || emp.employment_type_name,
+        }));
+        setEmploymentTypes(mapped);
+      })
+      .catch((err) => console.error("Error fetching employment types:", err));
   }, []);
 
   // โหลดข้อมูล Job Post ปัจจุบัน
@@ -89,7 +107,9 @@ const EditJobPost: React.FC = () => {
       try {
         const res = await jobPostAPI.getById(Number(id));
         const post: Jobpost = res.data;
-        setImagePreview(post.image_url || defaultLogo);
+
+        // preview จาก path จริง
+        setImagePreview(post.image_url ? post.image_url : defaultLogo);
 
         form.setFieldsValue({
           Name: post.title,
@@ -122,12 +142,19 @@ const EditJobPost: React.FC = () => {
         job_category_id: values.job_category_id,
         employment_type_id: values.employmentTypeId,
         salary_type_id: values.salaryTypeId,
-        image_url: imagePreview,
       };
 
+      // อัปเดตข้อมูลหลัก
       await jobPostAPI.update(Number(id), payload);
+
+      // ถ้ามี portfolio → upload
       if (portfolioFile) {
         await jobPostAPI.uploadPortfolio(Number(id), portfolioFile);
+      }
+
+      // ถ้ามีเลือกโลโก้ใหม่ → upload
+      if (logoFile) {
+        await jobPostAPI.uploadLogo(Number(id), logoFile);
       }
 
       message.success("แก้ไขประกาศงานสำเร็จ!");
@@ -141,24 +168,31 @@ const EditJobPost: React.FC = () => {
   const handleClose = () => {
     setOpen(false);
     setRedirectLoading(true);
-
-    // หน่วงเวลา 1 วินาทีเพื่อโชว์ Loading
     setTimeout(() => {
       setRedirectLoading(false);
       navigate("/Job/Mypost-job");
-      // โหลดข้อมูลใหม่ให้โพสต์ล่าสุดขึ้นมา
       window.location.reload();
     }, 1000);
   };
 
+  // เมื่อเลือกไฟล์รูป
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setLogoFile(file); // เก็บไฟล์จริง
       const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.onloadend = () => setImagePreview(reader.result as string); // preview เท่านั้น
       reader.readAsDataURL(file);
     }
   };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: 40 }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="jobpost-wrapper">
@@ -171,6 +205,7 @@ const EditJobPost: React.FC = () => {
         >
           <PageHeader title="แก้ไขประกาศงาน" />
 
+          {/* --- ชื่อ --- */}
           <Form.Item
             label="ชื่องาน"
             name="Name"
@@ -179,6 +214,7 @@ const EditJobPost: React.FC = () => {
             <Input placeholder="กรอกชื่องาน" size="large" />
           </Form.Item>
 
+          {/* --- หมวดหมู่ --- */}
           <Form.Item
             name="job_category_id"
             label="หมวดหมู่ของงาน"
@@ -193,21 +229,25 @@ const EditJobPost: React.FC = () => {
             </Select>
           </Form.Item>
 
+          {/* --- ประเภทงาน --- */}
           <Form.Item
             label="ประเภทงาน"
             name="employmentTypeId"
             rules={[{ required: true, message: "กรุณาเลือกประเภทงาน" }]}
           >
             <Radio.Group>
-              <div className="jobpost-radio-group">
+              <div className="employment-grid">
                 {employmenttype.map((emp) => (
                   <Card
                     key={emp.id}
-                    className={
+                    onClick={() =>
+                      form.setFieldsValue({ employmentTypeId: emp.id })
+                    }
+                    className={`custom-card ${
                       form.getFieldValue("employmentTypeId") === emp.id
                         ? "custom-card-selected"
                         : ""
-                    }
+                    }`}
                   >
                     <Radio value={emp.id}>{emp.employment_type_name}</Radio>
                   </Card>
@@ -216,6 +256,7 @@ const EditJobPost: React.FC = () => {
             </Radio.Group>
           </Form.Item>
 
+          {/* --- location --- */}
           <Form.Item
             label="ที่ตั้ง"
             name="locationjob"
@@ -224,6 +265,7 @@ const EditJobPost: React.FC = () => {
             <Input placeholder="กรอก Location" size="large" />
           </Form.Item>
 
+          {/* --- รายละเอียดงาน --- */}
           <Form.Item
             label="รายละเอียดงาน"
             name="jobDetails"
@@ -232,6 +274,7 @@ const EditJobPost: React.FC = () => {
             <TextArea rows={4} placeholder="อธิบายรายละเอียดงาน" />
           </Form.Item>
 
+          {/* --- เงินเดือน + salary type --- */}
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -261,6 +304,7 @@ const EditJobPost: React.FC = () => {
             </Col>
           </Row>
 
+          {/* --- deadline --- */}
           <Form.Item
             label="วันหมดเขตรับสมัคร"
             name="applicationDeadline"
@@ -273,6 +317,7 @@ const EditJobPost: React.FC = () => {
             />
           </Form.Item>
 
+          {/* --- portfolio --- */}
           <Form.Item label="แนบผลงาน (Portfolio)">
             <input
               type="file"
@@ -284,9 +329,23 @@ const EditJobPost: React.FC = () => {
             />
           </Form.Item>
 
-           <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
-                      <input type="file" accept="image/*" onChange={handleImageChange} />
-                    </Form.Item>
+          {/* --- logo --- */}
+          <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
+            <input type="file" accept="image/*" onChange={handleImageChange} />
+            {imagePreview && (
+              <div style={{ marginTop: 10 }}>
+                <img
+                  src={
+                    logoFile
+                      ? imagePreview // preview ใหม่
+                      : `${imagePreview}` // path เก่าจาก DB
+                  }
+                  alt="preview"
+                  style={{ width: 120, borderRadius: 8 }}
+                />
+              </div>
+            )}
+          </Form.Item>
 
           <Alert
             message="สำหรับโพสต์จ้างงานเท่านั้น"
@@ -296,18 +355,14 @@ const EditJobPost: React.FC = () => {
           />
 
           <div className="submit-button-wrapper">
-            <Button
-              type="primary"
-              size="large"
-              htmlType="submit"
-              className="submit-button"
-            >
+            <Button type="primary" size="large" htmlType="submit">
               บันทึกการแก้ไข
             </Button>
           </div>
         </Form>
       </div>
 
+      {/* Modal success */}
       <Modal
         open={open}
         onCancel={handleClose}
@@ -321,6 +376,8 @@ const EditJobPost: React.FC = () => {
           subTitle="ข้อมูลโพสต์งานนี้ถูกอัปเดตแล้ว"
         />
       </Modal>
+
+      {/* Modal loading */}
       <Modal
         open={redirectLoading}
         footer={null}

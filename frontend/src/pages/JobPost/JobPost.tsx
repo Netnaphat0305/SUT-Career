@@ -15,7 +15,7 @@ import {
   Col,
 } from "antd";
 import { useAuth } from "../../context/AuthContext";
-import type { RadioChangeEvent } from "antd";
+// import type { RadioChangeEvent } from "antd";
 import "./JobPost.css";
 import PageHeader from "../../components/PageHeader";
 import {
@@ -25,7 +25,8 @@ import {
   employmentTypeAPI,
 } from "../../services/https";
 import type { CreateJobpost } from "../../interfaces/jobpost";
-import defaultLogo from "../../assets/profile.svg";
+import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 
 const { TextArea } = Input;
 
@@ -33,10 +34,12 @@ const JobPost: React.FC = () => {
   const { user } = useAuth();
   const [form] = Form.useForm();
   const [open, setOpen] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
 
-  console.log(user);
+  const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+
+  const navigate = useNavigate();
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   // state
   const [categories, setCategories] = useState<
@@ -53,12 +56,15 @@ const JobPost: React.FC = () => {
   useEffect(() => {
     jobCategoryAPI
       .getAll()
-      .then((data) => {
-        const mapped = (data.data || data).map((cat: any) => ({
-          id: cat.ID,
-          category_name: cat.CategoryName || cat.category_name,
-        }));
-        setCategories(mapped);
+      .then((res: any) => {
+        const list = res?.data?.data || res?.data || [];
+        if (Array.isArray(list)) {
+          const mapped = list.map((cat: any) => ({
+            id: cat.ID,
+            category_name: cat.CategoryName || cat.category_name,
+          }));
+          setCategories(mapped);
+        }
       })
       .catch((err) => console.error("Error fetching categories:", err));
   }, []);
@@ -67,12 +73,15 @@ const JobPost: React.FC = () => {
   useEffect(() => {
     salaryTypeAPI
       .getAll()
-      .then((data) => {
-        const mapped = (data.data || data).map((s: any) => ({
-          id: s.ID,
-          salary_type_name: s.SalaryTypeName || s.salary_type_name,
-        }));
-        setSalaryTypes(mapped);
+      .then((res: any) => {
+        const list = res?.data?.data || res?.data || [];
+        if (Array.isArray(list)) {
+          const mapped = list.map((s: any) => ({
+            id: s.ID,
+            salary_type_name: s.SalaryTypeName || s.salary_type_name,
+          }));
+          setSalaryTypes(mapped);
+        }
       })
       .catch((err) => console.error("Error fetching salary types:", err));
   }, []);
@@ -81,71 +90,81 @@ const JobPost: React.FC = () => {
   useEffect(() => {
     employmentTypeAPI
       .getAll()
-      .then((data) => {
-        const mapped = (data.data || data).map((emp: any) => ({
-          id: emp.ID,
-          employment_type_name:
-            emp.EmploymentTypeName || emp.employment_type_name,
-        }));
-
-        setEmploymentTypes(mapped);
+      .then((res: any) => {
+        const list = res?.data?.data || res?.data || [];
+        if (Array.isArray(list)) {
+          const mapped = list.map((emp: any) => ({
+            id: emp.ID,
+            employment_type_name:
+              emp.EmploymentTypeName || emp.employment_type_name,
+          }));
+          setEmploymentTypes(mapped);
+        }
       })
       .catch((err) => console.error("Error fetching employment types:", err));
   }, []);
 
-  // ส่งฟอร์ม สร้าง payload ที่ตรงกับ interface CreateJobpost
+  // ส่งฟอร์ม
   const handleFinish = async (values: any) => {
     try {
+      setConfirmLoading(true);
+
       const payload: CreateJobpost = {
         title: values.Name,
         description: values.jobDetails,
         salary: Number(values.compensation),
         locationjob: values.locationjob,
-        deadline: values.applicationDeadline.toISOString(),
-        status: "Open", // ผู้ว่าจ้างกรอก
-        portfolio_required: "false", // ผู้ว่าจ้างกรอก
+        deadline: values.applicationDeadline
+          .endOf("day")
+          .toDate()
+          .toISOString(),
+        status: "Open",
+        portfolio_required: "false",
         job_category_id: values.job_category_id,
         employment_type_id: values.employmentTypeId,
         salary_type_id: values.salaryTypeId,
-        employer_id: Number(user?.id), // จาก context
-        image_url: imagePreview || defaultLogo,
+        employer_id: Number(user?.id),
+        image_url: "",
       };
-      console.log("ส่งไป backend:", payload);
+
       const res = await jobPostAPI.create(payload);
       const jobpostId = res.data.ID || res.data.data?.ID;
 
-      // upload portfolio ถ้ามี สร้าง payload ที่ตรงกับ interface CreateJobpost
       if (portfolioFile) {
         await jobPostAPI.uploadPortfolio(jobpostId, portfolioFile);
       }
-      //  ถ้าสำเร็จ เปิด Modal success
-      //  ถ้า error แสดงข้อความ error
+
+      if (logoFile) {
+        await jobPostAPI.uploadLogo(jobpostId, logoFile);
+      }
+
       setOpen(true);
+      setConfirmLoading(false);
     } catch (error: any) {
       console.error("Error:", error.response?.data || error.message);
       message.error("บันทึกงานไม่สำเร็จ!");
+      setConfirmLoading(false);
     }
   };
 
-  // reset modal
   const handleClose = () => {
     setOpen(false);
-    setImagePreview(null);
     setPortfolioFile(null);
+    setLogoFile(null);
     form.resetFields();
+    navigate("/Job/Board");
   };
 
-  // เลือกรูป
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePortfolioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
+    if (file) setPortfolioFile(file);
   };
 
-  // เงินเดือน
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setLogoFile(file);
+  };
+
   const SalaryInput: React.FC = () => (
     <Row gutter={16}>
       <Col span={12}>
@@ -163,10 +182,7 @@ const JobPost: React.FC = () => {
           name="salaryTypeId"
           rules={[{ required: true, message: "กรุณาเลือกประเภทเงินเดือน" }]}
         >
-          <Select
-            placeholder="เลือกประเภท"
-            onChange={(value) => console.log("เลือก", value)}
-          >
+          <Select placeholder="เลือกประเภท">
             {salarytype.map((s) => (
               <Select.Option key={s.id} value={s.id}>
                 {s.salary_type_name}
@@ -178,38 +194,32 @@ const JobPost: React.FC = () => {
     </Row>
   );
 
-  // ประเภทงาน
-  const EmploymentTypeSelector: React.FC = () => {
-    const [value, setValue] = useState<number | null>(null);
+  const EmploymentTypeSelector: React.FC = () => (
+    <Form.Item
+      label="ประเภทงาน"
+      name="employmentTypeId"
+      rules={[{ required: true, message: "กรุณาเลือกประเภทงาน" }]}
+    >
+      <Radio.Group>
+        <div className="employment-grid">
+          {employmenttype.map((emp) => (
+            <Card
+              key={emp.id}
+              onClick={() => form.setFieldsValue({ employmentTypeId: emp.id })}
+              className={`custom-card ${
+                form.getFieldValue("employmentTypeId") === emp.id
+                  ? "custom-card-selected"
+                  : ""
+              }`}
+            >
+              <Radio value={emp.id}>{emp.employment_type_name}</Radio>
+            </Card>
+          ))}
+        </div>
+      </Radio.Group>
+    </Form.Item>
+  );
 
-    const onChange = (e: RadioChangeEvent) => {
-      setValue(e.target.value);
-    };
-
-    return (
-      <Form.Item
-        label="ประเภทงาน"
-        name="employmentTypeId"
-        rules={[{ required: true, message: "กรุณาเลือกประเภทงาน" }]}
-      >
-        <Radio.Group onChange={onChange} value={value}>
-          <div style={{ display: "grid", gap: 12 }}>
-            {employmenttype.map((emp) => (
-              <Card
-                key={emp.id}
-                onClick={() => onChange({ target: { value: emp.id } } as any)}
-                className={value === emp.id ? "custom-card-selected" : ""}
-              >
-                <Radio value={emp.id}>{emp.employment_type_name}</Radio>
-              </Card>
-            ))}
-          </div>
-        </Radio.Group>
-      </Form.Item>
-    );
-  };
-
-  // หมวดหมู่
   const JobCategorySelector: React.FC = () => (
     <Form.Item
       name="job_category_id"
@@ -275,22 +285,49 @@ const JobPost: React.FC = () => {
               size="large"
               style={{ width: "100%" }}
               format="YYYY-MM-DD"
+              disabledDate={(current) => {
+                return current && current.isBefore(dayjs().startOf("day"));
+              }}
             />
           </Form.Item>
 
           <Form.Item label="แนบผลงาน (Portfolio)">
             <input
+              id="portfolio-upload"
               type="file"
               accept=".pdf,.doc,.docx,.jpg,.png"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) setPortfolioFile(file);
-              }}
+              style={{ display: "none" }}
+              onChange={handlePortfolioChange}
             />
+            <Button
+              type="primary"
+              onClick={() =>
+                document.getElementById("portfolio-upload")?.click()
+              }
+            >
+              อัปโหลด Portfolio
+            </Button>
+            {portfolioFile && (
+              <span style={{ marginLeft: 10 }}>{portfolioFile.name}</span>
+            )}
           </Form.Item>
 
           <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
-            <input type="file" accept="image/*" onChange={handleImageChange} />
+            <input
+              id="logo-upload"
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleLogoChange}
+            />
+            <Button
+              onClick={() => document.getElementById("logo-upload")?.click()}
+            >
+              เลือกรูปโลโก้
+            </Button>
+            {logoFile && (
+              <span style={{ marginLeft: 10 }}>{logoFile.name}</span>
+            )}
           </Form.Item>
 
           <Alert
@@ -306,6 +343,7 @@ const JobPost: React.FC = () => {
               size="large"
               htmlType="submit"
               className="submit-button"
+              loading={confirmLoading}
             >
               ยืนยัน
             </Button>
@@ -324,6 +362,11 @@ const JobPost: React.FC = () => {
           status="success"
           title="โพสต์งานเรียบร้อยแล้ว"
           subTitle="นักศึกษาสามารถเห็นประกาศนี้ได้ทันที และคุณสามารถติดตามผู้สมัครได้ตลอดเวลา"
+          extra={[
+            <Button type="primary" key="go" onClick={handleClose}>
+              ไปที่โพสต์งาน
+            </Button>,
+          ]}
         />
       </Modal>
     </div>
@@ -331,4 +374,3 @@ const JobPost: React.FC = () => {
 };
 
 export default JobPost;
-

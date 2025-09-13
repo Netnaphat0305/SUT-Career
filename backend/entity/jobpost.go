@@ -17,7 +17,7 @@ type Jobpost struct {
 	gorm.Model
 	Title       		string    		`gorm:"type:varchar(255);not null" json:"title"`
 	Description 		string    		`gorm:"type:text;not null" json:"description"`
-	Deadline    		time.Time 		`gorm:"type:date;not null" json:"deadline"`
+	Deadline 			time.Time 		`gorm:"type:datetime;not null" json:"deadline"` //เปลี่ยนgorm gorm เป็น datetime เพราะว่าตอนนี้มันหมดเขตที่เวลา 00:00
 	Status				StatusEnum 		`gorm:"not null" json:"status"`
 	ImageURL 			*string 		`gorm:"type:varchar(255)" json:"image_url"` // nullable string
 	PortfolioRequired 	*string 		`gorm:"type:varchar(100)" json:"portfolio_required"` // nullable
