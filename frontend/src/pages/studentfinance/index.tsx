@@ -33,76 +33,59 @@ const FinancialReportPage: React.FC = () => {
     document.body.classList.add("kanit-font");
 
     const fetchData = async () => {
-      try {
-        setError(null);
-        setLoading(true);
-        
-        let financeDataResponse;
-        let financeSummaryResponse;
-
-        try {
-          [financeDataResponse, financeSummaryResponse] = await Promise.all([
-            StudentFinanceAPI.getFinanceData(),
-            StudentFinanceAPI.getFinanceSummary(),
-          ]);
-        } catch (newApiError: any) {
-          if (user?.id) {
-            try {
-              [financeDataResponse, financeSummaryResponse] = await Promise.all([
-                StudentFinanceAPI.getFinanceDataByStudentId(user.id),
-                StudentFinanceAPI.getFinanceSummaryByStudentId(user.id),
-              ]);
-            } catch (userIdError: any) {
-              [financeDataResponse, financeSummaryResponse] = await Promise.all([
-                StudentFinanceAPI.getFinanceDataByStudentId(1),
-                StudentFinanceAPI.getFinanceSummaryByStudentId(1),
-              ]);
+            if (!user) {
+                setError("ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่");
+                setLoading(false);
+                return;
             }
-          } else {
-            throw new Error("No user data available");
-          }
-        }
 
-        setTransactions(financeDataResponse?.data || []);
+            try {
+                setLoading(true);
+                setError(null);
+                
+                // เรียกใช้ API ใหม่ที่ใช้ JWT โดยตรง ไม่ต้องส่ง ID
+                const [financeDataResponse, financeSummaryResponse] = await Promise.all([
+                    StudentFinanceAPI.getFinanceData(),
+                    StudentFinanceAPI.getFinanceSummary(),
+                ]);
 
-        const backendSummary = financeSummaryResponse?.data;
-        if (backendSummary) {
-          const mappedSummary = {
-            jobsThisMonth: backendSummary.monthlyJobCount || 0,
-            totalJobs: backendSummary.totalJobCount || 0,
-            totalAmount: backendSummary.totalEarnings || 0,
-          };
-          setSummary(mappedSummary);
-        } else {
-          setSummary({ jobsThisMonth: 0, totalJobs: 0, totalAmount: 0 });
-        }
-      } catch (err: any) {
-        if (err.status === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          window.location.href = "/login";
-          return;
-        }
-        const errorMessage = err?.response?.data?.error || err?.message || "เกิดข้อผิดพลาดในการดึงข้อมูล";
-        setError(errorMessage);
-        setTransactions([]);
-        setSummary({ jobsThisMonth: 0, totalJobs: 0, totalAmount: 0 });
-      } finally {
-        setLoading(false);
-      }
-    };
+                setTransactions(financeDataResponse?.data || []);
 
-    if (user) {
-      fetchData();
-    } else {
-      setLoading(false);
-      setError("ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่");
-    }
+                const backendSummary = financeSummaryResponse?.data;
+                if (backendSummary) {
+                    setSummary({
+                        jobsThisMonth: backendSummary.monthlyJobCount || 0,
+                        totalJobs: backendSummary.totalJobCount || 0,
+                        totalAmount: backendSummary.totalEarnings || 0,
+                    });
+                } else {
+                    // ตั้งค่า default หาก API ไม่คืนข้อมูล summary
+                    setSummary({ jobsThisMonth: 0, totalJobs: 0, totalAmount: 0 });
+                }
 
-    return () => {
-      document.body.classList.remove("kanit-font");
-    };
-  }, [user]);
+            } catch (err: any) {
+                // จัดการ Error กรณี Token หมดอายุ หรือปัญหาอื่นๆ
+                if (err.status === 401) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+                    window.location.href = "/login";
+                    return;
+                }
+                const errorMessage = err?.response?.data?.error || err?.message || "เกิดข้อผิดพลาดในการดึงข้อมูล";
+                setError(errorMessage);
+                setTransactions([]); // ล้างข้อมูลเก่าเมื่อเกิดข้อผิดพลาด
+                setSummary({ jobsThisMonth: 0, totalJobs: 0, totalAmount: 0 });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+
+        return () => {
+            document.body.classList.remove("kanit-font");
+        };
+    }, [user]);
 
 
   const formatDateTime = (datetime: Date | string | undefined): string => {

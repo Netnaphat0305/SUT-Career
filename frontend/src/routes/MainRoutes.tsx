@@ -64,7 +64,6 @@ const MainRoutes: React.FC = () => {
             <Route path="/reviews/view/:id" element={<ViewReviewPage/>}/>
             <Route path="/Interview-Schedule" element={<InterviewScheduling/>} />
             <Route path="/profile-v1" element={<ProfilePageV1 />} />
-            <Route path="/student/:id/finance/summary" element={<FinancialReportPage />} />
             <Route path="/my/finance/summary" element={<FinancialReportPage />} />
             <Route path="/worklog" element={<WorklogPage />} />
             <Route path="/list-report" element={<IncidentReportList />} />

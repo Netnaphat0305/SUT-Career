@@ -202,3 +202,42 @@ func GetReviewByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": review})
 }
+
+// GET /api/reviews/student/:studentId
+func GetReviewsByStudentID(c *gin.Context) {
+    studentIDStr := c.Param("studentId")
+    studentID, err := strconv.Atoi(studentIDStr)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid student id"})
+        return
+    }
+
+    db := config.DB()
+    var reviews []entity.Reviews
+
+    // 1. Find all JobApplication IDs for the student
+    var jobAppIDs []uint
+    if err := db.Model(&entity.JobApplication{}).Where("student_id = ?", studentID).Pluck("id", &jobAppIDs).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "could not query job applications"})
+        return
+    }
+
+    if len(jobAppIDs) == 0 {
+        // No job applications, so no reviews. Return empty.
+        c.JSON(http.StatusOK, gin.H{"data": reviews})
+        return
+    }
+
+    // 2. Find all reviews for those JobApplication IDs
+    if err := db.
+        Where("job_application_id IN ?", jobAppIDs).
+        Preload("Ratingscore").
+        Preload("JobApplication.JobPost.Employer.User"). // Preload for reviewer info
+        Order("datetime desc").
+        Find(&reviews).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch reviews"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"data": reviews})
+}

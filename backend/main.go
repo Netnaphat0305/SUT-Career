@@ -466,8 +466,7 @@ func main() {
 
 		// 🔧 ⭐ เพิ่มใหม่: Public Profile View - ดูโปรไฟล์คนอื่นได้โดยไม่ต้อง login
 		api.GET("/profile/:studentId", controller.GetProfileByStudentID)
-		
-
+		api.GET("/reviews/student/:studentId", controller.GetReviewsByStudentID)
 
 		// --- Job Categories ---
 		api.GET("/jobcategories", controller.ListJobCategories)
@@ -630,9 +629,6 @@ func main() {
 		// --- Student Finance ---
 		auth.GET("/my/finance", controller.GetMyFinance)
 		auth.GET("/my/finance/summary", controller.GetMyFinanceSummary)
-		auth.GET("/student/:id/finance", controller.GetStudentFinance)
-		auth.GET("/student/:id/finance/summary", controller.GetStudentFinanceSummary)
-		// auth.GET("/billable_items", controller.ListBillableItems)
 
 		// ===== Chat API =====
 		chat := auth.Group("/chat")

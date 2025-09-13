@@ -426,48 +426,6 @@ export const StudentFinanceAPI = {
       throw error;
     }
   },
-
-  // ✅ เพิ่ม missing functions ที่ Frontend ต้องการ
-  getFinanceDataByStudentId: async (studentId: number): Promise<StudentFinanceResponse> => {
-    
-    try {
-      const response = await Get<StudentFinanceResponse>(`/api/student/${studentId}/finance`);      
-      if (!response) {
-        throw new Error("No response received from server");
-      }
-      if (!response.data) {
-        return { data: [] };
-      }
-      if (!Array.isArray(response.data)) {
-      }
-
-      return response;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  getFinanceSummaryByStudentId: async (studentId: number): Promise<FinanceSummaryResponse> => {
-    
-    try {
-      const response = await Get<FinanceSummaryResponse>(`/api/student/${studentId}/finance/summary`);      
-      if (!response) {
-        throw new Error("No response received from server");
-      }
-      if (!response.data) {
-        return { 
-          data: { 
-            monthlyJobCount: 0, 
-            totalJobCount: 0, 
-            totalEarnings: 0 
-          } 
-        };
-      }
-      return response;
-    } catch (error) {
-      throw error;
-    }
-  },
 };
 
 export const adminFinanceAPI = {
@@ -484,6 +442,8 @@ export const reviewAPI = {
   getForJob: (jobapplicationId: number) => Get(`/api/reviews/jobapp/${jobapplicationId}`),
   getById: (id: string): Promise<{ data: Review }> =>
     Get(`/api/reviews/view/${id}`),
+  getReviewsByStudentId: (studentId: string | number): Promise<{ data: Review[] }> => 
+    Get(`/api/reviews/student/${studentId}`, false),
 };
 
 // Job Post APIs
