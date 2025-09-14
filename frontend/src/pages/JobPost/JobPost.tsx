@@ -160,9 +160,9 @@ const JobPost: React.FC = () => {
     <Row gutter={16}>
       <Col span={12}>
         <Form.Item
-          label="เงินเดือน/ค่าตอบแทน"
+          label="ค่าตอบแทน"
           name="compensation"
-          rules={[{ required: true, message: "กรุณากรอกเงินเดือน" }]}
+          rules={[{ required: true, message: "กรุณากรอกจำนวนเงิน" }]}
         >
           <Input type="number" placeholder="กรอกค่าตอบแทน" />
         </Form.Item>
@@ -171,7 +171,7 @@ const JobPost: React.FC = () => {
         <Form.Item
           label="ประเภทการจ่ายเงิน"
           name="salaryTypeId"
-          rules={[{ required: true, message: "กรุณาเลือกประเภทเงินเดือน" }]}
+          rules={[{ required: true, message: "กรุณาเลือกประเภทการจ่ายเงิน" }]}
         >
           <Select placeholder="เลือกประเภท">
             {salarytype.map((s) => (

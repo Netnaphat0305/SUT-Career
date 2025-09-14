@@ -73,8 +73,8 @@ const FullLayout: React.FC = () => {
         createMenuItem("Job/Board", "Jobs"),
         createMenuItem("feed", "Feed"),
         createMenuItem("report", "Report"),
-        createMenuItem("my/finance/summary", "รายได้"),
-
+        createMenuItem("my/finance/summary", "Income"),
+        createMenuItem("chat","Chat"),
         createMenuItem("help", "Help"),
         
       ];
@@ -87,9 +87,9 @@ const FullLayout: React.FC = () => {
         createMenuItem("feed", "Feed"),
         createMenuItem("report", "Report"),
         createMenuItem("my-jobs", "My Job"),
-        createMenuItem("Job/Mypost-job", "โพสต์ของฉัน"),
+        createMenuItem("Job/Mypost-job", "My Post"),
         createMenuItem("payment-report", "Payment Report"),
-        
+        createMenuItem("chat","Chat"),
       ];
     } else {
       //admin
