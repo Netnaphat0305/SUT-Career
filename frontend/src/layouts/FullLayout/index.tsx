@@ -138,7 +138,7 @@ const FullLayout: React.FC = () => {
     });
     }
     menuItems.push({
-        key: 'logout',
+        key: 'myreport',
         label: <Link to="/list-report">ดูรายงานของฉัน</Link>,
         icon: <ExclamationCircleOutlined />,
     });

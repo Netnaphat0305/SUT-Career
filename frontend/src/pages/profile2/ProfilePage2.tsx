@@ -33,7 +33,7 @@ import {
   MessageOutlined, // ======================= edit by book ========================
 } from '@ant-design/icons';
 import { useAuth } from '../../context/AuthContext';
-import { studentPostAPI, profileAPI, chatAPI } from '../../services/https/index';
+import { studentPostAPI, profileAPI, chatAPI, reviewAPI } from '../../services/https/index';
 import type { Student } from '../../interfaces/student';
 import type { StudentPost } from '../../interfaces/studentpost';
 import type { Review } from '../../interfaces/review';
@@ -124,19 +124,41 @@ const ProfilePage2: React.FC = () => {
         throw new Error('ไม่ได้รับข้อมูลโปรไฟล์ที่ถูกต้องจาก API');
       }
 
-      // Mock reviews (can be replaced with actual API call)
-      const mockReviews: Review[] = [];
-      const mockRating = { average: 0, count: 0 };
+      // --- START: Fetch real review data ---
+      let reviews: Review[] = [];
+      let rating = { average: 0, count: 0 };
+
+      try {
+        const reviewResponse = await reviewAPI.getReviewsByStudentId(responseData.student.ID);
+        const reviewData = (reviewResponse as any)?.data as Review[];
+        
+        if (Array.isArray(reviewData) && reviewData.length > 0) {
+            reviews = reviewData;
+            const totalScore = reviews.reduce((acc, review) => {
+                // Use ratingscore_id as the score (1-5)
+                return acc + (review.ratingscore_id || 0);
+            }, 0);
+            
+            rating = {
+              average: totalScore / reviews.length,
+              count: reviews.length,
+            };
+        }
+      } catch (reviewErr) {
+        console.warn("Could not fetch reviews for student:", responseData.student.ID, reviewErr);
+        // Continue without reviews, not a fatal error
+      }
+      // --- END: Fetch real review data ---
 
       const finalProfileData: ProfileData = {
         student: responseData.student,
         posts: responseData.posts || [],
-        reviews: mockReviews,
-        rating: mockRating
+        reviews: reviews,
+        rating: rating
       };
 
       setProfileData(finalProfileData);
-      console.log("✅ Profile data loaded:", finalProfileData);
+      console.log("✅ Profile data loaded with reviews:", finalProfileData);
 
     } catch (err: any) {
       console.error("❌ Profile loading error:", err);
@@ -375,14 +397,21 @@ const ProfilePage2: React.FC = () => {
                     <List.Item.Meta
                       avatar={<Avatar icon={<UserOutlined />} />}
                       title={
-                        <div>
-                          <Rate disabled allowHalf value={review.ratingscore?.score || 0} />
-                          <Text type="secondary" style={{ marginLeft: '8px' }}>
-                            {new Date(review.datetime).toLocaleDateString('th-TH')}
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <Rate disabled allowHalf value={review.ratingscore_id || 0} />
+                          <Text type="secondary" style={{ marginLeft: '8px', fontSize: '12px' }}>
+                            โดย {(review.job_application?.JobPost as any)?.employer?.user?.username || 'ผู้ว่าจ้าง'}
                           </Text>
                         </div>
                       }
-                      description={review.comment}
+                      description={
+                        <>
+                          <Paragraph style={{ marginBottom: '4px' }}>{review.comment}</Paragraph>
+                           <Text type="secondary" style={{ fontSize: '12px' }}>
+                            {new Date(review.datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          </Text>
+                        </>
+                      }
                     />
                   </List.Item>
                 )}

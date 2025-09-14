@@ -484,6 +484,8 @@ export const reviewAPI = {
   getForJob: (jobapplicationId: number) => Get(`/api/reviews/jobapp/${jobapplicationId}`),
   getById: (id: string): Promise<{ data: Review }> =>
     Get(`/api/reviews/view/${id}`),
+  getReviewsByStudentId: (studentId: string | number): Promise<{ data: Review[] }> => 
+    Get(`/api/reviews/student/${studentId}`, false),
 };
 
 // Job Post APIs
