@@ -40,11 +40,11 @@ const LoginForm = ({
     >
       <Input.Password prefix={<LockOutlined />} placeholder="รหัสผ่าน" />
     </Form.Item>
-    <Form.Item>
+    {/* <Form.Item>
       <Link to="#" className="login-form-forgot">
         ลืมรหัสผ่าน
       </Link>
-    </Form.Item>
+    </Form.Item> */}
     <Form.Item>
       <Button type="primary" htmlType="submit" className="login-form-button">
         เข้าสู่ระบบ
@@ -115,10 +115,10 @@ const LoginPage: React.FC = () => {
           </Title>
           {/* ✨ 2. เรียกใช้ LoginForm และกำหนด name ที่ไม่ซ้ำกัน */}
           <LoginForm onFinishHandler={onFinish} formName="student_login" />
-          <div className="login-register-link">
+          {/* <div className="login-register-link">
             <Text>ยังไม่ได้เป็นสมาชิก? </Text>
             <Link to="/register">สมัครสมาชิก</Link>
-          </div>
+          </div> */}
         </>
       ),
     },

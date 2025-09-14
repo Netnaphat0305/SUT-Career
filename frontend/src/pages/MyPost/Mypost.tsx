@@ -150,7 +150,7 @@ const MyPost: React.FC = () => {
                   </Tag>
                 </h3>
                 <p className="mypost-company">
-                  {post.Employer?.company_name || "ไม่ระบุบริษัท"}
+                  {post.employer?.company_name || "ไม่ระบุบริษัท"}
                 </p>
 
                 <div className="mypost-details">

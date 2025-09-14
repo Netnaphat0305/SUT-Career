@@ -43,6 +43,9 @@
 
 
   /* ========================อันนี้อันใหม่============================== */
+* {
+  font-family: "Poppins", "Kanit", sans-serif !important;
+}
 .login-page-container {
   position: relative;
   display: flex;

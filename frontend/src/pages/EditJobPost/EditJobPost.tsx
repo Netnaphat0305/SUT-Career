@@ -14,7 +14,9 @@ import {
   Row,
   Col,
   Spin,
+  Upload,
 } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../../components/PageHeader";
 import {
@@ -108,7 +110,6 @@ const EditJobPost: React.FC = () => {
         const res = await jobPostAPI.getById(Number(id));
         const post: Jobpost = res.data;
 
-        // preview จาก path จริง
         setImagePreview(post.image_url ? post.image_url : defaultLogo);
 
         form.setFieldsValue({
@@ -144,15 +145,12 @@ const EditJobPost: React.FC = () => {
         salary_type_id: values.salaryTypeId,
       };
 
-      // อัปเดตข้อมูลหลัก
       await jobPostAPI.update(Number(id), payload);
 
-      // ถ้ามี portfolio → upload
       if (portfolioFile) {
         await jobPostAPI.uploadPortfolio(Number(id), portfolioFile);
       }
 
-      // ถ้ามีเลือกโลโก้ใหม่ → upload
       if (logoFile) {
         await jobPostAPI.uploadLogo(Number(id), logoFile);
       }
@@ -173,17 +171,6 @@ const EditJobPost: React.FC = () => {
       navigate("/Job/Mypost-job");
       window.location.reload();
     }, 1000);
-  };
-
-  // เมื่อเลือกไฟล์รูป
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setLogoFile(file); // เก็บไฟล์จริง
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string); // preview เท่านั้น
-      reader.readAsDataURL(file);
-    }
   };
 
   if (loading) {
@@ -319,27 +306,46 @@ const EditJobPost: React.FC = () => {
 
           {/* --- portfolio --- */}
           <Form.Item label="แนบผลงาน (Portfolio)">
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx,.jpg,.png"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) setPortfolioFile(file);
+            <Upload
+              beforeUpload={(file) => {
+                setPortfolioFile(file);
+                return false;
               }}
-            />
+              maxCount={1}
+              accept=".pdf,.doc,.docx,.jpg,.png"
+              showUploadList={{ showRemoveIcon: true }}
+            >
+              <Button icon={<UploadOutlined />}>
+                คลิกเพื่ออัปโหลด Portfolio
+              </Button>
+            </Upload>
+            {portfolioFile && (
+              <span style={{ marginLeft: 10 }}>{portfolioFile.name}</span>
+            )}
           </Form.Item>
 
           {/* --- logo --- */}
           <Form.Item label="เลือกรูปโลโก้ร้าน (ถ้ามี)">
-            <input type="file" accept="image/*" onChange={handleImageChange} />
+            <Upload
+              beforeUpload={(file) => {
+                setLogoFile(file);
+                const reader = new FileReader();
+                reader.onloadend = () => setImagePreview(reader.result as string);
+                reader.readAsDataURL(file);
+                return false;
+              }}
+              maxCount={1}
+              accept="image/*"
+              showUploadList={{ showRemoveIcon: true }}
+            >
+              <Button icon={<UploadOutlined />}>
+                คลิกเพื่ออัปโหลดโลโก้
+              </Button>
+            </Upload>
             {imagePreview && (
               <div style={{ marginTop: 10 }}>
                 <img
-                  src={
-                    logoFile
-                      ? imagePreview // preview ใหม่
-                      : `${imagePreview}` // path เก่าจาก DB
-                  }
+                  src={imagePreview}
                   alt="preview"
                   style={{ width: 120, borderRadius: 8 }}
                 />

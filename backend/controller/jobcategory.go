@@ -7,7 +7,7 @@ import (
 	"github.com/KBook22/System-Analysis-and-Design/entity"
 	"github.com/gin-gonic/gin"
 )
-
+//หมวดหมู่งานทั้งหมด
 // GET /jobcategories
 func ListJobCategories(c *gin.Context) {
 	var categories []entity.JobCategory
@@ -18,7 +18,7 @@ func ListJobCategories(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": categories})
 }
 
-
+//หมวดหมู่เดียวตาม ID
 // (optional) GET /jobcategories/:id
 func GetJobCategoryByID(c *gin.Context) {
 	var category entity.JobCategory

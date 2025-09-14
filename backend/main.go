@@ -89,7 +89,7 @@ func main() {
 		api.PUT("/worklogs/:id", controller.UpdateWorklogByID)
 		api.DELETE("/worklogs/:id", controller.DeleteWorklogID)
 		api.GET("/jobposts/employer/:id", controller.GetJobpostByEmployerID)
-		api.GET("/worklogs/getjobpost/user/:id", controller.GetJobpostByUserID) 
+		api.GET("/worklogs/getjobpost/user/:id", controller.GetJobpostByUserID)
 		api.GET("/jobapplications/:id", controller.GetstudentByjobpostID)
 		api.GET("/worklogs/user/:id", controller.GetWorklogsByUserID)
 		// // Extra
@@ -174,7 +174,6 @@ func main() {
 		auth.DELETE("/student-posts/:id", controller.DeleteStudentPost)
 		auth.GET("/skills", controller.ListSkills)
 		auth.POST("/upload", controller.UploadToSupabase)
-		
 
 		// --- Job Applications ---
 		auth.GET("/jobapplications/init/:id", controller.InitJobApplication)
@@ -237,11 +236,11 @@ func main() {
 		// ========= Interview & Interview Scheduling API =========
 		interviewScheduling := auth.Group("/interview-schedules")
 		{
-			interviewScheduling.POST("/create", controller.CreateInterviewSchedule)       // สร้างช่วงเวลา
-			interviewScheduling.GET("/get", controller.GetAllInterviewSchedules)          // ดูทั้งหมด
+			interviewScheduling.POST("/create", controller.CreateInterviewSchedule)        // สร้างช่วงเวลา
+			interviewScheduling.GET("/get", controller.GetAllInterviewSchedules)           // ดูทั้งหมด
 			interviewScheduling.GET("/get/employer/", controller.GetSchedulesByEmployerID) //ดูจาก ID ผู้ว่าจ้าง
-			interviewScheduling.GET("/get/:id", controller.GetInterviewScheduleByID)      // ดึงตาม ID
-			interviewScheduling.DELETE("/delete/:id", controller.DeleteInterviewSchedule) // ลบช่วงเวลา
+			interviewScheduling.GET("/get/:id", controller.GetInterviewScheduleByID)       // ดึงตาม ID
+			interviewScheduling.DELETE("/delete/:id", controller.DeleteInterviewSchedule)  // ลบช่วงเวลา
 		}
 
 		interview := auth.Group("/interviews")
@@ -274,6 +273,13 @@ func main() {
 	r.GET("/download/:filename", func(c *gin.Context) {
 		filename := c.Param("filename")
 		filepath := "./uploads/" + filename
+		c.FileAttachment(filepath, filename)
+	})
+
+	// เพิ่มตรงนี้
+	r.GET("/download/resume/:filename", func(c *gin.Context) {
+		filename := c.Param("filename")
+		filepath := "./uploads/resume_file/" + filename
 		c.FileAttachment(filepath, filename)
 	})
 

@@ -57,6 +57,7 @@ func GetJobPostByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": jobpost})
 }
 
+// ดึงโพสต์งานทั้งหมดที่ผู้ว่าจ้าง (employer) คนนั้นเคยโพสต์
 // GET /jobposts/employer/:id
 func ListJobPostsByEmployerID(c *gin.Context) {
 	var jobposts []entity.Jobpost
@@ -89,18 +90,18 @@ func CreateJobPost(c *gin.Context) {
 		loc, _ := time.LoadLocation("Asia/Bangkok")
 		deadlineStr := jobpost.Deadline.Format(time.RFC3339)
 
-		// 1) พยายาม parse แบบ RFC3339
+		//  พยายาม parse แบบ RFC3339
 		if parsed, err := time.Parse(time.RFC3339, deadlineStr); err == nil {
 			localDeadline := parsed.In(loc)
 			onlyDate, _ := time.ParseInLocation("2006-01-02", localDeadline.Format("2006-01-02"), loc)
 			jobpost.Deadline = onlyDate.Add(24*time.Hour - time.Second)
 
 		} else if parsed, err := time.ParseInLocation("2006-01-02", deadlineStr, loc); err == nil {
-			// 2) parse YYYY-MM-DD
+			//  parse YYYY-MM-DD
 			jobpost.Deadline = parsed.Add(24*time.Hour - time.Second)
 		}
 	}
-
+	//กำหนดว่าเป็นของ emp คนไหน
 	jobpost.EmployerID = employerID.(uint)
 
 	if err := config.DB().Create(&jobpost).Error; err != nil {
@@ -129,19 +130,19 @@ func UpdateJobPost(c *gin.Context) {
 		return
 	}
 
-	// ถ้ามีการส่ง deadline มา → บังคับ set ให้เป็นสิ้นวัน
+	// ถ้ามีการส่ง deadline มา  บังคับ set ให้เป็นสิ้นวัน
 	if deadlineRaw, ok := request["deadline"]; ok {
 		if deadlineStr, ok := deadlineRaw.(string); ok {
 			loc, _ := time.LoadLocation("Asia/Bangkok")
 
-			// 1) พยายาม parse แบบ RFC3339 (เช่น 2025-09-14T00:00:00+07:00)
+			// พยายาม parse แบบ RFC3339 (เช่น 2025-09-14T00:00:00+07:00)
 			if parsed, err := time.Parse(time.RFC3339, deadlineStr); err == nil {
 				localDeadline := parsed.In(loc)
 				onlyDate, _ := time.ParseInLocation("2006-01-02", localDeadline.Format("2006-01-02"), loc)
 				request["deadline"] = onlyDate.Add(24*time.Hour - time.Second)
 
 			} else if parsed, err := time.ParseInLocation("2006-01-02", deadlineStr, loc); err == nil {
-				// 2) ถ้า parse แบบ YYYY-MM-DD ได้ → ใช้อันนี้
+				//  ถ้า parse แบบ YYYY-MM-DD ได้  ใช้อันนี้
 				request["deadline"] = parsed.Add(24*time.Hour - time.Second)
 			}
 		}
@@ -208,7 +209,7 @@ func GetEmployerPosts(c *gin.Context) {
 // อัพโหลดไฟล์ Portfolio และอัปเดตใน Jobpost
 func UploadPortfolio(c *gin.Context) {
 	id := c.Param("id") // รับ id ของ jobpost ที่จะอัพเดต
-
+	//รับ
 	file, err := c.FormFile("portfolio")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ไม่พบไฟล์"})

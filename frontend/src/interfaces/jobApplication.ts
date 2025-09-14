@@ -51,6 +51,6 @@ export interface JobApplication {
   CreatedAt: string;
   JobPost: JobPost;
   Student: Student;   // ตอนนี้ Student มี profile_image_url แน่นอน 
-
+  resume_file?: string; //  เพิ่มฟิลด์นี้
   InterviewScheduling?: InterviewScheduling | null;
 }

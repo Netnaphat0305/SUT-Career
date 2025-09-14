@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button, Spin, message} from "antd";
+import { Button, Spin, message } from "antd";
 import profile from "../../assets/profile.svg";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import "./JobDetail.css";
@@ -10,6 +10,7 @@ import {
   DollarCircleOutlined,
   EnvironmentOutlined,
   MessageOutlined, // add by book
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { jobPostAPI, chatAPI } from "../../services/https";
 import type { Jobpost } from "../../interfaces/jobpost";
@@ -115,11 +116,11 @@ const PostLayout: React.FC = () => {
     try {
       // นักศึกษา → สร้างห้องกับ employer
       const room = await chatAPI.createOrGetRoom(
-        selectedPost.employer_id,   // targetId
-        "employer"                  // targetRole
+        selectedPost.employer_id, // targetId
+        "employer" // targetRole
       );
 
-      // ✅ เมื่อสร้างเสร็จ → ไปหน้า Chat
+      //  เมื่อสร้างเสร็จ → ไปหน้า Chat
       navigate("/Chat", { state: { roomId: room.ID } });
     } catch (err) {
       console.error("Failed to create chat room:", err);
@@ -139,8 +140,9 @@ const PostLayout: React.FC = () => {
             <div
               key={post.ID}
               id={`post-${post.ID}`}
-              className={`post-preview ${selectedPost?.ID === post.ID ? "selected" : ""
-                }`}
+              className={`post-preview ${
+                selectedPost?.ID === post.ID ? "selected" : ""
+              }`}
               onClick={() => {
                 setSelectedPost(post);
                 window.history.replaceState(
@@ -155,7 +157,7 @@ const PostLayout: React.FC = () => {
                 <div className="post-text">
                   <h4>{post.title}</h4>
                   <p className="post-subtitle">
-                    {post.Employer?.company_name || "ไม่ระบุบริษัท"}
+                    {post.employer?.company_name || "ไม่ระบุบริษัท"}
                   </p>
                   <div className="post-meta">
                     <div className="meta-item">
@@ -171,7 +173,7 @@ const PostLayout: React.FC = () => {
                       <span>
                         {post.salary.toLocaleString()}
                         {post.SalaryType?.salary_type_name
-                          ? `/${post.SalaryType.salary_type_name}`
+                          ? ` บาท/${post.SalaryType.salary_type_name}`
                           : ""}
                       </span>
                     </div>
@@ -217,7 +219,7 @@ const PostLayout: React.FC = () => {
                   <div className="job-title-info">
                     <h2 className="title-detail">{selectedPost.title}</h2>
                     <p className="company-name">
-                      {selectedPost.Employer?.company_name || "ไม่ระบุบริษัท"}
+                      {selectedPost.employer?.company_name || "ไม่ระบุบริษัท"}
                     </p>
                   </div>
                 </div>
@@ -267,8 +269,8 @@ const PostLayout: React.FC = () => {
                   <span>
                     {selectedPost.deadline
                       ? new Date(selectedPost.deadline).toLocaleDateString(
-                        "th-TH"
-                      )
+                          "th-TH"
+                        )
                       : "วันนี้ - จนกว่าจะปิดรับสมัคร"}
                   </span>
                 </div>
@@ -277,7 +279,7 @@ const PostLayout: React.FC = () => {
                   <span>
                     {selectedPost.salary.toLocaleString()}{" "}
                     {selectedPost.SalaryType?.salary_type_name
-                      ? `/${selectedPost.SalaryType.salary_type_name}`
+                      ? ` บาท/${selectedPost.SalaryType.salary_type_name}`
                       : ""}
                   </span>
                 </div>
@@ -300,13 +302,25 @@ const PostLayout: React.FC = () => {
                   </p>
                 </div>
 
-                {/* <div className="job-time">
-                  <h3>เวลาเริ่ม - เลิกงาน</h3>
-                  <p>
-                    {selectedPost.start_time || "ไม่ระบุ"} -{" "}
-                    {selectedPost.end_time || "ไม่ระบุ"}
-                  </p>
-                </div> */}
+                <div className="job-portfolio">
+                  <h3>Portfolio</h3>
+                  {selectedPost.portfolio_required &&
+                  selectedPost.portfolio_required !== "false" ? (
+                    <a
+                      className="portfolio-link"
+                      href={`${API_BASE}/download/${selectedPost.portfolio_required
+                        ?.split("/")
+                        .pop()}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <FileTextOutlined className="portfolio-icon" />
+                      ดาวน์โหลด Portfolio
+                    </a>
+                  ) : (
+                    <p style={{ color: "green" }}>ไม่จำเป็นต้องมี</p>
+                  )}
+                </div>
               </div>
 
               {/* รายละเอียดงาน */}
