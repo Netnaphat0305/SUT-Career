@@ -85,6 +85,7 @@ func main() {
 
 		// worklog
 		api.POST("/worklogs", controller.CreateWorklog)
+		api.GET("/worklogs/:id",controller.GetWorklogByID)
 		api.GET("/worklogs/student/:id", controller.GetWorklogStudent)
 		api.PUT("/worklogs/:id", controller.UpdateWorklogByID)
 		api.DELETE("/worklogs/:id", controller.DeleteWorklogID)
