@@ -228,7 +228,7 @@ const MyJobPage: React.FC = () => {
       render: (text: string) => <span>{text || "-"}</span>,
     },
     {
-      title: "ยอดชำระ",
+      title: "ยอดเงินตั้งต้น",
       dataIndex: "salary",
       key: "salary",
       width: "15%",
