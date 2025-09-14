@@ -94,7 +94,7 @@ const FinanceDashboardPage: React.FC = () => {
   }, []);
 
   // ถ้าอยากให้เปลี่ยนช่วงวันที่แล้วโหลดอัตโนมัติ ให้เปิด useEffect นี้
-  // useEffect(() => { fetchAll(); }, [from, to]);
+  useEffect(() => { fetchAll(); }, [from, to]);
 
   const option = useMemo(() => {
     const dates = series.map((s) => s.date);

@@ -1,5 +1,5 @@
 // src/pages/review/index.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Typography,
   Card,
@@ -12,15 +12,11 @@ import {
   Result,
   message,
   Spin,
-  List,
-  Tag,
-  Empty,
 } from "antd";
 import { CheckCircleFilled } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import { reviewAPI } from "../../services/https";
 import type { CreateReviewPayload } from "../../interfaces/review";
-import { parseToDate, toTHDateTime } from "../../utils/index";
 import "./review.css";
 
 const { Title, Text } = Typography;
@@ -149,34 +145,6 @@ const ReviewPage: React.FC = () => {
     setSuccessOpen(false);
     navigate("/my-jobs");
   };
-
-  const scoreTag = (id?: number) => {
-    const color =
-      id === 5
-        ? "green"
-        : id === 4
-        ? "blue"
-        : id === 3
-        ? "gold"
-        : id === 2
-        ? "orange"
-        : "red";
-    return <Tag color={color}>{`คะแนน ${id ?? "-"}`}</Tag>;
-  };
-
-  const listData = useMemo(
-    () =>
-      reviews.map((r) => ({
-        key: String(r.ID ?? r.id ?? Math.random()),
-        title: scoreTag(r.ratingscore_id) || "-",
-        description: r.comment || "-",
-        datetime: toTHDateTime(r.datetime, "-"),
-        by: r.student
-          ? `${r.student.first_name ?? ""} ${r.student.last_name ?? ""}`.trim()
-          : "",
-      })),
-    [reviews]
-  );
 
   if (loading) {
     return (

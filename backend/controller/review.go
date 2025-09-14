@@ -203,7 +203,6 @@ func GetReviewByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": review})
 }
 
-
 // GET /api/reviews/student/:studentId
 func GetReviewsByStudentID(c *gin.Context) {
     studentIDStr := c.Param("studentId")

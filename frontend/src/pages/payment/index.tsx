@@ -118,14 +118,14 @@ const PaymentPage: React.FC = () => {
       alive = false;
     };
   }, [billableId, alreadyPaid]);
-
+  
+/* ----- load: job + ensure/create billable item ----- */
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const resp = await myjobpostAPI.getById(Number(jobId));
         const jp = asData<Jobpost>(resp);
-        console.log("Data from API:", jp);
         if (cancelled) return;
         setJob(jp);
 
@@ -136,32 +136,35 @@ const PaymentPage: React.FC = () => {
           setGross(Number.isFinite(fallback) ? fallback : 0);
         }
 
+        let billableRes: any = null;
+
         if (billableFromState) {
-          setBillableId(billableFromState);
-          return;
+          billableRes = await billableItemAPI.getById(billableFromState);
+        } else {
+          billableRes = await billableItemAPI.create({
+            job_application_id: Number(jobId),
+          } as any);
         }
 
-        const createdRes = await billableItemAPI.create({
-          job_application_id: Number(jobId),
-        } as any);
-        const created = asData<any>(createdRes);
+        if (cancelled) return;
 
+        // ✨ --- แก้ไขบรรทัดนี้ --- ✨
+        // ลบ .data ออก ให้เข้าถึงจาก object ที่ได้มาโดยตรง
+        const hours = Number(billableRes?.hours_worked ?? 0); 
+        setTimesheetSum({ total_hours: hours });
+
+        // ส่วนที่เหลือจะยังทำงานได้ เพราะ asData ถูกออกแบบมาให้จัดการเรื่องนี้ได้
+        const billableData = asData<any>({ data: billableRes });
         const createdAmount = Number(
-          created?.amount ?? created?.billable_item?.amount ?? created?.Amount
+          billableData?.amount ?? billableData?.billable_item?.amount ?? billableData?.Amount
         );
-        if (!cancelled && Number.isFinite(createdAmount)) {
+        if (Number.isFinite(createdAmount)) {
           setGross(createdAmount);
         }
-        const bid =
-          Number(
-            created?.ID ??
-              created?.id ??
-              created?.billable_item?.ID ??
-              created?.billable_item?.id ??
-              0
-          ) || null;
 
+        const bid = Number(billableData?.ID ?? billableData?.id ?? 0) || null;
         setBillableId(bid);
+        
       } catch (e: any) {
         if (!cancelled) {
           const msg =
@@ -177,7 +180,6 @@ const PaymentPage: React.FC = () => {
       cancelled = true;
     };
   }, [jobId]);
-
   /* ----- load: coupons + used coupons ----- */
   useEffect(() => {
     let cancelled = false;

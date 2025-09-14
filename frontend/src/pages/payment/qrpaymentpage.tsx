@@ -277,7 +277,7 @@ const QRPromptpayPage: React.FC = () => {
 
             if (bi) {
               const title =
-                bi.job_application?.jobpost?.title ||
+                bi.job_application?.JobPost?.title ||
                 bi.description ||
                 "รายการชำระเงิน";
               const amt = getAmountFromData(bi);
@@ -285,12 +285,12 @@ const QRPromptpayPage: React.FC = () => {
               setJobTitle(title);
               if (amt > 0) setAmount(amt);
 
-              if (bi.job_application?.jobpost?.employer) {
+              if (bi.job_application?.JobPost?.employer) {
                 const payer =
-                  bi.job_application?.jobpost.employer.company_name ||
+                  bi.job_application?.JobPost.employer.company_name ||
                   "ผู้ชำระเงิน";
                 const address =
-                  bi.job_application?.jobpost.employer.address ||
+                  bi.job_application?.JobPost.employer.address ||
                   "ที่อยู่ไม่ระบุ";
                 console.log('✅ [API BillableItem] ข้อมูลที่ได้:', { payer, address });
                 setPayerName(payer);
