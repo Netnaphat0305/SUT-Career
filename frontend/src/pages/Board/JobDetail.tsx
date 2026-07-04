@@ -91,14 +91,14 @@ const PostLayout: React.FC = () => {
 
     fetchPost();
   }, [id, location.state, role]);
-
+//คืนค่า scroll ของ sidebar
   useLayoutEffect(() => {
     const savedScroll = sessionStorage.getItem(SCROLL_KEY);
     if (sidebarRef.current && savedScroll) {
       sidebarRef.current.scrollTop = parseInt(savedScroll, 10);
     }
   }, [location.pathname]);
-
+//แสดง spinner ระหว่างโหลด
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: 40 }}>
@@ -108,19 +108,18 @@ const PostLayout: React.FC = () => {
   }
 
   // edit by book
-
   // ฟังก์ชันเมื่อกด Contact
   const handleCreateChat = async () => {
     if (!selectedPost?.employer_id) return;
 
     try {
-      // นักศึกษา → สร้างห้องกับ employer
+      // นักศึกษา สร้างห้องกับ employer
       const room = await chatAPI.createOrGetRoom(
         selectedPost.employer_id, // targetId
         "employer" // targetRole
       );
 
-      //  เมื่อสร้างเสร็จ → ไปหน้า Chat
+      //  เมื่อสร้างเสร็จ ไปหน้า Chat
       navigate("/Chat", { state: { roomId: room.ID } });
     } catch (err) {
       console.error("Failed to create chat room:", err);

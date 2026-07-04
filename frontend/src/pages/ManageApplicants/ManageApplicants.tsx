@@ -7,7 +7,7 @@ import "./ManageApplicants.css";
 import type { JobApplication, JobPost } from "../../interfaces/jobApplication";
 import PageHeader from "../../components/PageHeader";
 import { API_BASE } from "../../config";
-// import type { Student } from "../../interfaces/student";
+import type { Student } from "../../interfaces/student";
 
 const ManageApplicants: React.FC = () => {
   const { jobpost_id } = useParams<{ jobpost_id: string }>();

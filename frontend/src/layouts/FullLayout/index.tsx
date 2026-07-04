@@ -90,6 +90,7 @@ const FullLayout: React.FC = () => {
         createMenuItem("Job/Mypost-job", "My Post"),
         createMenuItem("payment-report", "Payment Report"),
         createMenuItem("chat","Chat"),
+        createMenuItem("help", "Help"),
       ];
     } else {
       //admin
