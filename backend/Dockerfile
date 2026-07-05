@@ -4,7 +4,7 @@ FROM golang:1.23-alpine AS builder
 WORKDIR /app
 
 # คัดลอกและดาวน์โหลด dependencies
-COPY go.mod go.sum ./
+COPY go.mod go.su[m] ./
 RUN go mod download
 
 # คัดลอกซอร์สโค้ดทั้งหมดของ backend
