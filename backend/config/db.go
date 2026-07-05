@@ -16,7 +16,8 @@ func DB() *gorm.DB {
 
 func ConnectionDB() {
 
-	dsn := "postgresql://postgres.ildfvonvkrbtwullbsro:SutCareer2026@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+	
+	dsn := "postgresql://postgres.ildfvonvkrbtwullbsro:SutCareer2026@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
 	// 🟢 ปรับตรงนี้: ใส่ SkipDefaultTransaction และ PrepareStmt: false เพื่อแก้ปัญหา Prepared Statement ตีกันบน Supabase
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		SkipDefaultTransaction: true,
