@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "time/tzdata"
 	"github.com/KBook22/System-Analysis-and-Design/config"
 	"github.com/KBook22/System-Analysis-and-Design/controller"
 	"github.com/KBook22/System-Analysis-and-Design/middleware"
