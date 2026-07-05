@@ -50,6 +50,9 @@ func main() {
 	if err := os.MkdirAll("./static/payment_evidence", 0o755); err != nil {
 		log.Fatal(err)
 	}
+	if err := os.MkdirAll("./uploads", 0o755); err != nil {
+        log.Fatal(err)
+    }
 	r.Static("/static", "./static")
 	// Seed ข้อมูลนักศึกษา 30 คน
 	db := config.DB()
