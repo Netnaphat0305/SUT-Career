@@ -1,19 +1,21 @@
-# Stage 1: Build the Go application
-FROM golang:1.23-alpine AS builder
+# Stage 1: Build โค้ด Go ให้กลายเป็นไฟล์ระบบที่ทำงานได้ (Binary)
+# แก้ไขตรงนี้: เปลี่ยนจาก 1.23-alpine เป็น 1.26-alpine (หรือ 1.25-alpine) เพื่อให้ครอบคลุมตามที่ go.mod ต้องการ
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
 
-# คัดลอกและดาวน์โหลด dependencies
+# คัดลอกไฟล์จัดการโมดูล
 COPY go.mod go.su[m] ./
 RUN go mod download
 
-# คัดลอกซอร์สโค้ดทั้งหมดของ backend
+# คัดลอกซอร์สโค้ดหลังบ้านทั้งหมดเข้ามา
 COPY . .
 
-# Build โค้ดให้กลายเป็นไฟล์สำหรับเอาไปรัน (Binary) ชื่อว่า "main"
+# สั่ง Build โค้ด Go ให้เป็นไฟล์ชื่อ main
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
-# Stage 2: Run the binary using a minimal base image
+
+# Stage 2: ดึงเอาเฉพาะไฟล์ระบบมาเซ็ตตัวรัน
 FROM alpine:latest
 
 WORKDIR /root/
@@ -21,11 +23,12 @@ WORKDIR /root/
 # ดึงไฟล์ที่ build เสร็จแล้วมาจาก Stage 1
 COPY --from=builder /app/main .
 
-# ⚠️ สำคัญมาก: คัดลอกโฟลเดอร์ static หรือโฟลเดอร์เก็บไฟล์ต่าง ๆ ตามที่ระบบในภาพแรกของคุณต้องการใช้
+# คัดลอกโฟลเดอร์ static และ uploads สำหรับเก็บรูป/ไฟล์
 COPY --from=builder /app/static ./static
+COPY --from=builder /app/uploads ./uploads
 
-# ประกาศพอร์ตที่แอปของคุณใช้ (ปกติ Go ชอบใช้ 8080)
+# ประกาศพอร์ตที่ API ของคุณเปิดใช้งาน
 EXPOSE 8080
 
-# สั่งให้ระบบรันไฟล์หลังบ้านทันทีเมื่อขึ้นคลาวด์
+# สั่งให้ระบบรันหลังบ้านทันทีเมื่อตู้ Container เริ่มทำงาน
 CMD ["./main"]
