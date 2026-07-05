@@ -63,9 +63,11 @@ const FullLayout: React.FC = () => {
   const { user, logout } = useAuth();
 
 
+  // เปลี่ยนช่วงนี้ในไฟล์เดิมของคุณ (ประมาณบรรทัดที่ 67 เป็นต้นไป):
+
   let navItems: MenuItem[] = [];
 
-  if (user) {
+  if (user && user.role) { // 🟢 เช็กเพิ่มเติมให้ชัวร์ว่ามี user และ role
     const userRole = user.role.toLowerCase();
     //nav bar ของ student
     if (userRole === "student" || userRole === "stu") { 
@@ -76,7 +78,6 @@ const FullLayout: React.FC = () => {
         createMenuItem("my/finance/summary", "Income"),
         createMenuItem("chat","Chat"),
         createMenuItem("help", "Help"),
-        
       ];
     // nav bar ของ employer
     } else if (userRole === "employer" || userRole === "emp") {
@@ -100,28 +101,18 @@ const FullLayout: React.FC = () => {
       ];
     }
   } else {
-    // ถ้ายังไม่ login
+    // ถ้ายังไม่ login หรือไม่มีสิทธิ์
     navItems = [
       createMenuItem("Job/Board", "Jobs"),
       createMenuItem("feed", "Feed"),
       createMenuItem("help", "Help"),
     ];
   }
-  
-
-
-
-
-
-
-
-
 
   // Dynamically create menu items based on user role
   const menuItems: MenuProps['items'] = [];
 
-  if (user) {
-    // Check if user is a student (case-insensitive check)
+  if (user && user.role) { // 🟢 เติมเช็กความปลอดภัยตรงนี้ด้วย
     const userRole = user.role.toLowerCase();
     if (userRole === 'student' || userRole === 'stu') {
         menuItems.push({
@@ -130,15 +121,12 @@ const FullLayout: React.FC = () => {
             icon: <ProfileOutlined />,
         });
 
-        // add by netnaphat เพิ่ม myapp==============//
-    menuItems.push({
-        key: 'MyApplication',
-        label: <Link to="/my-applications">ใบสมัครของฉัน</Link>,
-        icon: <FormOutlined />
-    });
+        menuItems.push({
+            key: 'MyApplication',
+            label: <Link to="/my-applications">ใบสมัครของฉัน</Link>,
+            icon: <FormOutlined />
+        });
     }
-
-    //edit by netnaphat copy satang แก้้ให้ employer มีปุ่มโปรไฟล์
     else if (userRole === 'employer' || userRole === 'emp') {
         menuItems.push({
             key: 'employer-profile',
@@ -146,27 +134,22 @@ const FullLayout: React.FC = () => {
             icon: <ProfileOutlined />,
         });
 
-        // add by netnaphat เพิ่ม mypost==============//
         menuItems.push({
-        key: 'JobMyPost',
-        label: <Link to="/Job/Mypost-job">โพสต์ของฉัน</Link>,
-        icon: <EditOutlined />
-        
-    });
-
-
+            key: 'JobMyPost',
+            label: <Link to="/Job/Mypost-job">โพสต์ของฉัน</Link>,
+            icon: <EditOutlined />
+        });
     }
     menuItems.push({
         key: 'myreport',
         label: <Link to="/list-report">ดูรายงานของฉัน</Link>,
         icon: <ExclamationCircleOutlined />,
     });
-    // Add logout option for all logged-in users
     menuItems.push({
         key: 'logout',
         label: 'ออกจากระบบ',
         icon: <LogoutOutlined />,
-        onClick: logout, // Call logout function on click
+        onClick: logout,
         danger: true,
     });
   }

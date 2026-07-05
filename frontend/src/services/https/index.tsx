@@ -16,7 +16,7 @@ import type { CreateBillableitemPayload } from "../../interfaces/billableitem";
 import type { Paymentmethod } from "../../interfaces/paymentmethod";
 import type { Skill } from "../../interfaces/skill"
 /** ใช้ VITE_API_KEY เป็น baseURL เหมือนเดิม */
-const API_URL = import.meta.env.VITE_API_KEY || "http://localhost:8080";
+const API_URL =  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 export const UPLOAD_URL = `${API_URL}/api/upload`;
 /** build URL ให้สะอาด */
 const buildUrl = (path: string) =>
