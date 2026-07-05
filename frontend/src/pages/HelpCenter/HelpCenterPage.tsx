@@ -270,7 +270,7 @@ const HelpCenterPage: React.FC = () => {
 
   const replyUploadProps: UploadProps = {
     name: 'file',
-    action: 'http://localhost:8080/api/upload',
+    action: 'https://sut-career-backend.onrender.com/api/upload',
     headers: {
       Authorization: `Bearer ${localStorage.getItem('token')}`,
     },

@@ -1,7 +1,7 @@
 // // src/services/qnaService.ts
 // import type{ FAQ, RequestTicket } from '../types';
 
-// const API_BASE_URL = 'http://localhost:8080/api';
+// const API_BASE_URL = 'https://sut-career-backend.onrender.com/api';
 
 // /**
 //  * ดึงข้อมูลคำถามที่พบบ่อย (FAQ) ทั้งหมดจากเซิร์ฟเวอร์

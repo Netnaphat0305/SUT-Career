@@ -66,7 +66,7 @@ const CreateRequestPage: React.FC = () => {
       fd.append('file', realFile);
 
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:8080/api/upload`, {
+      const res = await fetch(`https://sut-career-backend.onrender.com/api/upload`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: fd,

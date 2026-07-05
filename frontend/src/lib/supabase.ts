@@ -147,7 +147,7 @@ export const uploadFileToBackend = async (file: File): Promise<string> => {
     formData.append('file', file);
 
     const token = localStorage.getItem('token');
-    const response = await fetch('http://localhost:8080/api/upload', {
+    const response = await fetch('https://sut-career-backend.onrender.com/api/upload', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`

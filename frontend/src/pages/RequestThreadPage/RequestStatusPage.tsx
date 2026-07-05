@@ -85,7 +85,7 @@
 // import type { RequestTicket } from '../../types'; // Use the correct type
 
 // const { Title, Paragraph, Text } = Typography;
-// const API_URL = 'http://localhost:8080/api';
+// const API_URL = 'https://sut-career-backend.onrender.com/api';
 
 // const RequestStatusPage: React.FC = () => {
 //     const { id } = useParams<{ id: string }>();
@@ -237,7 +237,7 @@ import { qnaAPI } from '../../services/https/index';
 
 const { Title, Paragraph, Text } = Typography;
 // ❌ 2. ลบ API_URL ที่ไม่จำเป็นต้องใช้ออก
-// const API_URL = 'http://localhost:8080/api';
+// const API_URL = 'https://sut-career-backend.onrender.com/api';
 
 const RequestStatusPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();

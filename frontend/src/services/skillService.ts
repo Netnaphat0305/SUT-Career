@@ -1,6 +1,6 @@
 // import type{ Skill } from "../interfaces/skill"; // เราจะสร้าง interface นี้ในขั้นตอนถัดไป
 
-// const API_BASE_URL = 'http://localhost:8080/api';
+// const API_BASE_URL = 'https://sut-career-backend.onrender.com/api';
 
 // // ฟังก์ชันสำหรับดึง Token จาก Local Storage
 // const getAuthHeaders = () => {

@@ -59,7 +59,7 @@
 //     UpdatedAt: string;
 //   }
   
-//   const API_BASE_URL = 'http://localhost:8080/api';
+//   const API_BASE_URL = 'https://sut-career-backend.onrender.com/api';
   
 //   // Helper function to get auth headers
 //   const getAuthHeaders = () => {

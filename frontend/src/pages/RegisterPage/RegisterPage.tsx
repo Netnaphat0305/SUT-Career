@@ -14,7 +14,7 @@ const RegisterPage: React.FC = () => {
   const onFinish = async (values: any) => {
     try {
       // 1. ตรวจสอบว่า Endpoint ถูกต้อง
-      const response = await fetch('http://localhost:8080/api/register/student', {
+      const response = await fetch('https://sut-career-backend.onrender.com/api/register/student', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

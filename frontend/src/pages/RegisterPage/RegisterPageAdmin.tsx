@@ -12,7 +12,7 @@ const RegisterPageAdmin: React.FC = () => {
 
   const onFinish = async (values: any) => {
     try {
-      const response = await fetch('http://localhost:8080/api/register/admin', {
+      const response = await fetch('https://sut-career-backend.onrender.com/api/register/admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

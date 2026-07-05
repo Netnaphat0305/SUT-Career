@@ -1,6 +1,6 @@
 // import type{ Student } from '../types'; // สมมติว่ามี type Student ใน types.ts
 
-// const API_BASE_URL = 'http://localhost:8080/api';
+// const API_BASE_URL = 'https://sut-career-backend.onrender.com/api';
 
 // export const getMyProfile = async (): Promise<Student> => {
 //     const token = localStorage.getItem('token');
