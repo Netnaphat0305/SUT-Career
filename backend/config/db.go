@@ -15,18 +15,19 @@ func DB() *gorm.DB {
 }
 
 func ConnectionDB() {
-
-	
-	dsn := "postgresql://postgres.ildfvonvkrbtwullbsro:SutCareer2026@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
-	// 🟢 ปรับตรงนี้: ใส่ SkipDefaultTransaction และ PrepareStmt: false เพื่อแก้ปัญหา Prepared Statement ตีกันบน Supabase
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		SkipDefaultTransaction: true,
-		PrepareStmt:            false,
-	})
-	if err != nil {
-		panic("failed to connect database")
-	}
-	db = database
+    dsn := "postgresql://postgres.ildfvonvkrbtwullbsro:SutCareer2026@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
+    
+    database, err := gorm.Open(postgres.New(postgres.Config{
+        DSN:                  dsn,
+        PreferSimpleProtocol: true, // 🟢 ไฮไลท์จุดนี้: บังคับใช้ Simple Protocol ปิดการทำ Prepared Statement ทั้งหมดถาวร!
+    }), &gorm.Config{
+        SkipDefaultTransaction: true,
+        PrepareStmt:            false,
+    })
+    if err != nil {
+        panic("failed to connect database")
+    }
+    db = database
 }
 
 func SetupDatabase() {
