@@ -11,50 +11,69 @@ import (
 
 // GET /jobposts
 // use by PostBoard ดึงข้อมูลประกาศงานทั้งหมด เรียงจากโพสต์ล่าสุดก่อน
+// GET /jobposts
+// use by PostBoard ดึงข้อมูลประกาศงานทั้งหมด เรียงจากโพสต์ล่าสุดก่อน
 func ListJobPosts(c *gin.Context) {
-	var jobposts []entity.Jobpost
-	if err := config.DB().
-		Preload("Employer").
-		Preload("Employer.User").
-		Preload("JobCategory").
-		Preload("EmploymentType").
-		Preload("SalaryType").
-		Order("created_at DESC").
-		Find(&jobposts).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	// เช็ค deadline ทุกโพสต์ ถ้าหมดเขต อัพเดตเป็น Close
-	now := time.Now()
-	for i := range jobposts {
-		if jobposts[i].Deadline.Before(now) && jobposts[i].Status == "Open" {
-			jobposts[i].Status = "Close"
-			config.DB().Save(&jobposts[i])
-		}
-	}
+    var jobposts []entity.Jobpost
+    if err := config.DB().
+        Preload("Employer").
+        Preload("Employer.User").
+        Preload("JobCategory").
+        Preload("EmploymentType").
+        Preload("SalaryType").
+        Order("created_at DESC").
+        Find(&jobposts).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    // เช็ค deadline ทุกโพสต์ ถ้าหมดเขต อัพเดตเป็น Close
+    now := time.Now()
+    for i := range jobposts {
+        if jobposts[i].Deadline.Before(now) && jobposts[i].Status == "Open" {
+            jobposts[i].Status = "Close"
+            config.DB().Save(&jobposts[i])
+        }
 
-	c.JSON(http.StatusOK, gin.H{"data": jobposts})
+        // 🟢 เพิ่มตรงนี้: ถ้ามีรูปภาพ ให้ต่อ URL ตัวเต็มของ Render ส่งออกไป
+        if jobposts[i].ImageURL != nil && *jobposts[i].ImageURL != "" {
+            // เช็คว่าถ้ามันยังไม่ขึ้นต้นด้วย http ให้ต่อโดเมน Render เข้าไป
+            if (*jobposts[i].ImageURL)[0:1] == "/" {
+                fullURL := "https://sut-career-backend.onrender.com" + *jobposts[i].ImageURL
+                jobposts[i].ImageURL = &fullURL
+            }
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{"data": jobposts})
 }
 
 // GET /jobposts/:id
 // use by Post Detail ดึงข้อมูลประกาศงานตาม ID
 func GetJobPostByID(c *gin.Context) {
-	var jobpost entity.Jobpost
-	id := c.Param("id")
+    var jobpost entity.Jobpost
+    id := c.Param("id")
 
-	if err := config.DB().
-		Preload("Employer").
-		Preload("Employer.User").
-		Preload("JobCategory").
-		Preload("EmploymentType").
-		Preload("Applications.Student"). //preload นักศึกษาที่สมัครงานนี้
-		Preload("SalaryType").
-		First(&jobpost, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Job post not found"})
-		return
-	}
+    if err := config.DB().
+        Preload("Employer").
+        Preload("Employer.User").
+        Preload("JobCategory").
+        Preload("EmploymentType").
+        Preload("Applications.Student"). //preload นักศึกษาที่สมัครงานนี้
+        Preload("SalaryType").
+        First(&jobpost, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Job post not found"})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{"data": jobpost})
+    // 🟢 เพิ่มตรงนี้: ถ้ามีรูปภาพ ให้ต่อ URL ตัวเต็มของ Render ส่งออกไป
+    if jobpost.ImageURL != nil && *jobpost.ImageURL != "" {
+        if (*jobpost.ImageURL)[0:1] == "/" {
+            fullURL := "https://sut-career-backend.onrender.com" + *jobpost.ImageURL
+            jobpost.ImageURL = &fullURL
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{"data": jobpost})
 }
 
 // ดึงโพสต์งานทั้งหมดที่ผู้ว่าจ้าง (employer) คนนั้นเคยโพสต์
