@@ -2,10 +2,9 @@
 package config
 
 import (
-
-	"github.com/KBook22/System-Analysis-and-Design/entity"
 	"github.com/KBook22/System-Analysis-and-Design/config/seed"
-	"gorm.io/driver/sqlite"
+	"github.com/KBook22/System-Analysis-and-Design/entity"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -14,8 +13,15 @@ var db *gorm.DB
 func DB() *gorm.DB {
 	return db
 }
+
 func ConnectionDB() {
-	database, err := gorm.Open(sqlite.Open("sa-project.db"), &gorm.Config{})
+
+	dsn := "postgresql://postgres.ildfvonvkrbtwullbsro:SutCareer2026@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+	// 🟢 ปรับตรงนี้: ใส่ SkipDefaultTransaction และ PrepareStmt: false เพื่อแก้ปัญหา Prepared Statement ตีกันบน Supabase
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		SkipDefaultTransaction: true,
+		PrepareStmt:            false,
+	})
 	if err != nil {
 		panic("failed to connect database")
 	}
@@ -23,58 +29,50 @@ func ConnectionDB() {
 }
 
 func SetupDatabase() {
-	// Migrate the schema
+	// 🟢 จัดลำดับการสร้างตาราง (Migrate) ใหม่ทั้งหมด: เอาตารางที่เป็นแม่ ไม่มี FK ขึ้นก่อนให้ครบถ้วน
 	db.AutoMigrate(
-		&entity.User{},
+		// Layer 1: ตารางพื้นฐานมากๆ (Master Data) ไม่มี FK ไปหาใครเลย
 		&entity.Genders{},
-		&entity.Employer{},
-		&entity.Student{},
-		&entity.Jobpost{},
-		//add by Netnaphat
+		&entity.Banks{},
+		&entity.Statuses{},
+		&entity.ReportStatus{},
 		&entity.EmploymentType{},
 		&entity.SalaryType{},
 		&entity.JobCategory{},
-		&entity.JobApplication{},
-		//
-		&entity.Reviews{},
-		&entity.Ratingscores{},
-		&entity.Payments{},
 		&entity.PaymentMethods{},
 		&entity.BillableItems{},
-		&entity.PaymentReports{},
-		&entity.Statuses{},
-		&entity.Banks{},
+		&entity.Ratingscores{},
 		&entity.Discounts{},
-		&entity.Orders{},
 		&entity.AddonServices{},
-		//=========================
-		
-		&entity.ReportStatus{},//by supanut
-		&entity.Report{},
+		&entity.User{},
 		&entity.Admin{},
+
+		// Layer 2: ตารางที่เรียกใช้ไอดีจาก Layer 1
+		&entity.Employer{}, // ผูกกับ User และ Gender
+		&entity.Student{},  // ผูกกับ User, Gender และ Bank
+
+		// Layer 3: ตารางระบบงานและฟีเจอร์อื่นๆ ที่ต้องอ้างอิง Student หรือ Employer
+		&entity.Jobpost{},  // ผูกกับ Employer, JobCategory, EmploymentType, SalaryType
+		&entity.JobApplication{},
+		&entity.Reviews{},
+		&entity.Payments{},
+		&entity.PaymentReports{},
+		&entity.Orders{},
+		&entity.Report{},
 		&entity.Worklog{},
-		// ================ เพิ่มโดยพรศิริ ============================================
 		&entity.StudentPost{},
 		&entity.Skill{},
 		&entity.StudentPostAttachment{},
-		// ✨ [เพิ่ม] Entity ของระบบ Q&A ที่ขาดไป
 		&entity.FAQ{},
 		&entity.FAQComment{},
 		&entity.RequestTicket{},
 		&entity.TicketReply{},
 		&entity.TicketAttachment{},
 		&entity.Notification{},
-		// =========================สิ้นสุดการเพิ่มของพรศิริ==============================
-
-		//=========================
-		&entity.Interview{}, //ขอเพิ่มหน่อยนะบุ๊คชั้นต้องใช้ถือว่ายังไงแกก็ต้องใช้
+		&entity.Interview{},
 		&entity.InterviewScheduling{},
-
-
-		//========================= Kittisak ====================
 		&entity.ChatHistory{},
 		&entity.ChatRoom{},
-		//========================= Kittisak ====================
 	)
 }
 
@@ -82,9 +80,7 @@ func SeedDatabase() {
 	seed.SeedMasterData(db)
 	seed.SeedUsersAndProfiles(db)
 	seed.SeedJobData(db)
-	seed.SeedUsersAndProfiles(db)
 	seed.SeedPaymentData(db)
 	seed.SeedReportData(db)
 	seed.SeedInterviewScheduling(db)
 }
-

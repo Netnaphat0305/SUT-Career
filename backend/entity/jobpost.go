@@ -15,18 +15,18 @@ const (
 
 type Jobpost struct {
 	gorm.Model
-	Title       		string    		`gorm:"type:varchar(255);not null" json:"title"`
-	Description 		string    		`gorm:"type:text;not null" json:"description"`
-	Deadline 			time.Time 		`gorm:"type:datetime;not null" json:"deadline"` //เปลี่ยนgorm gorm เป็น datetime เพราะว่าตอนนี้มันหมดเขตที่เวลา 00:00
-	Status				StatusEnum 		`gorm:"not null" json:"status"`
-	ImageURL 			*string 		`gorm:"type:varchar(255)" json:"image_url"` // nullable string
-	PortfolioRequired 	*string 		`gorm:"type:varchar(100)" json:"portfolio_required"` // nullable
-	Salary				int				`json:"salary"`
+	Title             string     `gorm:"type:varchar(255);not null" json:"title"`
+	Description       string     `gorm:"type:text;not null" json:"description"`
+	Deadline          time.Time  `gorm:"not null" json:"deadline"`
+	Status            StatusEnum `gorm:"not null" json:"status"`
+	ImageURL          *string    `gorm:"type:varchar(255)" json:"image_url"`          // nullable string
+	PortfolioRequired *string    `gorm:"type:varchar(100)" json:"portfolio_required"` // nullable
+	Salary            int        `json:"salary"`
 	LocationJob       string     `gorm:"column:locationjob;type:varchar(255);not null" json:"locationjob"`
 
 	//FK
-	EmployerID			uint    		`gorm:"not null" json:"employer_id"`
-    Employer   			Employer 		`gorm:"foreignKey:EmployerID;references:ID" json:"employer"`
+	EmployerID uint     `gorm:"not null" json:"employer_id"`
+	Employer   Employer `gorm:"foreignKey:EmployerID;references:ID" json:"employer"`
 
 	JobCategoryID uint        `json:"job_category_id"`
 	JobCategory   JobCategory `gorm:"foreignKey:JobCategoryID"`
@@ -46,5 +46,4 @@ type Jobpost struct {
 
 	// เพิ่มตรงนี้ preload ผู้สมัครในโพสต์งาน
 	Applications []JobApplication `gorm:"foreignKey:JobPostID" json:"applications,omitempty"`
-
 }
